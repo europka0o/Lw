@@ -161,6 +161,13 @@ class Collision {
 
 typedef Collision Trigger;
 
+class Base {
+	protected:
+	public:
+		Base() {}
+		~Base() {}
+};
+
 class ObjectStatic {
 	private:
 		axes_i pos;
