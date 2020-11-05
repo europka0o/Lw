@@ -109,23 +109,23 @@ int settings::loadSettings() {
 }
 // ----------------------------------Настройки-Settings-Конец-------------------------------
 
+//----------------------------------Структура-оси-axes-Начало-------------------------------
+template<typename type>
+axes<type>::axes() {
+	x = 0;
+	y = 0;
+}
+
+template<typename type>
+axes<type>::axes(type _x, type _y) : x(_x), y(_y) {}
+//----------------------------------Структура-оси-axes-Конец-------------------------------
+
 // ----------------------------------Персанаж-Character-Начало------------------------------
-Character::Character(Image *ptr_on_img, float X_POS, float Y_POS, int hp) :
-	cooldown(false),
-	isDead(false),
-	zeroing(false),
-	timer_cooldown(0),
-	health(hp)
+Character::Character(Image* ptr_on_img, float X_POS, float Y_POS, int hp) :
+	BaseCharacter(ptr_on_img, X_POS, Y_POS, hp)
 	{
-	pos.x = X_POS;
-	pos.y = Y_POS;
-	texture = new Texture;
-	texture->loadFromImage(*ptr_on_img);
-	sprt = new Sprite;
-	sprt->setTexture(*texture);
 	sprt->setTextureRect(IntRect(0, 250, 300, 250));
 	sprt->setPosition(pos.x, pos.y);
-	frame = 0;
 	direction = 0;
 	last_direction = direction;
 		
@@ -137,7 +137,7 @@ Character::Character(Image *ptr_on_img, float X_POS, float Y_POS, int hp) :
 Character::~Character() {
 	//sprt->~Sprite();
 	//texture->~Texture();
-	delete texture, sprt, HP;
+	delete HP;
 }
 
 void Character::setImage(Image *ptr_on_img) {
@@ -147,18 +147,12 @@ void Character::setImage(Image *ptr_on_img) {
 	sprt->setPosition(pos.x, pos.y);
 }
 
-axes_f Character::getPosition() noexcept {
-	pos.x = sprt->getGlobalBounds().left;
-	pos.y = sprt->getGlobalBounds().top;
-	return pos;
-}
-
 
 void __fastcall Character::setPosition(float X, float Y) noexcept {
 	pos.x = X;
 	pos.y = Y;
 	sprt->setPosition(X, Y);
-	rect_chr = sprt->getGlobalBounds();
+	fl_rect = sprt->getGlobalBounds();
 	rect_collis->setPosition(pos.x + 140, pos.y);
 	HP->setPosition(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2) - (HP->getSize().width / 2), sprt->getGlobalBounds().top + sprt->getGlobalBounds().height);
 }
@@ -168,7 +162,7 @@ void Character::setPosition(axes_f XY) noexcept {
 
 	sprt->setPosition(pos.x, pos.y);
 	HP->setPosition(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2) - (HP->getSize().width / 2), sprt->getGlobalBounds().top + sprt->getGlobalBounds().height);
-	rect_chr = sprt->getGlobalBounds();
+	fl_rect = sprt->getGlobalBounds();
 	rect_collis->setPosition(pos.x + 140, pos.y);
 }
 
@@ -285,8 +279,10 @@ void __fastcall Character::move(float time) noexcept {
 	last_direction = direction;
 	direction = 0;
 	HP->setPosition(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2) - (HP->getSize().width / 2) + 40, sprt->getGlobalBounds().top + sprt->getGlobalBounds().height);
-	rect_chr = sprt->getGlobalBounds();
+	fl_rect = sprt->getGlobalBounds();
 	rect_collis->setBounds(IntRect(sprt->getGlobalBounds().left + 140, sprt->getGlobalBounds().top, 165, sprt->getGlobalBounds().height));
+	pos.x = sprt->getGlobalBounds().left;
+	pos.y = sprt->getGlobalBounds().top;
 }
 
 void __fastcall Character::move(float time, int direct = 0) noexcept {
@@ -381,8 +377,10 @@ void __fastcall Character::move(float time, int direct = 0) noexcept {
 	last_direction = direction;
 	direction = 0;
 	HP->setPosition(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2) - (HP->getSize().width / 2) + 40, sprt->getGlobalBounds().top + sprt->getGlobalBounds().height);
-	rect_chr = sprt->getGlobalBounds();
+	fl_rect = sprt->getGlobalBounds();
 	rect_collis->setBounds(IntRect(sprt->getGlobalBounds().left + 140, sprt->getGlobalBounds().top, 165, sprt->getGlobalBounds().height));
+	pos.x = sprt->getGlobalBounds().left;
+	pos.y = sprt->getGlobalBounds().top;
 }
 
 void __fastcall Character::attack(float time) {
@@ -405,10 +403,6 @@ void __fastcall Character::attack(float time) {
 		}
 		sprt->setTextureRect(IntRect(400 * int(frame) + 400, 500, -400, 250));
 	}
-}
-
-FloatRect Character::getSize() {
-	return rect_chr;
 }
 
 bool Character::isCooldown(float time) {
@@ -447,12 +441,11 @@ ObjectStatic::ObjectStatic(Image *i, float X, float Y) {
 	pos.x = X;
 	pos.y = Y;
 
-	img = i;
 	texture = new Texture;
-	texture->loadFromImage(*img);
+	texture->loadFromImage(*i);
 	sprt = new Sprite;
 	sprt->setTexture(*texture);
-	sprt->setTextureRect(IntRect(0, 0, img->getSize().x, img->getSize().y));
+	sprt->setTextureRect(IntRect(0, 0, i->getSize().x, i->getSize().y));
 	sprt->setPosition(pos.x, pos.y);
 
 	react_obj_stat = sprt->getGlobalBounds();
@@ -461,8 +454,6 @@ ObjectStatic::ObjectStatic(Image *i, float X, float Y) {
 }
 
 ObjectStatic::~ObjectStatic() {
-	sprt->~Sprite();
-	texture->~Texture();
 	delete sprt, texture;
 	delete rect_collis;
 }
@@ -509,59 +500,18 @@ void ObjectStatic::render(RenderWindow *wd) {
 ObjectAnimated::ObjectAnimated(Image* i, float X, float Y) :
 	frame(0),
 	end(false),
-	cooldown(false)
+	cooldown(false),
+	ObjectStatic(i, X, Y)
 	{	
-	pos.x = X;
-	pos.y = Y;
-
-	img = i;
-	texture = new Texture;
-	texture->loadFromImage(*img);
-	sprt = new Sprite;
-	sprt->setTexture(*texture);
-	sprt->setTextureRect(IntRect(400, 0, img->getSize().x, img->getSize().y));
+	sprt->setTextureRect(IntRect(400, 0, i->getSize().x, i->getSize().y));
 	sprt->setPosition(pos.x, pos.y);
 
-	react_obj_anim = sprt->getGlobalBounds();
+	react_obj_stat = sprt->getGlobalBounds();
 
-	rect_collis = new Collision(IntRect(pos.x, pos.y, 400, 400));
+	rect_collis->setBounds(IntRect(pos.x, pos.y, 400, 400));
 }
 
-ObjectAnimated::~ObjectAnimated() {
-	sprt->~Sprite();
-	texture->~Texture();
-	delete sprt, texture;
-	delete rect_collis;
-}
-
-axes_i ObjectAnimated::getPosition() {
-	return pos;
-}
-
-FloatRect ObjectAnimated::getSize() {
-	return react_obj_anim;
-}
-
-void ObjectAnimated::setRect(FloatRect rect) {
-	
-}
-
-void __fastcall ObjectAnimated::setPosition(int x, int y) {
-	pos.x = x;
-	pos.y = y;
-}
-
-void ObjectAnimated::setPosition(axes_i xy) {
-	pos = xy;
-}
-
-void ObjectAnimated::render(RenderWindow& wd) {
-	wd.draw(*sprt);
-}
-
-void ObjectAnimated::render(RenderWindow* wd) {
-	wd->draw(*sprt);
-}
+ObjectAnimated::~ObjectAnimated() {}
 
 void __fastcall ObjectAnimated::update(float time) {
 	frame += 0.022 * time;
@@ -580,7 +530,7 @@ void __fastcall ObjectAnimated::update(float time) {
 		sprt->setTextureRect(IntRect(400 * (int(frame) - 18), 1200, 400, 400));
 	}
 
-	react_obj_anim = sprt->getGlobalBounds();
+	react_obj_stat = sprt->getGlobalBounds();
 }
 // -------------------------------Анимированный-объект-ObjectAnimated-Конец-------------------------------
 
@@ -2317,22 +2267,11 @@ void _interface::min_bar::render(RenderWindow *wd) noexcept {
 //-----------------------------Мини-полоса-min_bar-Конец-----------------------------------------
 
 //-----------------------------------Разрушитель-замков-DestroerCastle-Начало-----------------------------------------
-DestroerCastle::DestroerCastle(Image *ptr_on_img, float X_POS, float Y_POS, int hp) :
-	cooldown(false),
-	isDead(false),
-	zeroing(false),
-	timer_cooldown(0),
-	health(hp)
+DestroerCastle::DestroerCastle(Image* ptr_on_img, float X_POS, float Y_POS, int hp) :
+	BaseCharacter(ptr_on_img, X_POS, Y_POS, hp)
 	{
-	pos.x = X_POS;
-	pos.y = Y_POS;
-	texture = new Texture;
-	texture->loadFromImage(*ptr_on_img);
-	sprt = new Sprite;
-	sprt->setTexture(*texture);
 	sprt->setTextureRect(IntRect(0, 0, 600, 350));
 	sprt->setPosition(pos.x, pos.y);
-	frame = 0;
 	direction = 0;
 	last_direction = direction;
 
@@ -2342,11 +2281,7 @@ DestroerCastle::DestroerCastle(Image *ptr_on_img, float X_POS, float Y_POS, int 
 DestroerCastle::~DestroerCastle() {
 	//sprt->~Sprite();
 	//texture->~Texture();
-	delete texture, sprt, HP;
-}
-
-axes_f DestroerCastle::getPosition() noexcept {
-	return pos;
+	delete HP;
 }
 
 void __fastcall DestroerCastle::setPosition(float X, float Y) noexcept {
@@ -2400,7 +2335,9 @@ void __fastcall DestroerCastle::move(float time, int direct) noexcept {
 	last_direction = direction;
 	direction = 0;
 	HP->setPosition(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2) - (HP->getSize().width / 2), sprt->getGlobalBounds().top + sprt->getGlobalBounds().height);
-	rect_chr = sprt->getGlobalBounds();
+	fl_rect = sprt->getGlobalBounds();
+	pos.x = sprt->getGlobalBounds().left;
+	pos.y = sprt->getGlobalBounds().top;
 }
 
 void __fastcall DestroerCastle::attack(float time) {
@@ -2423,10 +2360,6 @@ void __fastcall DestroerCastle::attack(float time) {
 		}
 		sprt->setTextureRect(IntRect(600 * int(frame), 350, 600, 350));
 	}
-}
-
-FloatRect DestroerCastle::getSize() {
-	return rect_chr;
 }
 
 bool DestroerCastle::isCooldown(float time) {
@@ -2460,25 +2393,14 @@ void DestroerCastle::render(RenderWindow *wd) noexcept {
 
 //-----------------------------------------Копейщик-Spearman-Начало------------------------------------------
 Spearman::Spearman(Image *ptr_on_img, float X_POS, float Y_POS, int hp) :
-	cooldown(false),
-	isDead(false),
-	zeroing(false),
-	timer_cooldown(0),
-	health(hp)
+	BaseCharacter(ptr_on_img, X_POS, Y_POS, hp)
 	{
-	pos.x = X_POS;
-	pos.y = Y_POS;
-	texture = new Texture;
-	texture->loadFromImage(*ptr_on_img);
-	sprt = new Sprite;
-	sprt->setTexture(*texture);
 	sprt->setTextureRect(IntRect(0, 0, 600, 350));
 	sprt->setPosition(pos.x, pos.y);
-	frame = 0;
 	direction = 0;
 	last_direction = direction;
 
-	rect_spr = sprt->getGlobalBounds();
+	fl_rect = sprt->getGlobalBounds();
 	rect_collis = new Collision(IntRect(sprt->getGlobalBounds().left + 120, sprt->getGlobalBounds().top, 115, sprt->getGlobalBounds().height / 2));
 
 	HP = new _interface::min_bar(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2), sprt->getGlobalBounds().top + sprt->getGlobalBounds().height, health, 0, Color::Black, Color::Red);
@@ -2487,11 +2409,7 @@ Spearman::Spearman(Image *ptr_on_img, float X_POS, float Y_POS, int hp) :
 Spearman::~Spearman() {
 	//sprt->~Sprite();
 	//texture->~Texture();
-	delete texture, sprt, rect_collis, HP;
-}
-
-axes_f Spearman::getPosition() noexcept {
-	return pos;
+	delete rect_collis, HP;
 }
 
 void __fastcall Spearman::setPosition(float X, float Y) noexcept {
@@ -2499,7 +2417,7 @@ void __fastcall Spearman::setPosition(float X, float Y) noexcept {
 	pos.y = Y;
 
 	sprt->setPosition(pos.x, pos.y);
-	rect_spr = sprt->getGlobalBounds();
+	fl_rect = sprt->getGlobalBounds();
 	rect_collis->setPosition(pos.x + 120, pos.y);
 }
 
@@ -2507,7 +2425,7 @@ void Spearman::setPosition(axes_f XY) noexcept {
 	pos = XY;
 
 	sprt->setPosition(pos.x, pos.y);
-	rect_spr = sprt->getGlobalBounds();
+	fl_rect = sprt->getGlobalBounds();
 	rect_collis->setPosition(pos.x + 120, pos.y);
 }
 
@@ -2549,8 +2467,10 @@ void __fastcall Spearman::move(float time, int direct) noexcept {
 	last_direction = direction;
 	direction = 0;
 	HP->setPosition(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2) - (HP->getSize().width / 2) + 30, sprt->getGlobalBounds().top + sprt->getGlobalBounds().height);
-	rect_spr = sprt->getGlobalBounds();
+	fl_rect = sprt->getGlobalBounds();
 	rect_collis->setBounds(IntRect(sprt->getGlobalBounds().left + 120, sprt->getGlobalBounds().top, 115, sprt->getGlobalBounds().height / 2));
+	pos.x = sprt->getGlobalBounds().left;
+	pos.y = sprt->getGlobalBounds().top;
 }
 
 void __fastcall Spearman::attack(float time) {
@@ -2573,10 +2493,6 @@ void __fastcall Spearman::attack(float time) {
 		}
 		sprt->setTextureRect(IntRect(300 * int(frame) + 300, 180, -300, 180));
 	}
-}
-
-FloatRect Spearman::getSize() {
-	return rect_spr;
 }
 
 bool Spearman::isCooldown(float time) {
@@ -2646,24 +2562,13 @@ void _interface::background_color::render(RenderWindow *wd) noexcept {
 
 //---------------------------------------Ледяной-шар-IceBall-Начало------------------------------------------
 IceBall::IceBall(Image *ptr_on_img, float X_POS, float Y_POS, int hp) :
-	cooldown(false),
-	isDead(false),
-	zeroing(false),
-	visible(true),
-	timer_cooldown(0),
-	health(hp)
+	BaseCharacter(ptr_on_img, X_POS, Y_POS, hp)
 	{
-	pos.x = X_POS;
-	pos.y = Y_POS;
-	texture = new Texture;
-	texture->loadFromImage(*ptr_on_img);
-	sprt = new Sprite;
-	sprt->setTexture(*texture);
+	visible = true;
 	sprt->setTextureRect(IntRect(0, 0, 400, 120));
 	sprt->setPosition(pos.x, pos.y);
-	frame = 0;
 
-	rect_spr = sprt->getGlobalBounds();
+	fl_rect = sprt->getGlobalBounds();
 	rect_collis = new Collision(IntRect(sprt->getGlobalBounds().left, sprt->getGlobalBounds().top, 120, sprt->getGlobalBounds().height));
 
 	HP = new _interface::min_bar(rect_collis->getBounds().left + (rect_collis->getBounds().width / 2) - 70, sprt->getGlobalBounds().top + sprt->getGlobalBounds().height, health, 0, Color::Black, Color::Green);
@@ -2672,11 +2577,7 @@ IceBall::IceBall(Image *ptr_on_img, float X_POS, float Y_POS, int hp) :
 IceBall::~IceBall() {
 	//sprt->~Sprite();
 	//texture->~Texture();
-	delete texture, sprt, rect_collis, HP;
-}
-
-axes_f IceBall::getPosition() noexcept {
-	return pos;
+	delete rect_collis, HP;
 }
 
 void __fastcall IceBall::setPosition(float X, float Y) noexcept {
@@ -2684,7 +2585,7 @@ void __fastcall IceBall::setPosition(float X, float Y) noexcept {
 	pos.y = Y;
 
 	sprt->setPosition(pos.x, pos.y);
-	rect_spr = sprt->getGlobalBounds();
+	fl_rect = sprt->getGlobalBounds();
 	rect_collis->setPosition(pos.x, pos.y);
 }
 
@@ -2692,7 +2593,7 @@ void IceBall::setPosition(axes_f XY) noexcept {
 	pos = XY;
 
 	sprt->setPosition(pos.x, pos.y);
-	rect_spr = sprt->getGlobalBounds();
+	fl_rect = sprt->getGlobalBounds();
 	rect_collis->setPosition(pos.x, pos.y);
 }
 
@@ -2716,10 +2617,6 @@ void __fastcall IceBall::update(float time) noexcept {
 		}
 		sprt->setTextureRect(IntRect(400 * int(frame), 0, 400, 120));
 	}	
-}
-
-FloatRect IceBall::getSize() {
-	return rect_spr;
 }
 
 bool IceBall::isCooldown(float time) {
@@ -2756,3 +2653,84 @@ void IceBall::render(RenderWindow *wd) noexcept {
 	}
 }
 //--------------------------------------Ледяной-шар-IceBall-Конец------------------------------------------
+
+//--------------------------------База-Интерфейса-BaseInterface-Начало------------------------------------------
+BaseCharacter::BaseCharacter() :
+	pos(axes_f(0, 0)),
+	health(0),
+	visible(true),
+	cooldown(false),
+	isDead(false),
+	zeroing(false),
+	timer_cooldown(0),
+	frame(0)
+	{
+	texture = new Texture;
+	sprt = new Sprite;
+}
+
+BaseCharacter::BaseCharacter(Image* i, int x, int y, int _hp) : 
+	pos(x, y),
+	health(_hp),
+	visible(true),
+	cooldown(false),
+	isDead(false),
+	zeroing(false),
+	timer_cooldown(0),
+	frame(0)
+	{
+	texture = new Texture;
+	texture->loadFromImage(*i);
+	sprt = new Sprite;
+	sprt->setTexture(*texture);
+}
+
+BaseCharacter::BaseCharacter(Image* i, axes_f xy, int _hp) :
+	pos(xy),
+	health(_hp),
+	visible(true),
+	cooldown(false),
+	isDead(false),
+	zeroing(false),
+	timer_cooldown(0),
+	frame(0)
+	{
+	texture = new Texture;
+	texture->loadFromImage(*i);
+	sprt = new Sprite;
+	sprt->setTexture(*texture);
+}
+
+BaseCharacter::~BaseCharacter() {
+	delete sprt, texture;
+}
+
+axes_f BaseCharacter::getPosition() {
+	return pos;
+}
+
+FloatRect BaseCharacter::getSize() {
+	return fl_rect;
+}
+
+void BaseCharacter::setPosition(int x, int y) {
+	pos.x = x;
+	pos.y = y;
+}
+
+void BaseCharacter::setPosition(axes_f xy) {
+	pos = xy;
+}
+
+void BaseCharacter::render(RenderWindow &wd) {
+	if (visible) {
+		wd.draw(*sprt);
+	}
+}
+
+void BaseCharacter::render(RenderWindow *wd) {
+	if (visible) {
+		wd->draw(*sprt);
+	}
+}
+//--------------------------------База-Интерфейса-BaseInterface-Конец------------------------------------------

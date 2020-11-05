@@ -55,13 +55,15 @@ enum direcrion8{
 	downAndLeft
 };
 
-struct axes_f {
-	float x, y;
+template<typename type>
+struct axes {
+	type x, y;
+	axes();
+	axes(type _x, type _y);
 };
 
-struct axes_i {
-	int x, y;
-};
+typedef axes<int> axes_i;
+typedef axes<float> axes_f;
 
 class Camer {
 private:
@@ -161,17 +163,32 @@ class Collision {
 
 typedef Collision Trigger;
 
-class Base {
+class BaseCharacter {
 	protected:
+		axes_f pos;
+		Texture *texture;
+		Sprite *sprt;
+		FloatRect fl_rect;
+		float frame, timer_cooldown;
+		bool zeroing;
 	public:
-		Base() {}
-		~Base() {}
+		BaseCharacter();
+		BaseCharacter(Image *i, int x, int y, int _hp);
+		BaseCharacter(Image* i, axes_f xy, int _hp);
+		~BaseCharacter();
+		bool cooldown, isDead, visible;
+		int health;
+		virtual axes_f getPosition();
+		virtual void __fastcall setPosition(int x, int y);
+		virtual void __fastcall setPosition(axes_f xy);
+		virtual FloatRect getSize();
+		virtual void render(RenderWindow& wd);
+		virtual void render(RenderWindow* wd);
 };
 
 class ObjectStatic {
-	private:
+	protected:
 		axes_i pos;
-		Image *img;
 		Texture *texture;
 		Sprite *sprt;
 		FloatRect react_obj_stat;
@@ -190,42 +207,36 @@ class ObjectStatic {
 		/// Возвращает позицию 
 		/// </summary>
 		/// <returns>Структура axes_i</returns>
-		axes_i getPosition();
+		virtual axes_i getPosition();
 		/// <summary>
 		/// Возвращает данные о хитбоке: ширина, высота, функции проверки пересечения
 		/// </summary>
 		/// <returns>Структура IntRect</returns>
-		FloatRect getSize();
+		virtual FloatRect getSize();
 		/// <summary>
 		/// Устанавливает новые данные о хитбоксе
 		/// </summary>
 		/// <param name="bound">Струткура IntRect с новыми параметрами</param>
-		void setRect(IntRect bound);
+		virtual void setRect(IntRect bound);
 		/// <summary>
 		/// Устанавливает позицию хитбокса по осям X и Y
 		/// </summary>
 		/// <param name="x">Ось X</param>
 		/// <param name="y">Ось Y</param>
-		void __fastcall setPosition(int x, int y);
+		virtual void __fastcall setPosition(int x, int y);
 		/// <summary>
 		/// Устанавливает позицию хитбокса по осям X и Y
 		/// </summary>
 		/// <param name="xy">Структура axes_i</param>
-		void setPosition(axes_i xy);
-		void render(RenderWindow &wd);
-		void render(RenderWindow *wd);
+		virtual void setPosition(axes_i xy);
+		virtual void render(RenderWindow &wd);
+		virtual void render(RenderWindow *wd);
 };
 
-class ObjectAnimated {
+class ObjectAnimated : public ObjectStatic {
 	private:
 		float frame;
-		axes_i pos;
-		Image *img;
-		Texture *texture;
-		Sprite *sprt;
-		FloatRect react_obj_anim;
 	public:
-		Collision *rect_collis;
 		bool end, cooldown;
 		/// <summary>
 		/// Конструктор
@@ -241,34 +252,6 @@ class ObjectAnimated {
 		/// </summary>
 		/// <param name="time">Время, чем больше переменная, тем быстрее происходит обновление</param>
 		void __fastcall update(float time);
-		/// <summary>
-		/// Возвращает позицию 
-		/// </summary>
-		/// <returns>Структура axes_i</returns>
-		axes_i getPosition();
-		/// <summary>
-		/// Возвращает данные о хитбоке: ширина, высота, функции проверки пересечения
-		/// </summary>
-		/// <returns>Структура IntRect</returns>
-		FloatRect getSize();
-		/// <summary>
-		/// Устанавливает новые данные о хитбоксе
-		/// </summary>
-		/// <param name="rect">Струткура IntRect с новыми параметрами</param>
-		void setRect(FloatRect rect);
-		/// <summary>
-		/// Устанавливает позицию хитбокса по осям X и Y
-		/// </summary>
-		/// <param name="x">Ось X</param>
-		/// <param name="y">Ось Y</param>
-		void __fastcall setPosition(int x, int y);
-		/// <summary>
-		/// Устанавливает позицию хитбокса по осям X и Y
-		/// </summary>
-		/// <param name="xy">Структура axes_i</param>
-		void setPosition(axes_i xy);
-		void render(RenderWindow& wd);
-		void render(RenderWindow* wd);
 };
 
 namespace _interface {
@@ -720,23 +703,14 @@ namespace _interface {
 
 }; //конец пространства имен 
 
-class Character { //TODO dx, dy, speed, 
+class Character : public BaseCharacter { //TODO dx, dy, speed, 
 	private:
-		axes_f pos;
-		float frame, timer_cooldown; // pos_x pos_y координата объекта по оси Y, координата объекта по оси X, значение кадра для смены спрайта 
 		int direction, last_direction; //ширина изображения, высота изображения, положение спрайта по оси X, положение спрайта по оси Y, направление движения персонажа 
-		Texture* texture;
-		Sprite* sprt;
 		_interface::min_bar* HP;
-		FloatRect rect_chr;
-		bool zeroing;
 	public:
 		Collision* rect_collis;
-		int health;
-		bool cooldown, isDead;
 		Character(Image* ptr_on_img, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
 		~Character(); //деструктор
-		axes_f getPosition() noexcept; //возвращает координаты спрайта по оси X и Y
 		void __fastcall setPosition(float X, float Y) noexcept; //устанавливает позицию спрайта по осям X, Y
 		void setPosition(axes_f XY) noexcept; //устанавливает позицию спрайта по осям X, Y
 		void setImage(Image *ptr_on_img);
@@ -745,28 +719,18 @@ class Character { //TODO dx, dy, speed,
 		void __fastcall move(float time, int direct) noexcept; //перезаписывает положение спрайта
 		void __fastcall move(float time) noexcept; //перезаписывает положение спрайта
 		void __fastcall attack(float time);
-		FloatRect getSize();
 		bool isCooldown(float time);
 		void render(RenderWindow& wd) noexcept;
 		void render(RenderWindow* wd) noexcept;
 };	
 
-class DestroerCastle {
+class DestroerCastle : public BaseCharacter {
 	private:
-		axes_f pos;
-		float frame, timer_cooldown; // pos_x pos_y координата объекта по оси Y, координата объекта по оси X, значение кадра для смены спрайта 
 		int direction, last_direction; //ширина изображения, высота изображения, положение спрайта по оси X, положение спрайта по оси Y, направление движения персонажа 
-		Texture* texture;
-		Sprite* sprt;
 		_interface::min_bar* HP;
-		FloatRect rect_chr;
-		bool zeroing;
 	public:
-		int health;
-		bool cooldown, isDead;
 		DestroerCastle(Image *ptr_on_img, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
 		~DestroerCastle(); //деструктор
-		axes_f getPosition() noexcept; //возвращает координаты спрайта по оси X и Y
 		void __fastcall setPosition(float X, float Y) noexcept; //устанавливает позицию спрайта по осям X, Y
 		void setPosition(axes_f XY) noexcept; //устанавливает позицию спрайта по осям X, Y
 		//float getPositionX_forCamer() noexcept; //возвращает центр координата спрайта по оси X
@@ -774,60 +738,38 @@ class DestroerCastle {
 		void __fastcall move(float time, int direct) noexcept; //перезаписывает положение спрайта
 		//void move(float time) noexcept; //перезаписывает положение спрайта
 		void __fastcall attack(float time);
-		FloatRect getSize();
 		bool isCooldown(float time);
 		void render(RenderWindow& wd) noexcept;
 		void render(RenderWindow* wd) noexcept;
 };
 
-class Spearman {
+class Spearman : public BaseCharacter {
 	private:
-		axes_f pos;
-		float frame, timer_cooldown; // pos_x pos_y координата объекта по оси Y, координата объекта по оси X, значение кадра для смены спрайта 
 		int direction, last_direction; //ширина изображения, высота изображения, положение спрайта по оси X, положение спрайта по оси Y, направление движения персонажа 
-		String pathFromFile;
-		Texture* texture;
-		Sprite* sprt;
 		_interface::min_bar* HP;
-		FloatRect rect_spr;	
-		bool zeroing;
 	public:
 		Collision* rect_collis;
-		int health;
-		bool cooldown, isDead;
 		Spearman(Image *ptr_on_img, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
 		~Spearman(); //деструктор
-		axes_f getPosition() noexcept; //возвращает координаты спрайта по оси X и Y
 		void __fastcall setPosition(float X, float Y) noexcept; //устанавливает позицию спрайта по осям X, Y
 		void setPosition(axes_f XY) noexcept; //устанавливает позицию спрайта по осям X, Y
 		void __fastcall move(float time, int direct) noexcept; //перезаписывает положение спрайта
 		void __fastcall attack(float time);
-		FloatRect getSize();
 		bool isCooldown(float time);
 		void render(RenderWindow& wd) noexcept;
 		void render(RenderWindow* wd) noexcept;
 };
 
-class IceBall {
+class IceBall : public BaseCharacter {
 	private:
-		axes_f pos;
-		float frame, timer_cooldown; // pos_x pos_y координата объекта по оси Y, координата объекта по оси X, значение кадра для смены спрайта 
-		Texture* texture;
-		Sprite* sprt;
 		_interface::min_bar* HP;
-		FloatRect rect_spr;
-		bool zeroing;
 	public:
 		Collision* rect_collis;
-		bool cooldown, isDead, visible;
-		int health;
 		IceBall(Image *ptr_on_img, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
 		~IceBall(); //деструктор
-		axes_f getPosition() noexcept; //возвращает координаты спрайта по оси X и Y
 		void __fastcall setPosition(float X, float Y) noexcept; //устанавливает позицию спрайта по осям X, Y
 		void setPosition(axes_f XY) noexcept; //устанавливает позицию спрайта по осям X, Y
 		void __fastcall update(float time) noexcept; //перезаписывает положение спрайта
-		FloatRect getSize();
 		bool isCooldown(float time);
 		void render(RenderWindow& wd) noexcept;
 		void render(RenderWindow* wd) noexcept;
