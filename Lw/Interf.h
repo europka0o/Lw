@@ -256,6 +256,20 @@ class ObjectAnimated : public ObjectStatic {
 
 namespace _interface {
 
+	class BaseInerface {
+		protected:
+			axes_i pos;
+			FloatRect fl_rect;
+		public:
+			BaseInerface();
+			~BaseInerface();
+			bool visible;
+			virtual axes_i getPosition();
+			virtual void setPosition(axes_i xy);
+			virtual void __fastcall setPosition(int x, int y);
+			virtual FloatRect getSize();
+	};
+
 	enum gradient_direction {
 		leftOnRight,
 		rightOnLeft,

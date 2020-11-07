@@ -2654,7 +2654,7 @@ void IceBall::render(RenderWindow *wd) noexcept {
 }
 //--------------------------------------Ледяной-шар-IceBall-Конец------------------------------------------
 
-//--------------------------------База-Интерфейса-BaseInterface-Начало------------------------------------------
+//--------------------------------База-Характера-BaseCharacter-Начало------------------------------------------
 BaseCharacter::BaseCharacter() :
 	pos(axes_f(0, 0)),
 	health(0),
@@ -2732,5 +2732,35 @@ void BaseCharacter::render(RenderWindow *wd) {
 	if (visible) {
 		wd->draw(*sprt);
 	}
+}
+//--------------------------------База-Характера-BaseCharacter-Конец------------------------------------------
+
+//--------------------------------База-Интерфейса-BaseInterface-Начало------------------------------------------
+_interface::BaseInerface::BaseInerface() : 
+	pos(axes_i(0, 0)),
+	visible(true)
+	{
+
+}
+
+_interface::BaseInerface::~BaseInerface() {
+
+}
+
+axes_i _interface::BaseInerface::getPosition() {
+	return pos;
+}
+
+void _interface::BaseInerface::setPosition(axes_i xy) {
+	pos = xy;
+}
+
+void _interface::BaseInerface::setPosition(int x, int y) {
+	pos.x = x;
+	pos.y = y;
+}
+
+FloatRect _interface::BaseInerface::getSize() {
+	return fl_rect;
 }
 //--------------------------------База-Интерфейса-BaseInterface-Конец------------------------------------------
