@@ -17,9 +17,6 @@ unsigned int screen_height = GetSystemMetrics(SM_CYSCREEN);
 using namespace sf;
 using namespace std;
 
-#define CENTER_SCREEN_X screen_width / 2 
-#define CENTER_SCREEN_Y screen_height / 2 
-
 enum lvlnum {
 	LvlRun = 1,
 	lvlTraining,
@@ -39,6 +36,8 @@ class Game {
 		Image *ptr_on_image_ice; //"Img/ice.png"
 		sf::Vector2i pos;
 		sf::Vector2f realPos;
+		uint32_t CENTER_SCREEN_X;
+		uint32_t CENTER_SCREEN_Y;
 	public:
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		Game() {
@@ -63,6 +62,8 @@ class Game {
 			ptr_on_image_ice = new Image;
 			ptr_on_image_ice->loadFromFile("Img/ice.png");
 
+			CENTER_SCREEN_X = config->screenWidth / 2;
+			CENTER_SCREEN_Y = config->screenHeight / 2;
 		}
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		~Game() {
@@ -198,7 +199,7 @@ class Game {
 			MainWrd = new World("Img/untitled.png", 60, 60);
 			mlt = new _interface::multiline_text(100, 200, Color::Black, Color::Yellow);
 			mlt->resize(_interface::text_size::normal);
-			Camera = new Camer(CENTER_SCREEN_X, CENTER_SCREEN_Y, screen_width, screen_height);
+			Camera = new Camer(CENTER_SCREEN_X, CENTER_SCREEN_Y, config->screenWidth, config->screenHeight);
 
 			Castle = new ObjectStatic(ptr_on_image_castle, 0, 0); //замок
 			Castle->setRect(IntRect(0, 0, 400, 1500));
