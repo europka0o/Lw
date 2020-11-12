@@ -652,13 +652,11 @@ void World::render(RenderWindow *wd) noexcept {
 
 //-----------------------------------Полоса-bar-Начало-------------------------------------
 _interface::bar::bar(int x = 0, int y = 0, int br_ma = 100, int br_mi = 0, std::wstring name = L"ERR:", Color mcol = Color::White, Color bcol = Color::Red, Color tcol = Color::Black) :
+	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	max_bar(br_ma),
 	min_bar(br_mi),
-	curr_bar(br_ma),
-	visible(true)
+	curr_bar(br_ma)
 	{
-	pos.x = x;
-	pos.y = y;
 	font_main = new Font;
 	font_main->loadFromFile("Img/18094.ttf");
 	label = new Text;
@@ -679,17 +677,15 @@ _interface::bar::bar(int x = 0, int y = 0, int br_ma = 100, int br_mi = 0, std::
 	bevel->setFillColor(bcol);
 	bevel->setPosition(label->getGlobalBounds().width + 10 + 5, pos.y + 5);
 
-	rect_br = main->getGlobalBounds();
+	fl_rect = main->getGlobalBounds();
 }
 
 _interface::bar::bar() :
+	BaseInerface(0, 0, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	max_bar(100),
 	min_bar(0),
-	curr_bar(100),
-	visible(false)
+	curr_bar(100)
 	{
-	pos.x = 0;
-	pos.y = 0;
 	font_main = new Font;
 	label = new Text;
 	main = new RectangleShape;
@@ -734,28 +730,20 @@ void __fastcall _interface::bar::setPosition(int x, int y) noexcept {
 	label->setPosition(pos.x, pos.y);
 	label->setPosition(repoz_x(float, pos.x, label->getGlobalBounds().left, 5), repoz_y(float, pos.y, label->getGlobalBounds().top, 5));
 
-	rect_br = main->getGlobalBounds();
+	fl_rect = main->getGlobalBounds();
 }
 
-void _interface::bar::setPosition(axes_i xy) noexcept {
+void _interface::bar::setPosition(const axes_i &xy) noexcept {
 	pos = xy;
 	main->setPosition(pos.x, pos.y);
 	bevel->setPosition(pos.x + label->getGlobalBounds().width + 10 + 5, pos.y + 5);
 	label->setPosition(pos.x, pos.y);
 	label->setPosition(repoz_x(float, pos.x, label->getGlobalBounds().left, 5), repoz_y(float, pos.y, label->getGlobalBounds().top, 5));
 
-	rect_br = main->getGlobalBounds();
+	fl_rect = main->getGlobalBounds();
 }
 
-axes_i _interface::bar::getPosition() noexcept {
-	return pos;
-}
-
-FloatRect _interface::bar::getSize() {
-	return rect_br;
-}
-
-void _interface::bar::freeze(Camer *camera, axes_i xy) {
+void _interface::bar::freeze(Camer *camera, const axes_i &xy) {
 	this->setPosition(camera->getPosition().x - (camera->getScreenWidth() / 2) + xy.x, camera->getPosition().y - (camera->getScreenHeight() / 2) + xy.y);
 }
 
@@ -771,17 +759,15 @@ void _interface::bar::resize(int size = normal) noexcept {
 	bevel->setSize(Vector2f((400 * curr_bar) / max_bar, label->getGlobalBounds().height));
 	bevel->setPosition(label->getGlobalBounds().width + 10 + 5, pos.y + 5);
 
-	rect_br = main->getGlobalBounds();
+	fl_rect = main->getGlobalBounds();
 }
 //-----------------------------------Полоса-bar-Конец--------------------------------------
 
 //-----------------------------------Текст-text-Начало-------------------------------------
 _interface::text::text(int x = 0, int y = 0, std::wstring txt = L"ERR:", Color lbcol = Color::White, Color bvcol = Color::Black) :
-	visible(true),
+	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	visible_bevel(true)
 	{
-	pos.x = x;
-	pos.y = y;
 	font_main = new Font;
 	font_main->loadFromFile("Img/18094.ttf");
 	label = new Text;
@@ -802,7 +788,7 @@ _interface::text::text(int x = 0, int y = 0, std::wstring txt = L"ERR:", Color l
 	bevel->setFillColor(*bevel_cl);
 	bevel->setPosition(pos.x ,pos.y);
 
-	rect_tx = bevel->getGlobalBounds();
+	fl_rect = bevel->getGlobalBounds();
 }
 
 _interface::text::~text() {
@@ -818,15 +804,13 @@ void _interface::text::setFont(String txt) noexcept {
 	font_main->loadFromFile(txt);
 }
 
-axes_i _interface::text::getPosition() noexcept { 
-	return pos;
-}
-
-void _interface::text::setPosition(axes_i xy) noexcept {
+void _interface::text::setPosition(const axes_i &xy) noexcept {
 	pos = xy;
 	bevel->setPosition(pos.x, pos.y);
 	label->setPosition(pos.x, pos.y);
 	label->setPosition(repoz_x(int, pos.x, label->getGlobalBounds().left, 5), repoz_y(int, pos.y, label->getGlobalBounds().top, 5));
+
+	fl_rect = bevel->getGlobalBounds();
 }
 
 void __fastcall _interface::text::setPosition(int x, int y) noexcept {
@@ -836,7 +820,7 @@ void __fastcall _interface::text::setPosition(int x, int y) noexcept {
 	label->setPosition(pos.x, pos.y);
 	label->setPosition(repoz_x(int, pos.x, label->getGlobalBounds().left, 5), repoz_y(int, pos.y, label->getGlobalBounds().top, 5));
 
-	rect_tx = bevel->getGlobalBounds();
+	fl_rect = bevel->getGlobalBounds();
 }
 
 void _interface::text::resize(int size = normal) noexcept {
@@ -844,18 +828,16 @@ void _interface::text::resize(int size = normal) noexcept {
 	label->setPosition(pos.x, pos.y);
 	label->setPosition(repoz_x(int, pos.x, label->getGlobalBounds().left, 5), repoz_y(int, pos.y, label->getGlobalBounds().top, 5));
 	bevel->setSize(Vector2f(label->getGlobalBounds().width + 10, label->getGlobalBounds().height + 10));
+
+	fl_rect = bevel->getGlobalBounds();
 }
 
-void _interface::text::freeze(Camer* camera, axes_i xy) {
+void _interface::text::freeze(Camer* camera, const axes_i &xy) {
 	this->setPosition(camera->getPosition().x - (camera->getScreenHeight() / 2) + xy.x, camera->getPosition().y - (camera->getScreenWidth() / 2) + xy.y);
 }
 
 void _interface::text::freeze(Camer* camera, int x, int y) {
 	this->setPosition(camera->getPosition().x - (camera->getScreenHeight() / 2) + x, camera->getPosition().y - (camera->getScreenWidth() / 2) + y);
-}
-
-FloatRect _interface::text::getSize() {
-	return rect_tx;
 }
 
 void _interface::text::render(RenderWindow &wd) noexcept {
@@ -1019,7 +1001,7 @@ void _interface::multiline_text::render(RenderWindow *wd) noexcept {
 
 //-----------------------------------Кнопка-button-Начало-------------------------------------
 _interface::button::button(int x, int y, std::wstring text, Color maincl, Color textcl, Color activecl) : 
-	visible(true),
+	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	active(false)
 	{
 	pos.x = x;
@@ -1053,30 +1035,20 @@ _interface::button::button(int x, int y, std::wstring text, Color maincl, Color 
 	active_bvl->setFillColor(*active_cl);
 	active_bvl->setPosition(pos.x - 5, pos.y - 5);
 
-	rect_bt = main->getGlobalBounds();
+	fl_rect = main->getGlobalBounds();
 }
 
 _interface::button::~button() {
-	main->~RectangleShape();
-	active_bvl->~RectangleShape();
 	delete main, active_bvl, txt, font, active_cl, main_cl, txt_cl;
 }
 
-axes_i _interface::button::getPosition() {
-	return pos;
-}
-
-FloatRect _interface::button::getSize() {
-	return rect_bt;
-}
-
-void _interface::button::setPosition(axes_i xy) {
+void _interface::button::setPosition(const axes_i &xy) {
 	pos = xy;
 	txt->setPosition(pos.x, pos.y);
 	txt->setPosition(repoz_x(int, pos.x, txt->getGlobalBounds().left, 5), repoz_y(int, pos.y, txt->getGlobalBounds().top, 5));
 	main->setPosition(pos.x, pos.y);
 	active_bvl->setPosition(pos.x - 5, pos.y - 5);
-	rect_bt = main->getGlobalBounds();
+	fl_rect = main->getGlobalBounds();
 }
 
 void __fastcall _interface::button::setPosition(int x, int y) {
@@ -1086,7 +1058,7 @@ void __fastcall _interface::button::setPosition(int x, int y) {
 	txt->setPosition(repoz_x(int, pos.x, txt->getGlobalBounds().left, 5), repoz_y(int, pos.y, txt->getGlobalBounds().top, 5));
 	main->setPosition(pos.x, pos.y);
 	active_bvl->setPosition(pos.x - 5, pos.y - 5);
-	rect_bt = main->getGlobalBounds();
+	fl_rect = main->getGlobalBounds();
 }
 
 void _interface::button::render(RenderWindow &wd) noexcept {
@@ -1115,25 +1087,25 @@ void _interface::button::resize(int size) {
 	txt->setPosition(repoz_x(int, pos.x, txt->getGlobalBounds().left, 5), repoz_y(int, pos.y, txt->getGlobalBounds().top, 5));
 	main->setSize(Vector2f(txt->getGlobalBounds().width + 10, txt->getGlobalBounds().height + 10));
 	active_bvl->setSize(Vector2f(main->getGlobalBounds().width + 10, main->getGlobalBounds().height + 10));
-	rect_bt = main->getGlobalBounds();
+	fl_rect = main->getGlobalBounds();
 }
 
-void _interface::button::freeze(Camer* camera, axes_i xy) {
+void _interface::button::freeze(Camer *camera, const axes_i &xy) {
 	this->setPosition(camera->getPosition().x - (camera->getScreenHeight() / 2) + xy.x, camera->getPosition().y - (camera->getScreenWidth() / 2) + xy.y);
 
 }
 
-void _interface::button::freeze(Camer* camera, int x, int y) {
+void _interface::button::freeze(Camer *camera, int x, int y) {
 	this->setPosition(camera->getPosition().x - (camera->getScreenHeight() / 2) + x, camera->getPosition().y - (camera->getScreenWidth() / 2) + y);
 }
 
 bool __fastcall _interface::button::isAction(int x, int y) {
-	rect_bt.contains(x, y) ? active = true : active = false;
+	fl_rect.contains(x, y) ? active = true : active = false;
 	return active;
 }
 
-bool _interface::button::isAction(axes_i xy) {
-	rect_bt.contains(xy.x, xy.y) ? active = true : active = false;
+bool _interface::button::isAction(const axes_i &xy) {
+	fl_rect.contains(xy.x, xy.y) ? active = true : active = false;
 	return active;
 }
 //-----------------------------------Кнопка-button-Конец--------------------------------------
@@ -1245,11 +1217,9 @@ void _interface::menu::render(RenderWindow *wd, Camer *camera) noexcept {
 
 //------------------------------Чекбокс-check_box-Начало--------------------------------------
 _interface::check_box::check_box(int x, int y, Color maincl, Color bordercl, Color checkcl) :
-	visible(true),
+	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	isCheck(false)
 	{
-	pos.x = x;
-	pos.y = y;
 
 	main_cl = new Color;
 	*main_cl = maincl;
@@ -1272,7 +1242,7 @@ _interface::check_box::check_box(int x, int y, Color maincl, Color bordercl, Col
 	check->setFillColor(*check_cl);
 	check->setPosition(pos.x + 4, pos.y + 4);
 
-	rect_cb = border->getGlobalBounds();
+	fl_rect = border->getGlobalBounds();
 }
 
 _interface::check_box::~check_box() {
@@ -1280,17 +1250,13 @@ _interface::check_box::~check_box() {
 	delete main_cl, border_cl, check_cl;
 }
 
-axes_i _interface::check_box::getPosition() {
-	return pos;
-}
-
-void _interface::check_box::setPosition(axes_i xy) {
+void _interface::check_box::setPosition(const axes_i &xy) {
 	pos = xy;
 
 	border->setPosition(pos.x, pos.y);
 	main->setPosition(pos.x + 2, pos.y + 2);
 	check->setPosition(pos.x + 4, pos.y + 4);
-	rect_cb = border->getGlobalBounds();
+	fl_rect = border->getGlobalBounds();
 }
 
 void __fastcall _interface::check_box::setPosition(int x, int y) {
@@ -1300,11 +1266,7 @@ void __fastcall _interface::check_box::setPosition(int x, int y) {
 	border->setPosition(pos.x, pos.y);
 	main->setPosition(pos.x + 2, pos.y + 2);
 	check->setPosition(pos.x + 4, pos.y + 4);
-	rect_cb = border->getGlobalBounds();
-}
-
-FloatRect _interface::check_box::getSize() {
-	return rect_cb;
+	fl_rect = border->getGlobalBounds();
 }
 
 void _interface::check_box::render(RenderWindow &wd) noexcept {
@@ -1732,16 +1694,13 @@ void _interface::main_menu::render(RenderWindow *wd) noexcept {
 //------------------------Главное-меню-main_menu-Конец----------------------------------------
 
 //------------------------------Градиент-gradient-Начало---------------------------------------
-_interface::gradient::gradient(FloatRect rt, gradient_direction gd, Color first, Color second) :
-	visible(true)
+_interface::gradient::gradient(const FloatRect &rt, gradient_direction gd, Color first, Color second) :
+	BaseInerface(0, 0, rt)
 	{
 	rect = new sf::VertexArray;
-	rect_pos = new sf::FloatRect;
 
-	*rect_pos = rt;
-
-	pos.x = rect_pos->left; 
-	pos.y = rect_pos->top;
+	pos.x = fl_rect.left; 
+	pos.y = fl_rect.top;
 
 	rect->setPrimitiveType(sf::Quads);
 	
@@ -1774,29 +1733,25 @@ _interface::gradient::gradient(FloatRect rt, gradient_direction gd, Color first,
 		break;
 	}
 
-	rect->append(sf::Vertex(sf::Vector2f(rect_pos->left, rect_pos->top), colors[0]));
-	rect->append(sf::Vertex(sf::Vector2f(rect_pos->left + rect_pos->width, rect_pos->top), colors[1]));
-	rect->append(sf::Vertex(sf::Vector2f(rect_pos->left + rect_pos->width, rect_pos->top + rect_pos->height), colors[3]));
-	rect->append(sf::Vertex(sf::Vector2f(rect_pos->left, rect_pos->top + rect_pos->height), colors[2]));
+	rect->append(sf::Vertex(sf::Vector2f(fl_rect.left, fl_rect.top), colors[0]));
+	rect->append(sf::Vertex(sf::Vector2f(fl_rect.left + fl_rect.width, fl_rect.top), colors[1]));
+	rect->append(sf::Vertex(sf::Vector2f(fl_rect.left + fl_rect.width, fl_rect.top + fl_rect.height), colors[3]));
+	rect->append(sf::Vertex(sf::Vector2f(fl_rect.left, fl_rect.top + fl_rect.height), colors[2]));
 }
 
 _interface::gradient::~gradient() {
-	delete rect, rect_pos;
+	delete rect;
 }
 
-axes_i _interface::gradient::getPosition() {
-	return pos;
-}
-
-void _interface::gradient::setPosition(axes_i xy) {
+void _interface::gradient::setPosition(const axes_i &xy) {
 	pos = xy;
 
 	rect->clear();
 
 	rect->append(sf::Vertex(sf::Vector2f(pos.x, pos.y), colors[0]));
-	rect->append(sf::Vertex(sf::Vector2f(pos.x + rect_pos->width, pos.y), colors[1]));
-	rect->append(sf::Vertex(sf::Vector2f(pos.x + rect_pos->width, pos.y + rect_pos->height), colors[3]));
-	rect->append(sf::Vertex(sf::Vector2f(pos.x, pos.y + rect_pos->height), colors[2]));
+	rect->append(sf::Vertex(sf::Vector2f(pos.x + fl_rect.width, pos.y), colors[1]));
+	rect->append(sf::Vertex(sf::Vector2f(pos.x + fl_rect.width, pos.y + fl_rect.height), colors[3]));
+	rect->append(sf::Vertex(sf::Vector2f(pos.x, pos.y + fl_rect.height), colors[2]));
 }
 
 void __fastcall _interface::gradient::setPosition(int x, int y) {
@@ -1806,13 +1761,9 @@ void __fastcall _interface::gradient::setPosition(int x, int y) {
 	rect->clear();
 
 	rect->append(sf::Vertex(sf::Vector2f(pos.x, pos.y), colors[0]));
-	rect->append(sf::Vertex(sf::Vector2f(pos.x + rect_pos->width, pos.y), colors[1]));
-	rect->append(sf::Vertex(sf::Vector2f(pos.x + rect_pos->width, pos.y + rect_pos->height), colors[3]));
-	rect->append(sf::Vertex(sf::Vector2f(pos.x, pos.y + rect_pos->height), colors[2]));
-}
-
-FloatRect _interface::gradient::getSize() {
-	return *rect_pos;
+	rect->append(sf::Vertex(sf::Vector2f(pos.x + fl_rect.width, pos.y), colors[1]));
+	rect->append(sf::Vertex(sf::Vector2f(pos.x + fl_rect.width, pos.y + fl_rect.height), colors[3]));
+	rect->append(sf::Vertex(sf::Vector2f(pos.x, pos.y + fl_rect.height), colors[2]));
 }
 
 void _interface::gradient::render(RenderWindow &wd) noexcept {
@@ -1837,13 +1788,10 @@ _interface::combo_box::cell::cell(Text txt, int val) :
 }
 
 _interface::combo_box::combo_box(int x, int y, Color maincl, Color textcl) :
-	visible(true),
+	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	visible_main(false),
 	active(false)
 	{
-	pos.x = x;
-	pos.y = y;
-
 	font = new Font;
 	font->loadFromFile("Img/18094.ttf");
 	
@@ -1857,7 +1805,7 @@ _interface::combo_box::combo_box(int x, int y, Color maincl, Color textcl) :
 	main->setFillColor(*main_cl);
 	main->setPosition(pos.x, pos.y);
 	
-	rect_cmb = main->getGlobalBounds();
+	fl_rect = main->getGlobalBounds();
 
 	it = mass_text.begin();
 }
@@ -1873,18 +1821,14 @@ _interface::combo_box::~combo_box() {
 	mass_text.clear();
 }
 
-axes_i _interface::combo_box::getPosition() {
-	return pos;
-}
-
-void _interface::combo_box::setPosition(axes_i xy) {
+void _interface::combo_box::setPosition(const axes_i &xy) {
 	pos = xy;
 
 	main->setPosition(pos.x, pos.y);
 	(*it)->text.setPosition(pos.x, pos.y);
 	(*it)->text.setPosition(repoz_x(int, pos.x, (*it)->text.getGlobalBounds().left, 5), repoz_y(int, pos.y, (*it)->text.getGlobalBounds().top, 5));
 
-	rect_cmb = main->getGlobalBounds();
+	fl_rect = main->getGlobalBounds();
 }
 
 void __fastcall _interface::combo_box::setPosition(int x, int y) {
@@ -1895,7 +1839,7 @@ void __fastcall _interface::combo_box::setPosition(int x, int y) {
 	(*it)->text.setPosition(pos.x, pos.y);
 	(*it)->text.setPosition(repoz_x(int, pos.x, (*it)->text.getGlobalBounds().left, 5), repoz_y(int, pos.y, (*it)->text.getGlobalBounds().top, 5));
 
-	rect_cmb = main->getGlobalBounds();
+	fl_rect = main->getGlobalBounds();
 }
 
 void _interface::combo_box::add(std::wstring st, int val) {
@@ -1906,7 +1850,7 @@ void _interface::combo_box::add(std::wstring st, int val) {
 	(*it)->text.setPosition(pos.x, pos.y);
 	(*it)->text.setPosition(repoz_x(int, pos.x, (*it)->text.getGlobalBounds().left, 5), repoz_y(int, pos.y, (*it)->text.getGlobalBounds().top, 5));
 	main->setSize(Vector2f((*it)->text.getGlobalBounds().width + 10, (*it)->text.getGlobalBounds().height + 10));
-	rect_cmb = main->getGlobalBounds();
+	fl_rect = main->getGlobalBounds();
 }
 
 void _interface::combo_box::next() {
@@ -1922,7 +1866,7 @@ void _interface::combo_box::next() {
 	}
 
 	main->setSize(Vector2f((*it)->text.getGlobalBounds().width + 10, (*it)->text.getGlobalBounds().height + 10));
-	rect_cmb = main->getGlobalBounds();
+	fl_rect = main->getGlobalBounds();
 }
 
 void _interface::combo_box::back() {
@@ -1940,7 +1884,7 @@ void _interface::combo_box::back() {
 	}
 
 	main->setSize(Vector2f((*it)->text.getGlobalBounds().width + 10, (*it)->text.getGlobalBounds().height + 10));
-	rect_cmb = main->getGlobalBounds();
+	fl_rect = main->getGlobalBounds();
 }
 
 std::wstring _interface::combo_box::getText() {
@@ -1951,12 +1895,8 @@ int _interface::combo_box::getValue() {
 	return (*it)->value;
 }
 
-FloatRect _interface::combo_box::getSize() {
-	return rect_cmb;
-}
-
 bool __fastcall _interface::combo_box::isAction(int x, int y) {
-	rect_cmb.contains(x, y) ? active = true : active = false;
+	fl_rect.contains(x, y) ? active = true : active = false;
 	if (active) {
 		(*it)->text.setFillColor(Color::Black);
 		visible_main = true;
@@ -1967,8 +1907,8 @@ bool __fastcall _interface::combo_box::isAction(int x, int y) {
 	return active;
 }
 
-bool _interface::combo_box::isAction(axes_i xy) {
-	rect_cmb.contains(xy.x, xy.y) ? active = true : active = false;
+bool _interface::combo_box::isAction(const axes_i &xy) {
+	fl_rect.contains(xy.x, xy.y) ? active = true : active = false;
 	if (active) {
 		(*it)->text.setFillColor(Color::Black);
 		visible_main = true;
@@ -2193,14 +2133,11 @@ void Collision::render(RenderWindow *wd) {
 
 //-----------------------------Мини-полоса-min_bar-Начало----------------------------------------
 _interface::min_bar::min_bar(int x, int y, int br_ma, int br_mi, Color mcol, Color bcol) :
-	visible(true),
+	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	max_br(br_ma),
 	min_br(br_mi),
 	curr_br(br_ma)
 	{
-	pos.x = x;
-	pos.y = y;
-
 	main = new RectangleShape;
 	main->setSize(Vector2f(150, 9));
 	main->setFillColor(mcol);
@@ -2211,7 +2148,7 @@ _interface::min_bar::min_bar(int x, int y, int br_ma, int br_mi, Color mcol, Col
 	bevel->setFillColor(bcol);
 	bevel->setPosition(pos.x + 3, pos.y + 3);
 
-	rect_br = main->getGlobalBounds();
+	fl_rect = main->getGlobalBounds();
 }
 
 _interface::min_bar::~min_bar() {
@@ -2224,21 +2161,15 @@ void __fastcall _interface::min_bar::setPosition(int x, int y) noexcept {
 
 	main->setPosition(pos.x, pos.y);
 	bevel->setPosition(pos.x + 3, pos.y + 3);
+	fl_rect = main->getGlobalBounds();
 }
 
-void _interface::min_bar::setPosition(axes_i xy) noexcept {
+void _interface::min_bar::setPosition(const axes_i &xy) noexcept {
 	pos = xy;
 
 	main->setPosition(pos.x, pos.y);
 	bevel->setPosition(pos.x + 3, pos.y + 3);
-}
-
-axes_i _interface::min_bar::getPosition() {
-	return pos;
-}
-
-FloatRect _interface::min_bar::getSize() {
-	return rect_br;
+	fl_rect = main->getGlobalBounds();
 }
 
 void  _interface::min_bar::changeBar(int arg) noexcept {
@@ -2685,7 +2616,7 @@ BaseCharacter::BaseCharacter(Image* i, int x, int y, int _hp) :
 	sprt->setTexture(*texture);
 }
 
-BaseCharacter::BaseCharacter(Image* i, axes_f xy, int _hp) :
+BaseCharacter::BaseCharacter(Image* i, const axes_f &xy, int _hp) :
 	pos(xy),
 	health(_hp),
 	visible(true),
@@ -2718,7 +2649,7 @@ void BaseCharacter::setPosition(int x, int y) {
 	pos.y = y;
 }
 
-void BaseCharacter::setPosition(axes_f xy) {
+void BaseCharacter::setPosition(const axes_f &xy) {
 	pos = xy;
 }
 
@@ -2743,6 +2674,22 @@ _interface::BaseInerface::BaseInerface() :
 
 }
 
+_interface::BaseInerface::BaseInerface(int x, int y, const FloatRect &rect) :
+	pos(axes_i(x, y)),
+	fl_rect(rect),
+	visible(true)
+	{
+
+}
+
+_interface::BaseInerface::BaseInerface(const axes_i &xy, const FloatRect &rect) :
+	pos(xy),
+	fl_rect(rect),
+	visible(true)
+	{
+
+}
+
 _interface::BaseInerface::~BaseInerface() {
 
 }
@@ -2751,7 +2698,7 @@ axes_i _interface::BaseInerface::getPosition() {
 	return pos;
 }
 
-void _interface::BaseInerface::setPosition(axes_i xy) {
+void _interface::BaseInerface::setPosition(const axes_i &xy) {
 	pos = xy;
 }
 

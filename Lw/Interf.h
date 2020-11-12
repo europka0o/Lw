@@ -6,7 +6,7 @@
 #include <string>
 #include <sstream>
 
-using namespace sf;
+using namespace sf; 
 
 #ifndef _INTERFACE_G
 #define _INTERFACE_G
@@ -174,13 +174,13 @@ class BaseCharacter {
 	public:
 		BaseCharacter();
 		BaseCharacter(Image *i, int x, int y, int _hp);
-		BaseCharacter(Image* i, axes_f xy, int _hp);
+		BaseCharacter(Image* i, const axes_f &xy, int _hp);
 		~BaseCharacter();
 		bool cooldown, isDead, visible;
 		int health;
 		virtual axes_f getPosition();
 		virtual void __fastcall setPosition(int x, int y);
-		virtual void __fastcall setPosition(axes_f xy);
+		virtual void __fastcall setPosition(const axes_f &xy);
 		virtual FloatRect getSize();
 		virtual void render(RenderWindow& wd);
 		virtual void render(RenderWindow* wd);
@@ -262,10 +262,12 @@ namespace _interface {
 			FloatRect fl_rect;
 		public:
 			BaseInerface();
+			BaseInerface(int x, int y, const FloatRect &rect);
+			BaseInerface(const axes_i &xy, const FloatRect &rect);
 			~BaseInerface();
 			bool visible;
 			virtual axes_i getPosition();
-			virtual void setPosition(axes_i xy);
+			virtual void setPosition(const axes_i &xy);
 			virtual void __fastcall setPosition(int x, int y);
 			virtual FloatRect getSize();
 	};
@@ -304,35 +306,22 @@ namespace _interface {
 	#define repoz_y(type, Y, size, indent) repoz_y <type>(Y, size, indent) //вычисляет погрешность позиции текста в пикселях и выравнивает его относительно заданных координат для оси Y
 	
 
-	class gradient {
+	class gradient : public BaseInerface {
 		private:
-			axes_i pos;
 			std::vector<sf::Color> colors;
 			sf::VertexArray *rect;
-			sf::FloatRect *rect_pos;
 		public:
-			bool visible;
 			/// <param name="rt">Размер и положение хитбокса</param>
 			/// <param name="gd">Направление градиента</param>
 			/// <param name="first">Первый цвет градиента</param>
 			/// <param name="second">Второй цвет градиента</param>
-			gradient(FloatRect rt, gradient_direction gd, Color first, Color second);
+			gradient(const FloatRect &rt, gradient_direction gd, Color first, Color second);
 			~gradient();
-			/// <summary>
-			/// Возвращает хитбокс градиента
-			/// </summary>
-			/// <returns>Структура FloatRect</returns>
-			FloatRect getSize();
-			/// <summary>
-			/// Возвращает позицию
-			/// </summary>
-			/// <returns>Структура axes_i</returns>
-			axes_i getPosition();
 			/// <summary>
 			/// Устанавливает позицию объекта по осям X и Y
 			/// </summary>
 			/// <param name="xy">Структура с координатами по осям X и Y</param>
-			void setPosition(axes_i xy);
+			void setPosition(const axes_i &xy);
 			/// <summary>
 			/// Устанавливает позицию объекта по осям X и Y
 			/// </summary>
@@ -343,77 +332,65 @@ namespace _interface {
 			void render(RenderWindow *wd) noexcept;
 	};
 
-	class button {
+	class button : public BaseInerface {
 		private:
-			axes_i pos;
 			Font *font;
 			Text *txt;
 			Color *main_cl, *txt_cl, *active_cl;
 			RectangleShape *main, *active_bvl;
-			FloatRect rect_bt;
 		public:
-			bool visible, active;
+			bool active;
 			button(int x, int y, std::wstring text, Color maincl, Color textcl, Color activecl);
 			~button();
-			axes_i getPosition();
-			FloatRect getSize();
-			void setPosition(axes_i xy);
+			void setPosition(const axes_i &xy);
 			void __fastcall setPosition(int x, int y);
 			void render(RenderWindow &wd) noexcept;
 			void render(RenderWindow *wd) noexcept;
 			void resize(int size);
-			void freeze(Camer *camera, axes_i xy); //замораживает позицию компонента относительно камеры
+			void freeze(Camer *camera, const axes_i &xy); //замораживает позицию компонента относительно камеры
 			void freeze(Camer *camera, int x, int y); //замораживает позицию компонента относительно камеры
 			bool __fastcall isAction(int x, int y);
-			bool isAction(axes_i xy);
+			bool isAction(const axes_i &xy);
 	};
 
-	class combo_box {
+	class combo_box : public BaseInerface {
 		private:
 			struct cell {
 				cell(Text txt, int val);
 				Text text;
 				int value;
 			};
-			axes_i pos;
 			Font *font;
 			RectangleShape *main;
 			Color *text_cl, *main_cl;
 			std::vector<cell*> mass_text;
 			std::vector<cell*>::iterator it;
-			FloatRect rect_cmb;
 		public:
-			bool visible, visible_main, active;
+			bool visible_main, active;
 			combo_box(int x, int y, Color maincl, Color textcl);
 			~combo_box();
-			axes_i getPosition();
-			void setPosition(axes_i xy);
+			void setPosition(const axes_i &xy);
 			void __fastcall setPosition(int x, int y);
 			void add(std::wstring st, int val);
 			void next();
 			void back();
 			bool __fastcall isAction(int x, int y);
-			bool isAction(axes_i xy);
+			bool isAction(const axes_i &xy);
 			std::wstring getText();
 			int getValue();
-			FloatRect getSize();
 			void render(RenderWindow &wd);
 			void render(RenderWindow *wd);
 	};
 
-	class check_box {
+	class check_box : public BaseInerface {
 		private:
-			axes_i pos;
 			Color *main_cl, *border_cl, *check_cl;
 			RectangleShape *main, *border, *check;
-			FloatRect rect_cb;
 		public:
-			bool visible, isCheck;
+			bool isCheck;
 			check_box(int x, int y, Color maincl, Color bordercl, Color checkcl);
 			~check_box();
-			axes_i getPosition();
-			FloatRect getSize();
-			void setPosition(axes_i xy);
+			void setPosition(const axes_i &xy);
 			void __fastcall setPosition(int x, int y);
 			void render(RenderWindow  &wd) noexcept;
 			void render(RenderWindow *wd) noexcept;
@@ -421,14 +398,11 @@ namespace _interface {
 			void invers();
 	};
 
-	class text {
+	class text : public BaseInerface {
 		private:
-			axes_i pos; //координата объекта по оси Y, координата объекта по оси X
 			RectangleShape* bevel; //прямоугольник под текстом 
 			Font* font_main;
-			FloatRect rect_tx;
 		public:
-			bool visible; //видимость объекта
 			bool visible_bevel; //видимость прямоугольника под текстом 
 			Text* label;
 			Color* bevel_cl;
@@ -437,12 +411,10 @@ namespace _interface {
 			~text();
 			void setString(std::wstring txt) noexcept; //задаетс текст 
 			void setFont(String txt) noexcept; //путь к фону для текста
-			FloatRect getSize();
-			axes_i getPosition() noexcept; //возвращает координаты объекта по оси X и Y
 			void __fastcall setPosition(int x, int y) noexcept; //устанавливает позицию объекта по осям X, Y 
-			void setPosition(axes_i xy) noexcept; //устанавливает позицию объекта по осям X, Y 
+			void setPosition(const axes_i &xy) noexcept; //устанавливает позицию объекта по осям X, Y 
 			void resize(int size) noexcept; //задает размер объекта в пикселях
-			void freeze(Camer* camera, axes_i xy); //замораживает позицию компонента относительно камеры
+			void freeze(Camer* camera, const axes_i &xy); //замораживает позицию компонента относительно камеры
 			void freeze(Camer* camera, int x, int y); //замораживает позицию компонента относительно камеры
 			void render(RenderWindow& wd) noexcept; // 
 			void render(RenderWindow* wd) noexcept;
@@ -520,17 +492,14 @@ namespace _interface {
 			void render(RenderWindow *wd) noexcept;
 	};
 
-	class bar {
+	class bar : public BaseInerface {
 		private:
-			axes_i pos;
 			int max_bar, min_bar, curr_bar; //координата объекта по оси Y, координата объекта по оси X, макс значение полосы, мин значение полосы, текущее значение полосы 
 			RectangleShape *main; //прямоугольник под объектом
 			RectangleShape *bevel; //полоса
 			Font *font_main;
 			Text *label;
-			FloatRect rect_br;
 		public:
-			bool visible; //видимость объекта
 			/// <summary>
 			/// Конструктор
 			/// </summary>
@@ -565,7 +534,7 @@ namespace _interface {
 			/// Устанавливает позицию объекта по осям X и Y
 			/// </summary>
 			/// <param name="xy">Структура с координатами по осям X и Y</param>
-			void setPosition(axes_i xy) noexcept; //устанавливает позицию объекта по осям X, Y 
+			void setPosition(const axes_i &xy) noexcept; //устанавливает позицию объекта по осям X, Y 
 			/// <summary>
 			/// Изменяет размер текста
 			/// </summary>
@@ -577,7 +546,7 @@ namespace _interface {
 			/// </summary>
 			/// <param name="camera">Указатель на камеру</param>
 			/// <param name="xy">Структура с координатами заморозки</param>
-			void freeze(Camer* camera, axes_i xy); //замораживает позицию компонента относительно камеры
+			void freeze(Camer* camera, const axes_i &xy); //замораживает позицию компонента относительно камеры
 			/// <summary>
 			/// Замораживает позицию объекта относительно камеры
 			/// </summary>
@@ -585,27 +554,16 @@ namespace _interface {
 			/// <param name="x">Координаты по оси X</param>
 			/// <param name="y">Координаты по оси Y</param>
 			void freeze(Camer* camera, int x, int y); //замораживает позицию компонента относительно камеры
-			/// <summary>
-			/// Возвращает позицию
-			/// </summary>
-			/// <returns>Структура axes_i</returns>
-			axes_i getPosition() noexcept; //возвращает координаты объекта по оси X и Y
-			/// <summary>
-			/// Возвращает хитбокс градиента
-			/// </summary>
-			/// <returns>Структура FloatRect</returns>
-			FloatRect getSize();
 	};
 
-	class min_bar {
+	class min_bar : public BaseInerface {
 		private:
-			axes_i pos;
+			//axes_i pos;
 			int max_br, min_br, curr_br; //координата объекта по оси Y, координата объекта по оси X, макс значение полосы, мин значение полосы, текущее значение полосы 
 			RectangleShape* main; //прямоугольник под объектом
 			RectangleShape* bevel; //полоса
-			FloatRect rect_br;
+			//FloatRect rect_br;
 		public:
-			bool visible;
 			/// <summary>
 			/// Конструктор
 			/// </summary>
@@ -629,17 +587,7 @@ namespace _interface {
 			/// Устанавливает позицию объекта по осям X и Y
 			/// </summary>
 			/// <param name="xy">Структура с координатами по осям X и Y</param>
-			void setPosition(axes_i xy) noexcept;
-			/// <summary>
-			/// Возвращает позицию
-			/// </summary>
-			/// <returns>Структура axes_i</returns>
-			axes_i getPosition();
-			/// <summary>
-			/// Возвращает хитбокс градиента
-			/// </summary>
-			/// <returns>Структура FloatRect</returns>
-			FloatRect getSize();
+			void setPosition(const axes_i &xy) noexcept;
 			/// <summary>
 			/// Изменяет состояние полосы
 			/// </summary>
