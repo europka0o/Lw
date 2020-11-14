@@ -148,17 +148,17 @@ void Character::setImage(Image *ptr_on_img) {
 }
 
 
-void __fastcall Character::setPosition(float X, float Y) noexcept {
-	pos.x = X;
-	pos.y = Y;
-	sprt->setPosition(X, Y);
+void __fastcall Character::setPosition(float x, float y) noexcept {
+	pos.x = x;
+	pos.y = y;
+	sprt->setPosition(x, y);
 	fl_rect = sprt->getGlobalBounds();
 	rect_collis->setPosition(pos.x + 140, pos.y);
 	HP->setPosition(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2) - (HP->getSize().width / 2), sprt->getGlobalBounds().top + sprt->getGlobalBounds().height);
 }
 
-void Character::setPosition(axes_f XY) noexcept {
-	pos = XY;
+void Character::setPosition(const axes_f &xy) noexcept {
+	pos = xy;
 
 	sprt->setPosition(pos.x, pos.y);
 	HP->setPosition(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2) - (HP->getSize().width / 2), sprt->getGlobalBounds().top + sprt->getGlobalBounds().height);
@@ -454,7 +454,7 @@ ObjectStatic::ObjectStatic(Image *i, float X, float Y) {
 }
 
 ObjectStatic::~ObjectStatic() {
-	delete sprt, texture;
+	delete texture, sprt;
 	delete rect_collis;
 }
 
@@ -466,7 +466,7 @@ FloatRect ObjectStatic::getSize() {
 	return react_obj_stat;
 }
 
-void ObjectStatic::setRect(IntRect bound) {
+void ObjectStatic::setRect(const IntRect &bound) {
 	sprt->setTextureRect(IntRect(bound.left, bound.top, bound.width, bound.height));
 }
 
@@ -479,7 +479,7 @@ void __fastcall ObjectStatic::setPosition(int x, int y) {
 	react_obj_stat = sprt->getGlobalBounds();
 }
 
-void ObjectStatic::setPosition(axes_i xy) {
+void ObjectStatic::setPosition(const axes_i &xy) {
 	pos = xy;
 
 	sprt->setPosition(pos.x, pos.y);
@@ -2067,7 +2067,7 @@ void _interface::message::render(RenderWindow *wd) noexcept {
 //-----------------------------Сообщение-message-Конец---------------------------------------
 
 //-----------------------------Коллизия-Collision-Начало---------------------------------------
-Collision::Collision(IntRect rect) :
+Collision::Collision(const IntRect &rect) :
 	active(true),
 	visible_deb(false)
 	{
@@ -2095,7 +2095,7 @@ void __fastcall Collision::setPosition(int x, int y) {
 	main->setPosition(Vector2f(pos.x, pos.y));
 }
 
-void Collision::setPosition(axes_i xy) {
+void Collision::setPosition(const axes_i &xy) {
 	pos = xy;
 
 	rect_collis.left = pos.x;
@@ -2111,7 +2111,7 @@ IntRect Collision::getBounds() {
 	return rect_collis;
 }
 
-void Collision::setBounds(IntRect rect) {
+void Collision::setBounds(const IntRect &rect) {
 	pos.x = rect.left;
 	pos.y = rect.top;
 	rect_collis = rect;
@@ -2343,17 +2343,17 @@ Spearman::~Spearman() {
 	delete rect_collis, HP;
 }
 
-void __fastcall Spearman::setPosition(float X, float Y) noexcept {
-	pos.x = X;
-	pos.y = Y;
+void __fastcall Spearman::setPosition(float x, float y) noexcept {
+	pos.x = x;
+	pos.y = y;
 
 	sprt->setPosition(pos.x, pos.y);
 	fl_rect = sprt->getGlobalBounds();
 	rect_collis->setPosition(pos.x + 120, pos.y);
 }
 
-void Spearman::setPosition(axes_f XY) noexcept {
-	pos = XY;
+void Spearman::setPosition(const axes_f &xy) noexcept {
+	pos = xy;
 
 	sprt->setPosition(pos.x, pos.y);
 	fl_rect = sprt->getGlobalBounds();
@@ -2511,17 +2511,17 @@ IceBall::~IceBall() {
 	delete rect_collis, HP;
 }
 
-void __fastcall IceBall::setPosition(float X, float Y) noexcept {
-	pos.x = X;
-	pos.y = Y;
+void __fastcall IceBall::setPosition(float x, float y) noexcept {
+	pos.x = x;
+	pos.y = y;
 
 	sprt->setPosition(pos.x, pos.y);
 	fl_rect = sprt->getGlobalBounds();
 	rect_collis->setPosition(pos.x, pos.y);
 }
 
-void IceBall::setPosition(axes_f XY) noexcept {
-	pos = XY;
+void IceBall::setPosition(const axes_f &xy) noexcept {
+	pos = xy;
 
 	sprt->setPosition(pos.x, pos.y);
 	fl_rect = sprt->getGlobalBounds();
@@ -2600,7 +2600,7 @@ BaseCharacter::BaseCharacter() :
 	sprt = new Sprite;
 }
 
-BaseCharacter::BaseCharacter(Image* i, int x, int y, int _hp) : 
+BaseCharacter::BaseCharacter(Image* i, float x, float y, int _hp) :
 	pos(x, y),
 	health(_hp),
 	visible(true),
@@ -2644,7 +2644,7 @@ FloatRect BaseCharacter::getSize() {
 	return fl_rect;
 }
 
-void BaseCharacter::setPosition(int x, int y) {
+void BaseCharacter::setPosition(float x, float y) {
 	pos.x = x;
 	pos.y = y;
 }
@@ -2709,5 +2709,12 @@ void _interface::BaseInerface::setPosition(int x, int y) {
 
 FloatRect _interface::BaseInerface::getSize() {
 	return fl_rect;
+}
+
+void _interface::BaseInerface::render(RenderWindow &wd) {
+
+}
+void _interface::BaseInerface::render(RenderWindow *wd) {
+
 }
 //--------------------------------База-Интерфейса-BaseInterface-Конец------------------------------------------

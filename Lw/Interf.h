@@ -129,7 +129,7 @@ class Collision {
 		/// </summary>
 		/// <param name="rect">Хитбокс</param>
 		/// <returns></returns>
-		Collision(IntRect rect);
+		Collision(const IntRect &rect);
 		~Collision();
 		/// <summary>
 		/// Устанавливает позицию хитбокса по осям X и Y
@@ -141,7 +141,7 @@ class Collision {
 		/// Устанавливает позицию хитбокса по осям X и Y
 		/// </summary>
 		/// <param name="xy">Структура axes_i</param>
-		void setPosition(axes_i xy);
+		void setPosition(const axes_i &xy);
 		/// <summary>
 		/// Возвращает позицию хитбокса по осям X и Y
 		/// </summary>
@@ -156,7 +156,7 @@ class Collision {
 		/// Устанавливает новые данные о хитбоксе
 		/// </summary>
 		/// <param name="rect">Струткура IntRect с новыми параметрами</param>
-		void setBounds(IntRect rect);
+		void setBounds(const IntRect &rect);
 		void render(RenderWindow& wd);
 		void render(RenderWindow* wd);
 };
@@ -173,13 +173,13 @@ class BaseCharacter {
 		bool zeroing;
 	public:
 		BaseCharacter();
-		BaseCharacter(Image *i, int x, int y, int _hp);
+		BaseCharacter(Image *i, float x, float y, int _hp);
 		BaseCharacter(Image* i, const axes_f &xy, int _hp);
 		~BaseCharacter();
 		bool cooldown, isDead, visible;
 		int health;
 		virtual axes_f getPosition();
-		virtual void __fastcall setPosition(int x, int y);
+		virtual void __fastcall setPosition(float x, float y);
 		virtual void __fastcall setPosition(const axes_f &xy);
 		virtual FloatRect getSize();
 		virtual void render(RenderWindow& wd);
@@ -217,7 +217,7 @@ class ObjectStatic {
 		/// Устанавливает новые данные о хитбоксе
 		/// </summary>
 		/// <param name="bound">Струткура IntRect с новыми параметрами</param>
-		virtual void setRect(IntRect bound);
+		virtual void setRect(const IntRect &bound);
 		/// <summary>
 		/// Устанавливает позицию хитбокса по осям X и Y
 		/// </summary>
@@ -228,7 +228,7 @@ class ObjectStatic {
 		/// Устанавливает позицию хитбокса по осям X и Y
 		/// </summary>
 		/// <param name="xy">Структура axes_i</param>
-		virtual void setPosition(axes_i xy);
+		virtual void setPosition(const axes_i &xy);
 		virtual void render(RenderWindow &wd);
 		virtual void render(RenderWindow *wd);
 };
@@ -270,6 +270,8 @@ namespace _interface {
 			virtual void setPosition(const axes_i &xy);
 			virtual void __fastcall setPosition(int x, int y);
 			virtual FloatRect getSize();
+			virtual void render(RenderWindow &wd);
+			virtual void render(RenderWindow *wd);
 	};
 
 	enum gradient_direction {
@@ -321,15 +323,15 @@ namespace _interface {
 			/// Устанавливает позицию объекта по осям X и Y
 			/// </summary>
 			/// <param name="xy">Структура с координатами по осям X и Y</param>
-			void setPosition(const axes_i &xy);
+			void setPosition(const axes_i &xy) override;
 			/// <summary>
 			/// Устанавливает позицию объекта по осям X и Y
 			/// </summary>
 			/// <param name="x">Координаты по оси X</param>
 			/// <param name="x">Координаты по оси Y</param>
-			void __fastcall setPosition(int x, int y);
-			void render(RenderWindow &wd) noexcept;
-			void render(RenderWindow *wd) noexcept;
+			void __fastcall setPosition(int x, int y) override;
+			void render(RenderWindow &wd) noexcept override;
+			void render(RenderWindow *wd) noexcept override;
 	};
 
 	class button : public BaseInerface {
@@ -342,10 +344,10 @@ namespace _interface {
 			bool active;
 			button(int x, int y, std::wstring text, Color maincl, Color textcl, Color activecl);
 			~button();
-			void setPosition(const axes_i &xy);
-			void __fastcall setPosition(int x, int y);
-			void render(RenderWindow &wd) noexcept;
-			void render(RenderWindow *wd) noexcept;
+			void setPosition(const axes_i &xy) override;
+			void __fastcall setPosition(int x, int y) override;
+			void render(RenderWindow &wd) noexcept override;
+			void render(RenderWindow *wd) noexcept override;
 			void resize(int size);
 			void freeze(Camer *camera, const axes_i &xy); //замораживает позицию компонента относительно камеры
 			void freeze(Camer *camera, int x, int y); //замораживает позицию компонента относительно камеры
@@ -369,8 +371,8 @@ namespace _interface {
 			bool visible_main, active;
 			combo_box(int x, int y, Color maincl, Color textcl);
 			~combo_box();
-			void setPosition(const axes_i &xy);
-			void __fastcall setPosition(int x, int y);
+			void setPosition(const axes_i &xy) override;
+			void __fastcall setPosition(int x, int y) override;
 			void add(std::wstring st, int val);
 			void next();
 			void back();
@@ -390,10 +392,10 @@ namespace _interface {
 			bool isCheck;
 			check_box(int x, int y, Color maincl, Color bordercl, Color checkcl);
 			~check_box();
-			void setPosition(const axes_i &xy);
-			void __fastcall setPosition(int x, int y);
-			void render(RenderWindow  &wd) noexcept;
-			void render(RenderWindow *wd) noexcept;
+			void setPosition(const axes_i &xy) override;
+			void __fastcall setPosition(int x, int y) override;
+			void render(RenderWindow  &wd) noexcept override;
+			void render(RenderWindow *wd) noexcept override;
 			void invers(bool operation);
 			void invers();
 	};
@@ -411,13 +413,13 @@ namespace _interface {
 			~text();
 			void setString(std::wstring txt) noexcept; //задаетс текст 
 			void setFont(String txt) noexcept; //путь к фону для текста
-			void __fastcall setPosition(int x, int y) noexcept; //устанавливает позицию объекта по осям X, Y 
-			void setPosition(const axes_i &xy) noexcept; //устанавливает позицию объекта по осям X, Y 
+			void __fastcall setPosition(int x, int y) noexcept override; //устанавливает позицию объекта по осям X, Y 
+			void setPosition(const axes_i &xy) noexcept override; //устанавливает позицию объекта по осям X, Y 
 			void resize(int size) noexcept; //задает размер объекта в пикселях
 			void freeze(Camer* camera, const axes_i &xy); //замораживает позицию компонента относительно камеры
 			void freeze(Camer* camera, int x, int y); //замораживает позицию компонента относительно камеры
-			void render(RenderWindow& wd) noexcept; // 
-			void render(RenderWindow* wd) noexcept;
+			void render(RenderWindow& wd) noexcept override;
+			void render(RenderWindow* wd) noexcept override;
 	};
 	
 	class message {
@@ -521,20 +523,20 @@ namespace _interface {
 			/// <param name="arg">Новое значение полосы</param>
 			/// <returns></returns>
 			void __fastcall changeBar(int arg) noexcept; //изменяет состояние полосы 
-			void render(RenderWindow &wd) noexcept;
-			void render(RenderWindow *wd) noexcept;
+			void render(RenderWindow &wd) noexcept override;
+			void render(RenderWindow *wd) noexcept override;
 			/// <summary>
 			/// Устанавливает позицию 
 			/// </summary>
 			/// <param name="x">Позиция по оси X</param>
 			/// <param name="y">Позиция по оси Y</param>
 			/// <returns></returns>
-			void __fastcall setPosition(int x, int y) noexcept; //устанавливает позицию объекта по осям X, Y 
+			void __fastcall setPosition(int x, int y) noexcept override; //устанавливает позицию объекта по осям X, Y 
 			/// <summary>
 			/// Устанавливает позицию объекта по осям X и Y
 			/// </summary>
 			/// <param name="xy">Структура с координатами по осям X и Y</param>
-			void setPosition(const axes_i &xy) noexcept; //устанавливает позицию объекта по осям X, Y 
+			void setPosition(const axes_i &xy) noexcept override; //устанавливает позицию объекта по осям X, Y 
 			/// <summary>
 			/// Изменяет размер текста
 			/// </summary>
@@ -582,20 +584,20 @@ namespace _interface {
 			/// <param name="x">Позиция по оси X</param>
 			/// <param name="y">Позиция по оси Y</param>
 			/// <returns></returns>
-			void __fastcall setPosition(int x, int y) noexcept; //устанавливает позицию объекта по осям X, Y 
+			void __fastcall setPosition(int x, int y) noexcept override; //устанавливает позицию объекта по осям X, Y 
 			/// <summary>
 			/// Устанавливает позицию объекта по осям X и Y
 			/// </summary>
 			/// <param name="xy">Структура с координатами по осям X и Y</param>
-			void setPosition(const axes_i &xy) noexcept;
+			void setPosition(const axes_i &xy) noexcept override;
 			/// <summary>
 			/// Изменяет состояние полосы
 			/// </summary>
 			/// <param name="arg">Новое значение полосы</param>
 			/// <returns></returns>
 			void changeBar(int arg) noexcept;
-			void render(RenderWindow& wd) noexcept;
-			void render(RenderWindow* wd) noexcept;
+			void render(RenderWindow& wd) noexcept override;
+			void render(RenderWindow* wd) noexcept override;
 
 	};
 
@@ -665,16 +667,16 @@ namespace _interface {
 
 }; //конец пространства имен 
 
-class Character : public BaseCharacter { //TODO dx, dy, speed, 
+class Character : public BaseCharacter { 
 	private:
-		int direction, last_direction; //ширина изображения, высота изображения, положение спрайта по оси X, положение спрайта по оси Y, направление движения персонажа 
+		int direction, last_direction; 
 		_interface::min_bar* HP;
 	public:
 		Collision* rect_collis;
 		Character(Image* ptr_on_img, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
 		~Character(); //деструктор
-		void __fastcall setPosition(float X, float Y) noexcept; //устанавливает позицию спрайта по осям X, Y
-		void setPosition(axes_f XY) noexcept; //устанавливает позицию спрайта по осям X, Y
+		void __fastcall setPosition(float x, float y) noexcept override; //устанавливает позицию спрайта по осям X, Y
+		void setPosition(const axes_f &xy) noexcept override; //устанавливает позицию спрайта по осям X, Y
 		void setImage(Image *ptr_on_img);
 		float getPositionX_forCamer() noexcept; //возвращает центр координата спрайта по оси X
 		float getPositionY_forCamer() noexcept; //возвращает центр координата спрайта по оси Y
@@ -682,8 +684,8 @@ class Character : public BaseCharacter { //TODO dx, dy, speed,
 		void __fastcall move(float time) noexcept; //перезаписывает положение спрайта
 		void __fastcall attack(float time);
 		bool isCooldown(float time);
-		void render(RenderWindow& wd) noexcept;
-		void render(RenderWindow* wd) noexcept;
+		void render(RenderWindow& wd) noexcept override;
+		void render(RenderWindow* wd) noexcept override;
 };	
 
 class DestroerCastle : public BaseCharacter {
@@ -713,13 +715,13 @@ class Spearman : public BaseCharacter {
 		Collision* rect_collis;
 		Spearman(Image *ptr_on_img, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
 		~Spearman(); //деструктор
-		void __fastcall setPosition(float X, float Y) noexcept; //устанавливает позицию спрайта по осям X, Y
-		void setPosition(axes_f XY) noexcept; //устанавливает позицию спрайта по осям X, Y
+		void __fastcall setPosition(float x, float y) noexcept override; //устанавливает позицию спрайта по осям X, Y
+		void setPosition(const axes_f &xy) noexcept override; //устанавливает позицию спрайта по осям X, Y
 		void __fastcall move(float time, int direct) noexcept; //перезаписывает положение спрайта
 		void __fastcall attack(float time);
 		bool isCooldown(float time);
-		void render(RenderWindow& wd) noexcept;
-		void render(RenderWindow* wd) noexcept;
+		void render(RenderWindow& wd) noexcept override;
+		void render(RenderWindow* wd) noexcept override;
 };
 
 class IceBall : public BaseCharacter {
@@ -729,12 +731,12 @@ class IceBall : public BaseCharacter {
 		Collision* rect_collis;
 		IceBall(Image *ptr_on_img, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
 		~IceBall(); //деструктор
-		void __fastcall setPosition(float X, float Y) noexcept; //устанавливает позицию спрайта по осям X, Y
-		void setPosition(axes_f XY) noexcept; //устанавливает позицию спрайта по осям X, Y
+		void __fastcall setPosition(float x, float y) noexcept override; //устанавливает позицию спрайта по осям X, Y
+		void setPosition(const axes_f &xy) noexcept override; //устанавливает позицию спрайта по осям X, Y
 		void __fastcall update(float time) noexcept; //перезаписывает положение спрайта
 		bool isCooldown(float time);
-		void render(RenderWindow& wd) noexcept;
-		void render(RenderWindow* wd) noexcept;
+		void render(RenderWindow& wd) noexcept override;
+		void render(RenderWindow* wd) noexcept override;
 };
 
 #endif

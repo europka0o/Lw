@@ -189,7 +189,7 @@ class Game {
 
 			ObjectStatic *Castle;
 			_interface::menu *men;
-			list<ObjectAnimated*> *Expl_list;
+			list<ObjectAnimated*> *Expl_list = new list<ObjectAnimated*>;
 
 			list<Character*> *Pers = new list<Character*>;
 			list<DestroerCastle*> *DC = new list<DestroerCastle*>;
@@ -225,7 +225,6 @@ class Game {
 			men = new _interface::menu(Camera, Color::Color(38, 38, 38, 255), Color::Yellow); //главное меню
 			men->active = false;
 			st_men->blackout_visible = false;
-			Expl_list = new list<ObjectAnimated*>;
 			
 			lvlInfo = new _interface::text(0, 0, L"Волна 1", Color::Black, Color::Yellow); //надпись с номером волны
 			lvlInfo->resize(_interface::text_size::medium);
@@ -317,6 +316,10 @@ class Game {
 
 							if (men->btExit->isAction(realPos.x, realPos.y)) { //если нажата кнопка выйти
 								if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Left) {
+									for (list<ObjectAnimated*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) {
+										delete* it_expl;
+										it_expl = Expl_list->erase(it_expl);
+									}
 									delete Expl_list;
 									delete men, st_men;
 									delete HP, MP;
@@ -403,6 +406,10 @@ class Game {
 					} else {
 						if (message_end->btOk->isAction(realPos.x, realPos.y) && message_end->active) { //если нажата кнопка ок в сообщении о проигрыше
 							if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Left) {
+								for (list<ObjectAnimated*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) {
+									delete* it_expl;
+									it_expl = Expl_list->erase(it_expl);
+								}
 								delete Expl_list;
 								delete men, st_men;
 								delete HP, MP;
@@ -446,6 +453,10 @@ class Game {
 
 						if (message_vic->btOk->isAction(realPos.x, realPos.y) && message_vic->active) {
 							if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Left) {
+								for (list<ObjectAnimated*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) {
+									delete* it_expl;
+									it_expl = Expl_list->erase(it_expl);
+								}
 								delete Expl_list;
 								delete men, st_men;
 								delete HP, MP;
@@ -1325,14 +1336,14 @@ class Game {
 
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------Регистрация попаданий
 					if (!men->active) {
-						for (list<ObjectAnimated*>::iterator it = Expl_list->begin(); it != Expl_list->end();) {
-							if ((*it)->end) {
-								delete* it;
-								it = Expl_list->erase(it);
+						for (list<ObjectAnimated*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) {
+							if ((*it_expl)->end) {
+								delete* it_expl;
+								it_expl = Expl_list->erase(it_expl);
 							} else {
 								
 								for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
-									if ((*it)->rect_collis->getBounds().intersects((*it_sp)->rect_collis->getBounds()) && !(*it)->cooldown) {
+									if ((*it_expl)->rect_collis->getBounds().intersects((*it_sp)->rect_collis->getBounds()) && !(*it_expl)->cooldown) {
 										(*it_sp)->health -= 30;
 										if ((*it_sp)->health <= 0) { (*it_sp)->health = 0; }
 									}
@@ -1340,7 +1351,7 @@ class Game {
 								}
 
 								for (list<DestroerCastle*>::iterator it_dc = DC->begin(); it_dc != DC->end();) {
-									if ((*it)->rect_collis->getBounds().intersects(IntRect((*it_dc)->getSize())) && !(*it)->cooldown) {
+									if ((*it_expl)->rect_collis->getBounds().intersects(IntRect((*it_dc)->getSize())) && !(*it_expl)->cooldown) {
 										(*it_dc)->health -= 25;
 										if ((*it_dc)->health <= 0) { (*it_dc)->health = 0; }
 									}
@@ -1348,17 +1359,17 @@ class Game {
 								}
 
 								for (list<Character*>::iterator it_p = Pers->begin(); it_p != Pers->end();) {
-									if ((*it)->rect_collis->getBounds().intersects(IntRect((*it_p)->getSize())) && !(*it)->cooldown) {
+									if ((*it_expl)->rect_collis->getBounds().intersects(IntRect((*it_p)->getSize())) && !(*it_expl)->cooldown) {
 										(*it_p)->health -= 25;
 										if ((*it_p)->health <= 0) { (*it_p)->health = 0; }
 									}
 									it_p++;
 								}
 
-								(*it)->update(timer);
+								(*it_expl)->update(timer);
 
-								(*it)->cooldown = true;
-								it++;
+								(*it_expl)->cooldown = true;
+								it_expl++;
 							}
 
 						}
@@ -1592,6 +1603,10 @@ class Game {
 				window->display();
 			}
 
+			for (list<ObjectAnimated*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) {
+				delete* it_expl;
+				it_expl = Expl_list->erase(it_expl);
+			}
 			delete Expl_list;
 			delete men, st_men;
 			delete HP, MP;
@@ -1726,7 +1741,7 @@ class Game {
 			MainWrd = new World("Img/untitled.png", 60, 60);
 			HP = new _interface::bar(5, 5, 100, 0, L"HP:", Color::White, Color::Red, Color::Black);
 			MP = new _interface::bar(5, HP->getSize().left + HP->getSize().width + 5, 100, 0, L"MP:", Color::White, Color::Blue, Color::Black);
-			Camera = new Camer(CENTER_SCREEN_X, CENTER_SCREEN_Y, screen_width, screen_height);
+			Camera = new Camer(CENTER_SCREEN_X, CENTER_SCREEN_Y, config->screenWidth, config->screenHeight);
 
 			Castle = new ObjectStatic(ptr_on_image_castle, 0, 0);
 			Castle->setRect(IntRect(0, 0, 400, 1500));
@@ -1770,6 +1785,10 @@ class Game {
 
 					if (!mlt->visible && !mltAboutHP->visible && !mltAboutMP->visible && !mltAboutEnemy->visible && !mltAboutIce->visible && !mltAboutIce2->visible && !mltAboutIce3->visible && mltEnd->visible) {
 						if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Left && !men->active) {
+							for (list<ObjectAnimated*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) {
+								delete* it_expl;
+								it_expl = Expl_list->erase(it_expl);
+							}
 							delete Expl_list;
 							delete men, st_men;
 							delete HP, MP;
@@ -1927,6 +1946,10 @@ class Game {
 					} else {
 						if (message_end->btOk->isAction(realPos.x, realPos.y)) {
 							if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Left) {
+								for (list<ObjectAnimated*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) {
+									delete* it_expl;
+									it_expl = Expl_list->erase(it_expl);
+								}
 								delete Expl_list;
 								delete men, st_men;
 								delete HP, MP;
@@ -1956,6 +1979,10 @@ class Game {
 				}
 
 				if (Keyboard::isKeyPressed(Keyboard::Enter)) {
+					for (list<ObjectAnimated*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) {
+						delete* it_expl;
+						it_expl = Expl_list->erase(it_expl);
+					}
 					delete Expl_list;
 					delete men, st_men;
 					delete HP, MP;
@@ -2132,6 +2159,10 @@ class Game {
 				window->display();
 			}
 
+			for (list<ObjectAnimated*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) {
+				delete* it_expl;
+				it_expl = Expl_list->erase(it_expl);
+			}
 			delete Expl_list;
 			delete men, st_men;
 			delete HP, MP;
