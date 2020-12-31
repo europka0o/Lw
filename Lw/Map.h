@@ -9,13 +9,11 @@ using namespace sf;
 class World {
 	private:
 		int size_x, size_y;
-		sf::String pathFromFile;
-		Image *worldimg;
 		Texture *worldTexture;
 		Sprite *worldSpr;
 		sf::String *mass_sp;
 	public:
-		World(String Path, int X_SIZE, int Y_SIZE);
+		World(Image *ptr_on_img, int X_SIZE, int Y_SIZE);
 		~World() noexcept;
 		void render(RenderWindow &wd) noexcept;
 		void render(RenderWindow *wd) noexcept;

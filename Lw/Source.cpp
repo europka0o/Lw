@@ -18,7 +18,7 @@ using namespace sf;
 using namespace std;
 
 enum lvlnum {
-	LvlRun = 1,
+	lvlRun = 1,
 	lvlTraining,
 	menuGame,
 	exitGame = 0
@@ -28,6 +28,7 @@ class Game {
 	private:
 		configuration *config;
 		RenderWindow *window;
+		Image *ptr_on_image_world;
 		Image *ptr_on_image_castle;
 		Image *ptr_on_image_expl;
 		Image *ptr_on_image_sprman; //"Img/sprman.png"
@@ -49,6 +50,8 @@ class Game {
 			window = new RenderWindow(VideoMode(config->screenWidth, config->screenHeight), "Little World", config->fullScreen ? 8 : 7);
 			window->setVerticalSyncEnabled(config->verticalSync);
 
+			ptr_on_image_world = new Image;
+			ptr_on_image_world->loadFromFile("Img/ground.png");
 			ptr_on_image_expl = new Image;
 			ptr_on_image_expl->loadFromFile("Img/exp.png");
 			ptr_on_image_castle = new Image;
@@ -68,7 +71,7 @@ class Game {
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		~Game() {
 			delete config, window; 
-			delete ptr_on_image_castle, ptr_on_image_expl, ptr_on_image_sprman, ptr_on_image_castl_destr, ptr_on_image_gg, ptr_on_image_ice;
+			delete ptr_on_image_world, ptr_on_image_castle, ptr_on_image_expl, ptr_on_image_sprman, ptr_on_image_castl_destr, ptr_on_image_gg, ptr_on_image_ice;
 		}
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		int Run() {
@@ -102,7 +105,7 @@ class Game {
 								//this->LvlRun();
 								//goto Exit;
 								delete main_men, st_men, message_settings;
-								return lvlnum::LvlRun;
+								return lvlnum::lvlRun;
 							}
 						}
 
@@ -168,12 +171,15 @@ class Game {
 					}
 				}
 
+				
 				window->clear();
 				main_men->render(window);
 				st_men->render(window);
 				message_settings->render(window);
 				window->display();
+				
 			}
+			
 			delete main_men, st_men, message_settings;
 			return lvlnum::exitGame;
 		}
@@ -196,7 +202,7 @@ class Game {
 			list<Spearman*> *Spman = new list<Spearman*>;
 			list<IceBall*> *Ice = new list<IceBall*>;
 
-			MainWrd = new World("Img/untitled.png", 60, 60);
+			MainWrd = new World(ptr_on_image_world, 60, 60);
 			mlt = new _interface::multiline_text(100, 200, Color::Black, Color::Yellow);
 			mlt->resize(_interface::text_size::normal);
 			Camera = new Camer(CENTER_SCREEN_X, CENTER_SCREEN_Y, config->screenWidth, config->screenHeight);
@@ -1341,7 +1347,7 @@ class Game {
 								delete* it_expl;
 								it_expl = Expl_list->erase(it_expl);
 							} else {
-								
+
 								for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
 									if ((*it_expl)->rect_collis->getBounds().intersects((*it_sp)->rect_collis->getBounds()) && !(*it_expl)->cooldown) {
 										(*it_sp)->health -= 30;
@@ -1738,7 +1744,7 @@ class Game {
 
 			Collision *triggerForEnemy = new Collision(IntRect(config->screenWidth - 500, 0, 20, config->screenHeight));
 
-			MainWrd = new World("Img/untitled.png", 60, 60);
+			MainWrd = new World(ptr_on_image_world, 60, 60);
 			HP = new _interface::bar(5, 5, 100, 0, L"HP:", Color::White, Color::Red, Color::Black);
 			MP = new _interface::bar(5, HP->getSize().left + HP->getSize().width + 5, 100, 0, L"MP:", Color::White, Color::Blue, Color::Black);
 			Camera = new Camer(CENTER_SCREEN_X, CENTER_SCREEN_Y, config->screenWidth, config->screenHeight);
@@ -2190,7 +2196,7 @@ class Game {
 			out = this->Run();
 			while (out != lvlnum::exitGame) {
 				switch (out) {
-				case lvlnum::LvlRun: out = this->LvlRun(); break;
+				case lvlnum::lvlRun: out = this->LvlRun(); break;
 				case lvlnum::lvlTraining: out = this->lvlTraining(); break;
 				case lvlnum::menuGame: out = this->Run(); break;
 				default: break;

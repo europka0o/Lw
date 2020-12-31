@@ -12,7 +12,7 @@ int settings::createSettings(int ScreenW, int ScreenH, bool VertS, int TxtS, boo
 
 int settings::saveSettings() {
 	std::ofstream zap;
-	zap.open("settings.txt");
+	zap.open("settings.cfg");
 	zap << "fullScreen = " << fullScreen << ";\n";
 	zap << "verticalSync = " << verticalSync << ";\n";
 	zap << "screenHeight = " << screenHeight << ";\n";
@@ -24,7 +24,7 @@ int settings::saveSettings() {
 
 int settings::loadSettings() {
 	std::ifstream read;
-	read.open("settings.txt");
+	read.open("settings.cfg");
 	if (read.is_open()) {
 		std::string *st = new std::string;
 		std::string *line = new std::string;
@@ -596,15 +596,12 @@ void Camer::setView(RenderWindow *wd) {
 // ----------------------------------Камера-Camer-Конец-------------------------------
 
 //-----------------------------------Мир-World-Начало-------------------------------------
-World::World(String Path, int X_SIZE, int Y_SIZE) :
-	pathFromFile(Path),
+World::World(Image *ptr_on_img, int X_SIZE, int Y_SIZE) :
 	size_x(X_SIZE),
 	size_y(Y_SIZE)
 	{
-	worldimg = new Image;
-	worldimg->loadFromFile(pathFromFile);
 	worldTexture = new Texture;
-	worldTexture->loadFromImage(*worldimg);
+	worldTexture->loadFromImage(*ptr_on_img);
 	worldSpr = new Sprite;
 	worldSpr->setTexture(*worldTexture);
 	mass_sp = new sf::String[size_y]; 
@@ -622,16 +619,16 @@ World::World(String Path, int X_SIZE, int Y_SIZE) :
 
 World::~World() noexcept {
 	delete[] mass_sp;
-	delete worldimg, worldTexture, worldSpr;
+	delete worldTexture, worldSpr;
 }
 
 void World::render(RenderWindow& wd) noexcept {
 	for (int i = 0; i < size_y; i++) { //отрисовка мира
 		for (int j = 0; j < size_x; j++) {
 			if (mass_sp[i][j] == '0') {
-				worldSpr->setTextureRect(IntRect(0, 0, worldimg->getSize().x, worldimg->getSize().y)); //0, 0, 128, 128
+				worldSpr->setTextureRect(IntRect(0, 0, worldTexture->getSize().x, worldTexture->getSize().y)); //0, 0, 128, 128
 			}
-			worldSpr->setPosition(j * worldimg->getSize().x, i * worldimg->getSize().y);
+			worldSpr->setPosition(j * worldTexture->getSize().x, i * worldTexture->getSize().y);
 			wd.draw(*worldSpr);
 		}
 	}
@@ -641,9 +638,9 @@ void World::render(RenderWindow *wd) noexcept {
 	for (int i = 0; i < size_y; i++) { //отрисовка мира
 		for (int j = 0; j < size_x; j++) {
 			if (mass_sp[i][j] == '0') {
-				worldSpr->setTextureRect(IntRect(0, 0, worldimg->getSize().x, worldimg->getSize().y)); //0, 0, 128, 128
+				worldSpr->setTextureRect(IntRect(0, 0, worldTexture->getSize().x, worldTexture->getSize().y)); //0, 0, 128, 128
 			}
-			worldSpr->setPosition(j * worldimg->getSize().x, i * worldimg->getSize().y);
+			worldSpr->setPosition(j * worldTexture->getSize().x, i * worldTexture->getSize().y);
 			wd->draw(*worldSpr);
 		}
 	}
@@ -2215,15 +2212,15 @@ DestroerCastle::~DestroerCastle() {
 	delete HP;
 }
 
-void __fastcall DestroerCastle::setPosition(float X, float Y) noexcept {
-	pos.x = X;
-	pos.y = Y;
+void __fastcall DestroerCastle::setPosition(float x, float y) noexcept {
+	pos.x = x;
+	pos.y = y;
 
 	sprt->setPosition(pos.x, pos.y);
 }
 
-void DestroerCastle::setPosition(axes_f XY) noexcept {
-	pos = XY;
+void DestroerCastle::setPosition(const axes_f &xy) noexcept {
+	pos = xy;
 
 	sprt->setPosition(pos.x, pos.y);
 }
