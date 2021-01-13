@@ -24,7 +24,7 @@ typedef struct settings {
 	//1600 x 900
 	//1600 x 1200
 	//1920 x 1080
-	//2048 x 1152
+	//2048 x 1152 ----------Под сомнениями, это не формат 16:9
 	//2560 x 1440
 } configuration;
 
@@ -166,15 +166,14 @@ typedef Collision Trigger;
 class BaseCharacter {
 	protected:
 		axes_f pos;
-		Texture *texture;
 		Sprite *sprt;
 		FloatRect fl_rect;
 		float frame, timer_cooldown;
 		bool zeroing;
 	public:
 		BaseCharacter();
-		BaseCharacter(Image *i, float x, float y, int _hp);
-		BaseCharacter(Image* i, const axes_f &xy, int _hp);
+		BaseCharacter(Texture* ptr_texture, float x, float y, int _hp);
+		BaseCharacter(Texture* ptr_texture, const axes_f &xy, int _hp);
 		~BaseCharacter();
 		bool cooldown, isDead, visible;
 		int health;
@@ -189,7 +188,7 @@ class BaseCharacter {
 class ObjectStatic {
 	protected:
 		axes_i pos;
-		Texture *texture;
+		//Texture *texture;
 		Sprite *sprt;
 		FloatRect react_obj_stat;
 	public:
@@ -201,7 +200,7 @@ class ObjectStatic {
 		/// <param name="X">Координаты по оси X</param>
 		/// <param name="Y">Координаты по оси Y</param>
 		/// <returns></returns>
-		ObjectStatic(Image* i, float X, float Y);
+		ObjectStatic(Texture* ptr_texture, float X, float Y);
 		~ObjectStatic();
 		/// <summary>
 		/// Возвращает позицию 
@@ -245,7 +244,7 @@ class ObjectAnimated : public ObjectStatic {
 		/// <param name="X">Координаты по оси X</param>
 		/// <param name="Y">Координаты по оси Y</param>
 		/// <returns></returns>
-		ObjectAnimated(Image* i, float X, float Y);
+		ObjectAnimated(Texture* ptr_texture, float X, float Y);
 		~ObjectAnimated();
 		/// <summary>
 		/// Обновление объекта
@@ -342,7 +341,7 @@ namespace _interface {
 			RectangleShape *main, *active_bvl;
 		public:
 			bool active;
-			button(int x, int y, std::wstring text, Color maincl, Color textcl, Color activecl);
+			button(int x, int y, const std::wstring &text, Color maincl, Color textcl, Color activecl);
 			~button();
 			void setPosition(const axes_i &xy) override;
 			void __fastcall setPosition(int x, int y) override;
@@ -373,7 +372,7 @@ namespace _interface {
 			~combo_box();
 			void setPosition(const axes_i &xy) override;
 			void __fastcall setPosition(int x, int y) override;
-			void add(std::wstring st, int val);
+			void add(const std::wstring &st, int val);
 			void next();
 			void back();
 			bool __fastcall isAction(int x, int y);
@@ -409,13 +408,13 @@ namespace _interface {
 			Text* label;
 			Color* bevel_cl;
 			Color* label_cl;
-			text(int x, int y, std::wstring txt, Color lbcol, Color bvcol); //координата объекта по оси X, координата объекта по оси Y, текст, цвет текста, цвет прямоугольника
+			text(int x = 0, int y = 0, const std::wstring& txt = L"ERR:", Color lbcol = Color::White, Color bvcol = Color::Black); //координата объекта по оси X, координата объекта по оси Y, текст, цвет текста, цвет прямоугольника
 			~text();
-			void setString(std::wstring txt) noexcept; //задаетс текст 
-			void setFont(String txt) noexcept; //путь к фону для текста
+			void setString(const std::wstring &txt) noexcept; //задаетс текст 
+			void setFont(const String &txt) noexcept; //путь к фону для текста
 			void __fastcall setPosition(int x, int y) noexcept override; //устанавливает позицию объекта по осям X, Y 
 			void setPosition(const axes_i &xy) noexcept override; //устанавливает позицию объекта по осям X, Y 
-			void resize(int size) noexcept; //задает размер объекта в пикселях
+			void resize(int size = normal) noexcept; //задает размер объекта в пикселях
 			void freeze(Camer* camera, const axes_i &xy); //замораживает позицию компонента относительно камеры
 			void freeze(Camer* camera, int x, int y); //замораживает позицию компонента относительно камеры
 			void render(RenderWindow& wd) noexcept override;
@@ -432,7 +431,7 @@ namespace _interface {
 		public:
 			bool active;
 			button *btOk;
-			message(int x, int y, std::wstring txt, Color maincl, Color bordercl, Color textcl);
+			message(int x, int y, const std::wstring& txt, Color maincl, Color bordercl, Color textcl);
 			~message();
 			void render(RenderWindow &wd, Camer *camera) noexcept;
 			void render(RenderWindow *wd, Camer *camera) noexcept;
@@ -469,7 +468,7 @@ namespace _interface {
 			text *txVertS, *txFullS, *txScreen;
 			check_box *cbVertS, *cbFullS;
 			combo_box *combScreen;
-			settings_menu(configuration *cf,Camer *camera, Color maincl, Color bordercl);
+			settings_menu(configuration *cf, Camer *camera, Color maincl, Color bordercl);
 			settings_menu(configuration *cf, Color maincl, Color bordercl);
 			~settings_menu();
 			void backSettings(configuration *cf);
@@ -514,7 +513,7 @@ namespace _interface {
 			/// <param name="bcol">Цвет прямоугольника под полосой</param>
 			/// <param name="tcol">Цвет текста</param>
 			/// <returns></returns>
-			bar(int x, int y, int br_ma, int br_mi, std::wstring name, Color mcol, Color bcol, Color tcol); 
+			bar(int x = 0, int y = 0, int br_ma = 100, int br_mi = 0, const std::wstring& name = L"NON:", Color mcol = Color::White, Color bcol = Color::Red, Color tcol = Color::Black);
 			bar(); //конструктор по умолчанию
 			~bar(); //деструктор
 			/// <summary>
@@ -542,7 +541,7 @@ namespace _interface {
 			/// </summary>
 			/// <param name="size">Новый размер текста в пикселях</param>
 			/// <returns></returns>
-			void resize(int size) noexcept; //задает размер объекта в пикселях 
+			void resize(int size = normal) noexcept; //задает размер объекта в пикселях 
 			/// <summary>
 			/// Замораживает позицию объекта относительно камеры
 			/// </summary>
@@ -608,8 +607,10 @@ namespace _interface {
 			RectangleShape *bevel; //прямоугольник под текстом 
 			Font *font_main;
 		public:
-			Text* mass; //указатель на массив строк
-			Text* ptr; //указатель на первый элемент массива строк (итерратор)
+			using dyn_vector_text = std::vector<Text*>;
+			dyn_vector_text mass_string;
+			//Text* mass; //указатель на массив строк
+			//Text* ptr; //указатель на первый элемент массива строк (итерратор)
 			bool visible; //видимость объекта
 			bool visible_bevel; //видимость прямоугольника под текстом
 			Color *bevel_cl;
@@ -622,20 +623,20 @@ namespace _interface {
 			/// <param name="lbcol">Цвет текста</param>
 			/// <param name="bvcol">Цвет ограничивающего прямоугольника под текстом</param>
 			/// <returns></returns>
-			multiline_text(float x, float y, Color lbcol, Color bvcol); //координата объекта по оси X, координата объекта по оси Y, цвет текста, цвет прямоугольника
+			multiline_text(float x = 0, float y = 0, Color lbcol = Color::White, Color bvcol = Color::Black); //координата объекта по оси X, координата объекта по оси Y, цвет текста, цвет прямоугольника
 			~multiline_text() noexcept;
 			/// <summary>
 			/// Изменяет размер текста
 			/// </summary>
 			/// <param name="size">Размер текста в пикселях</param>
 			/// <returns></returns>
-			void resize(int size) noexcept; //задает размер объекта в пикселях
+			void resize(int size = normal) noexcept; //задает размер объекта в пикселях
 			/// <summary>
 			/// Добавление новой линии текста
 			/// </summary>
 			/// <param name="txt">Текст на новой линии</param>
 			/// <returns></returns>
-			void add(std::wstring txt) noexcept; //добавляет новую строку в массив
+			void add(const std::wstring &txt) noexcept; //добавляет новую строку в массив
 			void render(RenderWindow &wd) noexcept;
 			void render(RenderWindow *wd) noexcept;
 	};
@@ -673,14 +674,13 @@ class Character : public BaseCharacter {
 		_interface::min_bar* HP;
 	public:
 		Collision* rect_collis;
-		Character(Image* ptr_on_img, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
+		Character(Texture* ptr_texture, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
 		~Character(); //деструктор
 		void __fastcall setPosition(float x, float y) noexcept override; //устанавливает позицию спрайта по осям X, Y
 		void setPosition(const axes_f &xy) noexcept override; //устанавливает позицию спрайта по осям X, Y
-		void setImage(Image *ptr_on_img);
 		float getPositionX_forCamer() noexcept; //возвращает центр координата спрайта по оси X
 		float getPositionY_forCamer() noexcept; //возвращает центр координата спрайта по оси Y
-		void __fastcall move(float time, int direct) noexcept; //перезаписывает положение спрайта
+		void __fastcall move(float time, int direct = 0) noexcept; //перезаписывает положение спрайта
 		void __fastcall move(float time) noexcept; //перезаписывает положение спрайта
 		void __fastcall attack(float time);
 		bool isCooldown(float time);
@@ -693,18 +693,18 @@ class DestroerCastle : public BaseCharacter {
 		int direction, last_direction; //ширина изображения, высота изображения, положение спрайта по оси X, положение спрайта по оси Y, направление движения персонажа 
 		_interface::min_bar* HP;
 	public:
-		DestroerCastle(Image *ptr_on_img, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
+		DestroerCastle(Texture* ptr_texture, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
 		~DestroerCastle(); //деструктор
-		void __fastcall setPosition(float X, float Y) noexcept; //устанавливает позицию спрайта по осям X, Y
-		void setPosition(axes_f XY) noexcept; //устанавливает позицию спрайта по осям X, Y
+		void __fastcall setPosition(float x, float y) noexcept override; //устанавливает позицию спрайта по осям X, Y
+		void setPosition(const axes_f &xy) noexcept override; //устанавливает позицию спрайта по осям X, Y
 		//float getPositionX_forCamer() noexcept; //возвращает центр координата спрайта по оси X
 		//float getPositionY_forCamer() noexcept; //возвращает центр координата спрайта по оси Y
 		void __fastcall move(float time, int direct) noexcept; //перезаписывает положение спрайта
 		//void move(float time) noexcept; //перезаписывает положение спрайта
 		void __fastcall attack(float time);
 		bool isCooldown(float time);
-		void render(RenderWindow& wd) noexcept;
-		void render(RenderWindow* wd) noexcept;
+		void render(RenderWindow& wd) noexcept override;
+		void render(RenderWindow* wd) noexcept override;
 };
 
 class Spearman : public BaseCharacter {
@@ -713,7 +713,7 @@ class Spearman : public BaseCharacter {
 		_interface::min_bar* HP;
 	public:
 		Collision* rect_collis;
-		Spearman(Image *ptr_on_img, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
+		Spearman(Texture* ptr_texture, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
 		~Spearman(); //деструктор
 		void __fastcall setPosition(float x, float y) noexcept override; //устанавливает позицию спрайта по осям X, Y
 		void setPosition(const axes_f &xy) noexcept override; //устанавливает позицию спрайта по осям X, Y
@@ -729,7 +729,7 @@ class IceBall : public BaseCharacter {
 		_interface::min_bar* HP;
 	public:
 		Collision* rect_collis;
-		IceBall(Image *ptr_on_img, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
+		IceBall(Texture* ptr_texture, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
 		~IceBall(); //деструктор
 		void __fastcall setPosition(float x, float y) noexcept override; //устанавливает позицию спрайта по осям X, Y
 		void setPosition(const axes_f &xy) noexcept override; //устанавливает позицию спрайта по осям X, Y

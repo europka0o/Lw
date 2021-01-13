@@ -121,8 +121,8 @@ axes<type>::axes(type _x, type _y) : x(_x), y(_y) {}
 //----------------------------------Структура-оси-axes-Конец-------------------------------
 
 // ----------------------------------Персанаж-Character-Начало------------------------------
-Character::Character(Image* ptr_on_img, float X_POS, float Y_POS, int hp) :
-	BaseCharacter(ptr_on_img, X_POS, Y_POS, hp)
+Character::Character(Texture* ptr_texture, float X_POS, float Y_POS, int hp) :
+	BaseCharacter(ptr_texture, X_POS, Y_POS, hp)
 	{
 	sprt->setTextureRect(IntRect(0, 250, 300, 250));
 	sprt->setPosition(pos.x, pos.y);
@@ -139,14 +139,6 @@ Character::~Character() {
 	//texture->~Texture();
 	delete HP;
 }
-
-void Character::setImage(Image *ptr_on_img) {
-	texture->loadFromImage(*ptr_on_img);
-	sprt->setTexture(*texture);
-	sprt->setTextureRect(IntRect(0, 250, 300, 250));
-	sprt->setPosition(pos.x, pos.y);
-}
-
 
 void __fastcall Character::setPosition(float x, float y) noexcept {
 	pos.x = x;
@@ -285,7 +277,7 @@ void __fastcall Character::move(float time) noexcept {
 	pos.y = sprt->getGlobalBounds().top;
 }
 
-void __fastcall Character::move(float time, int direct = 0) noexcept {
+void __fastcall Character::move(float time, int direct) noexcept {
 	direction = direct;
 	
 	if (health <= 0 && !zeroing) {
@@ -437,15 +429,13 @@ void Character::render(RenderWindow *wd) noexcept {
 // ----------------------------------Персанаж-Character-Конец------------------------------
 
 // ---------------------------Статический-объект-ObjectStatic-Начало------------------------------
-ObjectStatic::ObjectStatic(Image *i, float X, float Y) {
+ObjectStatic::ObjectStatic(Texture* ptr_texture, float X, float Y) {
 	pos.x = X;
 	pos.y = Y;
 
-	texture = new Texture;
-	texture->loadFromImage(*i);
 	sprt = new Sprite;
-	sprt->setTexture(*texture);
-	sprt->setTextureRect(IntRect(0, 0, i->getSize().x, i->getSize().y));
+	sprt->setTexture(*ptr_texture);
+	sprt->setTextureRect(IntRect(0, 0, ptr_texture->getSize().x, ptr_texture->getSize().y));
 	sprt->setPosition(pos.x, pos.y);
 
 	react_obj_stat = sprt->getGlobalBounds();
@@ -454,7 +444,7 @@ ObjectStatic::ObjectStatic(Image *i, float X, float Y) {
 }
 
 ObjectStatic::~ObjectStatic() {
-	delete texture, sprt;
+	delete sprt;
 	delete rect_collis;
 }
 
@@ -497,13 +487,13 @@ void ObjectStatic::render(RenderWindow *wd) {
 // ----------------------------------Статический-объект-ObjectStatic-Конец-------------------------------
 
 // -------------------------------Анимированный-объект-ObjectAnimated-Начало------------------------------
-ObjectAnimated::ObjectAnimated(Image* i, float X, float Y) :
+ObjectAnimated::ObjectAnimated(Texture* ptr_texture, float X, float Y) :
 	frame(0),
 	end(false),
 	cooldown(false),
-	ObjectStatic(i, X, Y)
+	ObjectStatic(ptr_texture, X, Y)
 	{	
-	sprt->setTextureRect(IntRect(400, 0, i->getSize().x, i->getSize().y));
+	sprt->setTextureRect(IntRect(400, 0, ptr_texture->getSize().x, ptr_texture->getSize().y));
 	sprt->setPosition(pos.x, pos.y);
 
 	react_obj_stat = sprt->getGlobalBounds();
@@ -648,7 +638,7 @@ void World::render(RenderWindow *wd) noexcept {
 //-----------------------------------Мир-World-Конец-------------------------------------
 
 //-----------------------------------Полоса-bar-Начало-------------------------------------
-_interface::bar::bar(int x = 0, int y = 0, int br_ma = 100, int br_mi = 0, std::wstring name = L"ERR:", Color mcol = Color::White, Color bcol = Color::Red, Color tcol = Color::Black) :
+_interface::bar::bar(int x, int y, int br_ma, int br_mi, const std::wstring &name, Color mcol, Color bcol, Color tcol) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	max_bar(br_ma),
 	min_bar(br_mi),
@@ -748,7 +738,7 @@ void _interface::bar::freeze(Camer* camera, int x, int y) {
 	this->setPosition(camera->getPosition().x - (camera->getScreenWidth() / 2) + x, camera->getPosition().y - (camera->getScreenHeight() / 2) + y);
 }
 
-void _interface::bar::resize(int size = normal) noexcept {
+void _interface::bar::resize(int size) noexcept {
 	label->setCharacterSize(size);
 	label->setPosition(pos.x, pos.y);
 	label->setPosition(repoz_x(float, pos.x, label->getGlobalBounds().left, 5), repoz_y(float, pos.y, label->getGlobalBounds().top, 5));
@@ -761,7 +751,7 @@ void _interface::bar::resize(int size = normal) noexcept {
 //-----------------------------------Полоса-bar-Конец--------------------------------------
 
 //-----------------------------------Текст-text-Начало-------------------------------------
-_interface::text::text(int x = 0, int y = 0, std::wstring txt = L"ERR:", Color lbcol = Color::White, Color bvcol = Color::Black) :
+_interface::text::text(int x, int y, const std::wstring& txt, Color lbcol, Color bvcol) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	visible_bevel(true)
 	{
@@ -792,12 +782,12 @@ _interface::text::~text() {
 	delete font_main, label, label_cl, bevel, bevel_cl;
 }
 
-void _interface::text::setString(std::wstring txt) noexcept {
+void _interface::text::setString(const std::wstring& txt) noexcept {
 	label->setString(txt);
 	_interface::text::resize(label->getCharacterSize());
 }
 
-void _interface::text::setFont(String txt) noexcept {
+void _interface::text::setFont(const String& txt) noexcept {
 	font_main->loadFromFile(txt);
 }
 
@@ -820,7 +810,7 @@ void __fastcall _interface::text::setPosition(int x, int y) noexcept {
 	fl_rect = bevel->getGlobalBounds();
 }
 
-void _interface::text::resize(int size = normal) noexcept {
+void _interface::text::resize(int size) noexcept {
 	label->setCharacterSize(size);
 	label->setPosition(pos.x, pos.y);
 	label->setPosition(repoz_x(int, pos.x, label->getGlobalBounds().left, 5), repoz_y(int, pos.y, label->getGlobalBounds().top, 5));
@@ -857,7 +847,7 @@ void _interface::text::render(RenderWindow *wd) noexcept {
 //-----------------------------------Текст-text-Конец-------------------------------------
 
 //-----------------------------------Многострочный-текст-multiline_text-Конец-------------------------------------
-_interface::multiline_text::multiline_text(float x = 0, float y = 0, Color lbcol = Color::White, Color bvcol = Color::Black) :
+_interface::multiline_text::multiline_text(float x, float y, Color lbcol, Color bvcol) :
 	visible(true),
 	visible_bevel(true)
 	{
@@ -867,8 +857,6 @@ _interface::multiline_text::multiline_text(float x = 0, float y = 0, Color lbcol
 	font_main->loadFromFile("Img/18094.ttf");
 	SIZE_MSTX = 0;
 	max_length = 0;
-	mass = nullptr;
-	ptr = nullptr;
 
 	bevel_cl = new Color; 
 	*bevel_cl = bvcol;
@@ -880,108 +868,76 @@ _interface::multiline_text::multiline_text(float x = 0, float y = 0, Color lbcol
 
 _interface::multiline_text::~multiline_text() noexcept {
 	if (SIZE_MSTX > 0) {
-		delete[] mass;
+		mass_string.clear();
 	}
 	delete font_main, bevel, bevel_cl, label_cl;
 }
 
-void _interface::multiline_text::add(std::wstring txt) noexcept {
+void _interface::multiline_text::add(const std::wstring& txt) noexcept {
 	float rep_y = 0;
+	int height = 0;
 	++SIZE_MSTX;
+	#undef small
+	mass_string.push_back(new Text());
+	mass_string.back()->setFont(*font_main);
+	mass_string.back()->setString(txt);
+	mass_string.back()->setCharacterSize(text_size::small);
+	mass_string.back()->setFillColor(*label_cl);
 
-	if (SIZE_MSTX == 1) {
-		mass = new Text[SIZE_MSTX];
-		ptr = &mass[0];
-		ptr->setFont(*font_main);
-		ptr->setString(txt);
-		ptr->setCharacterSize(small);
-		ptr->setFillColor(*label_cl);
-	} else {
-		Text* vrmass = new Text[SIZE_MSTX];
-		ptr = &mass[0];
-		for (int i = 0; i < SIZE_MSTX; i++) {
-			if (i != (SIZE_MSTX - 1)) {
-				vrmass[i] = *ptr;
-				ptr++;
-			} else {
-				vrmass[i].setFont(*font_main);
-				vrmass[i].setString(txt);
-				vrmass[i].setCharacterSize(small);
-				vrmass[i].setFillColor(*label_cl);
-			}
-		}
-
-		delete[] mass;
-		mass = new Text[SIZE_MSTX];
-		ptr = &vrmass[0];
-
-		rep_y = 0;
-		for (int i = 0; i < SIZE_MSTX; i++) {
-			mass[i] = *ptr;
-			ptr++;
-		}
-		delete[] vrmass;
-	}
-
-	ptr = &mass[0];
-	rep_y = 0;
-	int *height = new int(0);
 	for (int i = 0; i < SIZE_MSTX; i++) {
 		if (i == 0) {
-			ptr->setPosition(pos.x, pos.y);
-			max_length = ptr->getGlobalBounds().width;
-			ptr->setPosition(repoz_x(float, pos.x, ptr->getGlobalBounds().left, 5), repoz_y(float, pos.y, ptr->getGlobalBounds().top, 5));
-			*height += ptr->getGlobalBounds().height;
+			mass_string[i]->setPosition(pos.x, pos.y);
+			max_length = mass_string[i]->getGlobalBounds().width;
+			mass_string[i]->setPosition(repoz_x(float, pos.x, mass_string[i]->getGlobalBounds().left, 5), repoz_y(float, pos.y, mass_string[i]->getGlobalBounds().top, 5));
+			height += mass_string[i]->getGlobalBounds().height;
 		} else {
-			ptr->setPosition(pos.x, pos.y);
-			max_length < ptr->getGlobalBounds().width ? max_length = ptr->getGlobalBounds().width : max_length;
-			rep_y = repoz_y(float, pos.y, ptr->getGlobalBounds().top, 5);
-			rep_y += (*height + 5 * i);
-			ptr->setPosition(repoz_x(float, pos.x, ptr->getGlobalBounds().left, 5), rep_y);
-			*height += ptr->getGlobalBounds().height;
+			mass_string[i]->setPosition(pos.x, pos.y);
+			max_length < mass_string[i]->getGlobalBounds().width ? max_length = mass_string[i]->getGlobalBounds().width : max_length;
+			rep_y = repoz_y(float, pos.y, mass_string[i]->getGlobalBounds().top, 5);
+			rep_y += (height + 5 * i);
+			mass_string[i]->setPosition(repoz_x(float, pos.x, mass_string[i]->getGlobalBounds().left, 5), rep_y);
+			height += mass_string[i]->getGlobalBounds().height;
 		}
-		ptr++;
 	}
-	bevel->setSize(Vector2f(max_length + 10, *height + (SIZE_MSTX * 5) + 5));
+
+	bevel->setSize(Vector2f(max_length + 10, height + (SIZE_MSTX * 5) + 5));
 	bevel->setFillColor(*bevel_cl);
 	bevel->setPosition(pos.x, pos.y);
-	delete height;
+
+	
 }
 
-void _interface::multiline_text::resize(int size = normal) noexcept { 
-	ptr = &mass[0];
+void _interface::multiline_text::resize(int size) noexcept { 
 	float rep_y = 0;
-	int *height = new int(0);
+	int height = 0;
 	for (int i = 0; i < SIZE_MSTX; i++) {
 		if (i == 0) {
-			ptr->setCharacterSize(size);
-			ptr->setPosition(pos.x, pos.y);
-			max_length = ptr->getGlobalBounds().width;
-			ptr->setPosition(repoz_x(float, pos.x, ptr->getGlobalBounds().left, 5), repoz_y(float, pos.y, ptr->getGlobalBounds().top, 5));
-			*height += ptr->getGlobalBounds().height;
+			mass_string[i]->setCharacterSize(size);
+			mass_string[i]->setPosition(pos.x, pos.y);
+			max_length = mass_string[i]->getGlobalBounds().width;
+			mass_string[i]->setPosition(repoz_x(float, pos.x, mass_string[i]->getGlobalBounds().left, 5), repoz_y(float, pos.y, mass_string[i]->getGlobalBounds().top, 5));
+			height += mass_string[i]->getGlobalBounds().height;
 		} else {
-			ptr->setCharacterSize(size);
-			ptr->setPosition(pos.x, pos.y);
-			max_length < ptr->getGlobalBounds().width ? max_length = ptr->getGlobalBounds().width : max_length;
-			rep_y = repoz_y(float, pos.y, ptr->getGlobalBounds().top, 5);
-			rep_y += (*height + 5 * i);
-			ptr->setPosition(repoz_x(float, pos.x, ptr->getGlobalBounds().left, 5), rep_y);
-			*height += ptr->getGlobalBounds().height;
+			mass_string[i]->setCharacterSize(size);
+			mass_string[i]->setPosition(pos.x, pos.y);
+			max_length < mass_string[i]->getGlobalBounds().width ? max_length = mass_string[i]->getGlobalBounds().width : max_length;
+			rep_y = repoz_y(float, pos.y, mass_string[i]->getGlobalBounds().top, 5);
+			rep_y += (height + 5 * i);
+			mass_string[i]->setPosition(repoz_x(float, pos.x, mass_string[i]->getGlobalBounds().left, 5), rep_y);
+			height += mass_string[i]->getGlobalBounds().height;
 		}
-		ptr++;
 	}
 
-	bevel->setSize(Vector2f(max_length + 10, *height + (SIZE_MSTX * 5) + 5));
+	bevel->setSize(Vector2f(max_length + 10, height + (SIZE_MSTX * 5) + 5));
 	bevel->setFillColor(*bevel_cl);
 	bevel->setPosition(pos.x, pos.y);
-	delete height;
 }
 
 void _interface::multiline_text::render(RenderWindow &wd) noexcept {
 	if (visible) {
 		wd.draw(*bevel);
 		for (int i = 0; i < SIZE_MSTX; i++) {
-			wd.draw(mass[i]);
+			wd.draw(*mass_string[i]);
 		}
 	}
 }
@@ -990,14 +946,14 @@ void _interface::multiline_text::render(RenderWindow *wd) noexcept {
 	if (visible) {
 		wd->draw(*bevel);
 		for (int i = 0; i < SIZE_MSTX; i++) {
-			wd->draw(mass[i]);
+			wd->draw(*mass_string[i]);
 		}
 	}
 }
 //-----------------------------------Многострочный-текст-multiline_text-Конец-------------------------------------
 
 //-----------------------------------Кнопка-button-Начало-------------------------------------
-_interface::button::button(int x, int y, std::wstring text, Color maincl, Color textcl, Color activecl) : 
+_interface::button::button(int x, int y, const std::wstring& text, Color maincl, Color textcl, Color activecl) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	active(false)
 	{
@@ -1839,7 +1795,7 @@ void __fastcall _interface::combo_box::setPosition(int x, int y) {
 	fl_rect = main->getGlobalBounds();
 }
 
-void _interface::combo_box::add(std::wstring st, int val) {
+void _interface::combo_box::add(const std::wstring& st, int val) {
 	mass_text.push_back(new cell(Text(st, *font, _interface::text_size::small), val));
 	it = mass_text.end();
 	it--;
@@ -1936,7 +1892,7 @@ void _interface::combo_box::render(RenderWindow *wd) {
 //-----------------------------Комбо-бокс-combo_box-Конец---------------------------------------
 
 //-----------------------------Сообщение-message-Начало---------------------------------------
-_interface::message::message(int x, int y, std::wstring txt, Color maincl, Color bordercl, Color textcl) :
+_interface::message::message(int x, int y, const std::wstring &txt, Color maincl, Color bordercl, Color textcl) :
 	active(false)
 	{
 	pos.x = x;
@@ -2195,8 +2151,8 @@ void _interface::min_bar::render(RenderWindow *wd) noexcept {
 //-----------------------------Мини-полоса-min_bar-Конец-----------------------------------------
 
 //-----------------------------------Разрушитель-замков-DestroerCastle-Начало-----------------------------------------
-DestroerCastle::DestroerCastle(Image* ptr_on_img, float X_POS, float Y_POS, int hp) :
-	BaseCharacter(ptr_on_img, X_POS, Y_POS, hp)
+DestroerCastle::DestroerCastle(Texture* ptr_texture, float X_POS, float Y_POS, int hp) :
+	BaseCharacter(ptr_texture, X_POS, Y_POS, hp)
 	{
 	sprt->setTextureRect(IntRect(0, 0, 600, 350));
 	sprt->setPosition(pos.x, pos.y);
@@ -2320,8 +2276,8 @@ void DestroerCastle::render(RenderWindow *wd) noexcept {
 //-----------------------------------Разрушитель-замков-DestroerCastle-Конец------------------------------------------
 
 //-----------------------------------------Копейщик-Spearman-Начало------------------------------------------
-Spearman::Spearman(Image *ptr_on_img, float X_POS, float Y_POS, int hp) :
-	BaseCharacter(ptr_on_img, X_POS, Y_POS, hp)
+Spearman::Spearman(Texture* ptr_texture, float X_POS, float Y_POS, int hp) :
+	BaseCharacter(ptr_texture, X_POS, Y_POS, hp)
 	{
 	sprt->setTextureRect(IntRect(0, 0, 600, 350));
 	sprt->setPosition(pos.x, pos.y);
@@ -2489,8 +2445,8 @@ void _interface::background_color::render(RenderWindow *wd) noexcept {
 //-------------------------------------Задний-фон-background_color-Конец------------------------------------------
 
 //---------------------------------------Ледяной-шар-IceBall-Начало------------------------------------------
-IceBall::IceBall(Image *ptr_on_img, float X_POS, float Y_POS, int hp) :
-	BaseCharacter(ptr_on_img, X_POS, Y_POS, hp)
+IceBall::IceBall(Texture* ptr_texture, float X_POS, float Y_POS, int hp) :
+	BaseCharacter(ptr_texture, X_POS, Y_POS, hp)
 	{
 	visible = true;
 	sprt->setTextureRect(IntRect(0, 0, 400, 120));
@@ -2593,11 +2549,10 @@ BaseCharacter::BaseCharacter() :
 	timer_cooldown(0),
 	frame(0)
 	{
-	texture = new Texture;
 	sprt = new Sprite;
 }
 
-BaseCharacter::BaseCharacter(Image* i, float x, float y, int _hp) :
+BaseCharacter::BaseCharacter(Texture* ptr_texture, float x, float y, int _hp) :
 	pos(x, y),
 	health(_hp),
 	visible(true),
@@ -2607,13 +2562,11 @@ BaseCharacter::BaseCharacter(Image* i, float x, float y, int _hp) :
 	timer_cooldown(0),
 	frame(0)
 	{
-	texture = new Texture;
-	texture->loadFromImage(*i);
 	sprt = new Sprite;
-	sprt->setTexture(*texture);
+	sprt->setTexture(*ptr_texture);
 }
 
-BaseCharacter::BaseCharacter(Image* i, const axes_f &xy, int _hp) :
+BaseCharacter::BaseCharacter(Texture* ptr_texture, const axes_f &xy, int _hp) :
 	pos(xy),
 	health(_hp),
 	visible(true),
@@ -2623,14 +2576,12 @@ BaseCharacter::BaseCharacter(Image* i, const axes_f &xy, int _hp) :
 	timer_cooldown(0),
 	frame(0)
 	{
-	texture = new Texture;
-	texture->loadFromImage(*i);
 	sprt = new Sprite;
-	sprt->setTexture(*texture);
+	sprt->setTexture(*ptr_texture);
 }
 
 BaseCharacter::~BaseCharacter() {
-	delete sprt, texture;
+	delete sprt;
 }
 
 axes_f BaseCharacter::getPosition() {

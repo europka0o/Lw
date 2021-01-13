@@ -29,12 +29,12 @@ class Game {
 		configuration *config;
 		RenderWindow *window;
 		Image *ptr_on_image_world;
-		Image *ptr_on_image_castle;
-		Image *ptr_on_image_expl;
-		Image *ptr_on_image_sprman; //"Img/sprman.png"
-		Image *ptr_on_image_castl_destr; //"Img/CastlDestr.png"
-		Image *ptr_on_image_gg; //"Img/gg.png"
-		Image *ptr_on_image_ice; //"Img/ice.png"
+		Texture *ptr_on_texture_castle;
+		Texture *ptr_on_texture_expl;
+		Texture *ptr_on_texture_sprman; //"Img/sprman.png"
+		Texture *ptr_on_texture_castl_destr; //"Img/CastlDestr.png"
+		Texture *ptr_on_texture_gg; //"Img/gg.png"
+		Texture *ptr_on_texture_ice; //"Img/ice.png"
 		sf::Vector2i pos;
 		sf::Vector2f realPos;
 		uint32_t CENTER_SCREEN_X;
@@ -49,21 +49,21 @@ class Game {
 
 			window = new RenderWindow(VideoMode(config->screenWidth, config->screenHeight), "Little World", config->fullScreen ? 8 : 7);
 			window->setVerticalSyncEnabled(config->verticalSync);
-
+			
 			ptr_on_image_world = new Image;
 			ptr_on_image_world->loadFromFile("Img/ground.png");
-			ptr_on_image_expl = new Image;
-			ptr_on_image_expl->loadFromFile("Img/exp.png");
-			ptr_on_image_castle = new Image;
-			ptr_on_image_castle->loadFromFile("Img/castle.png");
-			ptr_on_image_sprman = new Image;
-			ptr_on_image_sprman->loadFromFile("Img/sprman.png");
-			ptr_on_image_castl_destr = new Image;
-			ptr_on_image_castl_destr->loadFromFile("Img/CastlDestr.png");
-			ptr_on_image_gg = new Image;
-			ptr_on_image_gg->loadFromFile("Img/gg.png");
-			ptr_on_image_ice = new Image;
-			ptr_on_image_ice->loadFromFile("Img/ice.png");
+			ptr_on_texture_expl = new Texture;
+			ptr_on_texture_expl->loadFromFile("Img/exp.png");
+			ptr_on_texture_castle = new Texture;
+			ptr_on_texture_castle->loadFromFile("Img/castle.png");
+			ptr_on_texture_sprman = new Texture;
+			ptr_on_texture_sprman->loadFromFile("Img/sprman.png");
+			ptr_on_texture_castl_destr = new Texture;
+			ptr_on_texture_castl_destr->loadFromFile("Img/CastlDestr.png");
+			ptr_on_texture_gg = new Texture;
+			ptr_on_texture_gg->loadFromFile("Img/gg.png");
+			ptr_on_texture_ice = new Texture;
+			ptr_on_texture_ice->loadFromFile("Img/ice.png");
 
 			CENTER_SCREEN_X = config->screenWidth / 2;
 			CENTER_SCREEN_Y = config->screenHeight / 2;
@@ -71,7 +71,7 @@ class Game {
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		~Game() {
 			delete config, window; 
-			delete ptr_on_image_world, ptr_on_image_castle, ptr_on_image_expl, ptr_on_image_sprman, ptr_on_image_castl_destr, ptr_on_image_gg, ptr_on_image_ice;
+			delete ptr_on_image_world, ptr_on_texture_castle, ptr_on_texture_expl, ptr_on_texture_sprman, ptr_on_texture_castl_destr, ptr_on_texture_gg, ptr_on_texture_ice;
 		}
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		int Run() {
@@ -202,12 +202,12 @@ class Game {
 			list<Spearman*> *Spman = new list<Spearman*>;
 			list<IceBall*> *Ice = new list<IceBall*>;
 
-			MainWrd = new World(ptr_on_image_world, 60, 60);
+			MainWrd = new World(ptr_on_image_world, 40, 60);
 			mlt = new _interface::multiline_text(100, 200, Color::Black, Color::Yellow);
 			mlt->resize(_interface::text_size::normal);
 			Camera = new Camer(CENTER_SCREEN_X, CENTER_SCREEN_Y, config->screenWidth, config->screenHeight);
 
-			Castle = new ObjectStatic(ptr_on_image_castle, 0, 0); //замок
+			Castle = new ObjectStatic(ptr_on_texture_castle, 0, 0); //замок
 			Castle->setRect(IntRect(0, 0, 400, 1500));
 			Castle->rect_collis->setBounds(IntRect(0, 0, 400, 1500));
 			int numlvl = 0; //номер волны
@@ -289,7 +289,7 @@ class Game {
 					if (!message_end->active && !message_vic->active) {
 						if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Left && !men->active) { //если нажата левая кнопка мыши
 							if (barmp >= mp_need_cast_expl) {
-								Expl_list->push_back(new ObjectAnimated(ptr_on_image_expl, realPos.x - 200, realPos.y - 200));
+								Expl_list->push_back(new ObjectAnimated(ptr_on_texture_expl, realPos.x - 200, realPos.y - 200));
 								expl_sound.play();
 								barmp -= mp_need_cast_expl;
 							}
@@ -298,10 +298,10 @@ class Game {
 						if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Right && !men->active) { //если нажата правая кнопка мыши
 							if (barmp >= mp_need_cast_ice) {
 								if (Ice->empty()) {
-									Ice->push_back(new IceBall(ptr_on_image_ice, realPos.x - 55, realPos.y - 65, 100));
+									Ice->push_back(new IceBall(ptr_on_texture_ice, realPos.x - 55, realPos.y - 65, 100));
 								} else {
 									Ice->back()->health = 0;
-									Ice->push_back(new IceBall(ptr_on_image_ice, realPos.x - 55, realPos.y - 65, 100));
+									Ice->push_back(new IceBall(ptr_on_texture_ice, realPos.x - 55, realPos.y - 65, 100));
 								}
 								barmp -= mp_need_cast_ice;
 							}
@@ -523,59 +523,59 @@ class Game {
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //если разрешение экрана 2560 х 1440
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 500, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 600, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 10, 700, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 900, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 1000, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140, 1100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 600, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 10, 700, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 900, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 1000, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140, 1100, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 900, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 920, 230, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 905, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 900, 560, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 980, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 950, 920, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 740, 990, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 900, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 920, 230, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 905, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 900, 560, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 980, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 950, 920, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 740, 990, 45));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //если разрешение 1280 х 720
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 10, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 10, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140, 450, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 900, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 920, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 905, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 900, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 980, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 950, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 740, 400, 45));				
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 900, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 920, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 905, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 900, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 980, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 950, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 740, 400, 45));				
 							} else { // если любое другое
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 180, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 260, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 340, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 10, 420, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 500, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 580, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 660, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140, 740, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 180, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 260, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 340, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 10, 420, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 580, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 660, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140, 740, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 900, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 920, 190, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 905, 280, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 900, 370, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 980, 460, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 950, 550, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 740, 640, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 900, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 920, 190, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 905, 280, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 900, 370, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 980, 460, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 950, 550, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 740, 640, 45));
 							}
 
 							change_numlvl = false;
@@ -590,92 +590,92 @@ class Game {
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //если разрешение экрана 2560 х 1440
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 200, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 29, 230, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 114, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 27, 560, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 55, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 240, 920, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 990, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 300, 1200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 200, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 29, 230, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 114, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 27, 560, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 55, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 240, 920, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 990, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 300, 1200, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 980, 230, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 995, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 990, 560, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1050, 920, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 970, 990, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1040, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 980, 230, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 995, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 990, 560, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1050, 920, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 970, 990, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1040, 100, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 230, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1905, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 560, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1908, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 920, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1905, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 560, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1910, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 920, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 230, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1905, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 560, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1908, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 920, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1905, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 560, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1910, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 920, 45));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //если разрешение 1280 х 720
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 200, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 29, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 114, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 27, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 55, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 240, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 300, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 200, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 29, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 114, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 27, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 55, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 240, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 300, 450, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 980, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 995, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 990, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1050, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 970, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1040, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 980, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 995, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 990, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1050, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 970, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1040, 450, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 20, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 70, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1905, 120, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 170, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1908, 220, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 270, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1905, 320, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 370, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1910, 420, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 470, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 20, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 70, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1905, 120, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 170, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1908, 220, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 270, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1905, 320, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 370, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1910, 420, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 470, 45));
 							} else { // если любое другое
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 200, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 29, 180, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 114, 260, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 27, 340, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 55, 420, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 240, 500, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 580, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 300, 660, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 200, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 29, 180, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 114, 260, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 27, 340, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 55, 420, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 240, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 580, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 300, 660, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 980, 180, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 995, 260, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 990, 340, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 420, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1050, 500, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 970, 580, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1040, 660, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 980, 180, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 995, 260, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 990, 340, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 420, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1050, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 970, 580, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1040, 660, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 170, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1905, 240, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 310, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1908, 380, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1905, 520, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 590, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1910, 660, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 730, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 170, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1905, 240, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 310, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1908, 380, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1905, 520, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 590, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1910, 660, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 730, 45));
 							}
 
 							change_numlvl = false;
@@ -690,95 +690,95 @@ class Game {
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //если разрешение экрана 2560 х 1440
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 500, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 600, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 10, 700, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 900, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 1000, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140, 1100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 600, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 10, 700, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 900, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 1000, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140, 1100, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 980, 230, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 995, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 990, 560, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1050, 920, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 970, 990, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1040, 1000, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 980, 230, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 995, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 990, 560, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1050, 920, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 970, 990, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1040, 1000, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 230, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1905, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 560, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1908, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 920, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1905, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 560, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1910, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 920, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 230, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1905, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 560, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1908, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 920, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1905, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 560, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1910, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 920, 45));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //если разрешение 1280 х 720
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 10, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 10, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140, 450, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 980, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 995, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 990, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1050, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 970, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1040, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 980, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 995, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 990, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1050, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 970, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1040, 450, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 90, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1905, 130, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 170, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1908, 210, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1905, 290, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 330, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1910, 370, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 410, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 90, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1905, 130, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 170, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1908, 210, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1905, 290, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 330, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1910, 370, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 410, 45));
 							} else { // если любое другое
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 10, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 10, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140, 500, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 980, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 995, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 990, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1050, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 970, 500, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1040, 550, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 980, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 995, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 990, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1050, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 970, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1040, 550, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1905, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1908, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1905, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1910, 550, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 600, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1905, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1908, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1905, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1910, 550, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 600, 45));
 							}
 
 							change_numlvl = false;
@@ -793,95 +793,95 @@ class Game {
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //если разрешение экрана 2560 х 1440
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 200, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 29, 230, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 114, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 27, 560, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 55, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 240, 920, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 990, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 300, 1200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 200, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 29, 230, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 114, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 27, 560, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 55, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 240, 920, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 990, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 300, 1200, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 120, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 980, 240, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 995, 410, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 990, 550, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 810, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1050, 930, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 970, 970, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1040, 1100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 120, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 980, 240, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 995, 410, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 990, 550, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 810, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1050, 930, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 970, 970, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1040, 1100, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 110, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 220, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1905, 405, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 575, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1908, 809, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 915, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1890, 970, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 2000, 1005, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1950, 1130, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 110, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 220, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1905, 405, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 575, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1908, 809, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 915, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1890, 970, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 2000, 1005, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1950, 1130, 45));
 
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 2100, 600, 650));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 2100, 600, 650));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //если разрешение 1280 х 720
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 200, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 29, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 114, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 27, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 55, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 240, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 300, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 200, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 29, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 114, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 27, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 55, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 240, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 300, 450, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 980, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 995, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 990, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1050, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 970, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1040, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 980, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 995, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 990, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1050, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 970, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1040, 400, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 90, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1905, 130, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 170, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1908, 210, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1890, 390, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 2000, 430, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1950, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 90, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1905, 130, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 170, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1908, 210, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1890, 390, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 2000, 430, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1950, 450, 45));
 
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 2100, 400, 650));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 2100, 400, 650));
 							} else { // если любое другое
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 200, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 29, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 114, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 27, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 55, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 240, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 300, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 200, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 29, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 114, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 27, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 55, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 240, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 300, 450, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 980, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 995, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 990, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1050, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 970, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1040, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 980, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 995, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 990, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1050, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 970, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1040, 450, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1905, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1900, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1908, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1920, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1890, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 2000, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1950, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1905, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1900, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1908, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1920, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1890, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 2000, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1950, 500, 45));
 
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 2100, 450, 650));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 2100, 450, 650));
 							}
 		
 							change_numlvl = false;
@@ -895,97 +895,97 @@ class Game {
 							mp_need_cast_ice -= 15; //mp_need_cast_ice = 85
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //если разрешение экрана 2560 х 1440
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 29, 230, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 114, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 57, 560, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 95, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140, 920, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 230, 990, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 1200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 29, 230, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 114, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 57, 560, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 95, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140, 920, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 230, 990, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 1200, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 230, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 560, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 920, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 990, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 1000, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 230, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 560, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 920, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 990, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 1000, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1300, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1300, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1300, 600, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 750, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1300, 900, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 1050, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1300, 1200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1300, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1300, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1300, 600, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 750, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1300, 900, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 1050, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1300, 1200, 45));
 
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 1900, 200, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 1870, 700, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 1900, 200, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 1870, 700, 500));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //если разрешение 1280 х 720
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 29, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 114, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 57, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 95, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 230, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 29, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 114, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 57, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 95, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 230, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 400, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 400, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1300, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1300, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1300, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1300, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1300, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1300, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1300, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1300, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 450, 45));
 
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 1900, 200, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 1870, 450, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 1900, 200, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 1870, 450, 500));
 							} else { // если любое другое
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 29, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 114, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 57, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 95, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 230, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 29, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 114, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 57, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 95, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 230, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 450, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 600, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 600, 450, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1300, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1300, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1300, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1300, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1300, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1300, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1300, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1300, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1300, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1300, 500, 45));
 
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 1900, 200, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 1870, 500, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 1900, 200, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 1870, 500, 500));
 							}
 
 							change_numlvl = false;
@@ -999,77 +999,77 @@ class Game {
 							mp_need_cast_expl -= 1; //mp_need_cast_expl = 9
 							
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //если разрешение экрана 2560 х 1440
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 20, 200, 400));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 20, 200, 400));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1200, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1150, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1100, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1050, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 600, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1050, 750, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1100, 900, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1150, 1050, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1200, 1200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1200, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1150, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1100, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1050, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 600, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1050, 750, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1100, 900, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1150, 1050, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1200, 1200, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1500, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1550, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1650, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1700, 600, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1650, 750, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 900, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1550, 1050, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1500, 1200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1500, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1550, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1650, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1700, 600, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1650, 750, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 900, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1550, 1050, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1500, 1200, 45));
 
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 1900, 600, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 1900, 600, 500));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //если разрешение 1280 х 720
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 20, 200, 400));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 20, 200, 400));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1200, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1150, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1100, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1050, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1050, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1100, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1150, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1200, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1200, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1150, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1100, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1050, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1050, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1100, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1150, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1200, 450, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1500, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1550, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1650, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1700, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1650, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1550, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1200, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1500, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1550, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1650, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1700, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1650, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1550, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1200, 450, 45));
 
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 1900, 300, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 1900, 300, 500));
 							} else { // если любое другое
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 20, 200, 400));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 20, 200, 400));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1200, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1150, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1100, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1050, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1000, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1050, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1100, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1150, 500, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1200, 550, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1200, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1150, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1100, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1050, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1000, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1050, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1100, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1150, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1200, 550, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1500, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1550, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1650, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1700, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1650, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1600, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1550, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 1500, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1500, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1550, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1650, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1700, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1650, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1600, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1550, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 1500, 500, 45));
 
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 1900, 400, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 1900, 400, 500));
 							}
 
 							change_numlvl = false;
@@ -1083,41 +1083,41 @@ class Game {
 							mp_need_cast_ice -= 15; //mp_need_cast_ice = 70
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //если разрешение экрана 2560 х 1440
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 120, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 115, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 110, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 105, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 600, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 105, 750, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 110, 900, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 115, 1050, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 120, 1200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 120, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 115, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 110, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 105, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 600, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 105, 750, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 110, 900, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 115, 1050, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 120, 1200, 45));
 
-								DC->push_back(new DestroerCastle(ptr_on_image_castl_destr, config->screenWidth + 1000, 700, 1000));
+								DC->push_back(new DestroerCastle(ptr_on_texture_castl_destr, config->screenWidth + 1000, 700, 1000));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //если разрешение 1280 х 720
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 120, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 115, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 110, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 105, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 105, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 110, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 115, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 120, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 120, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 115, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 110, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 105, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 105, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 110, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 115, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 120, 450, 45));
 
-								DC->push_back(new DestroerCastle(ptr_on_image_castl_destr, config->screenWidth + 1000, 250, 1000));
+								DC->push_back(new DestroerCastle(ptr_on_texture_castl_destr, config->screenWidth + 1000, 250, 1000));
 							} else { // если любое другое
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 120, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 115, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 110, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 105, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 105, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 110, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 115, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 120, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 120, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 115, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 110, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 105, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 105, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 110, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 115, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 120, 500, 45));
 
-								DC->push_back(new DestroerCastle(ptr_on_image_castl_destr, config->screenWidth + 1000, 400, 1000));
+								DC->push_back(new DestroerCastle(ptr_on_texture_castl_destr, config->screenWidth + 1000, 400, 1000));
 							}
 
 							change_numlvl = false;
@@ -1129,41 +1129,41 @@ class Game {
 							lvlInfo->setPosition((config->screenWidth / 2) - lvlInfo->getSize().width / 2, (config->screenHeight / 2) - lvlInfo->getSize().height / 2);
 							
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //если разрешение экрана 2560 х 1440
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 105, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 105, 650, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 105, 850, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 105, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 105, 650, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 105, 850, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 305, 650, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 305, 850, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 305, 1050, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 305, 650, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 305, 850, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 305, 1050, 45));
 
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 300, 300, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 350, 600, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 700, 800, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 300, 300, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 350, 600, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 700, 800, 500));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //если разрешение 1280 х 720
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 105, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 105, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 105, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 105, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 105, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 105, 300, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 305, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 305, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 305, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 305, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 305, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 305, 350, 45));
 
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 300, 200, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 350, 300, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 700, 400, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 300, 200, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 350, 300, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 700, 400, 500));
 							} else { // если любое другое
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 105, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 105, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 105, 550, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 105, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 105, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 105, 550, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 305, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 305, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 305, 550, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 305, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 305, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 305, 550, 45));
 
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 300, 100, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 350, 300, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 700, 500, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 300, 100, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 350, 300, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 700, 500, 500));
 							}
 
 							change_numlvl = false;
@@ -1175,20 +1175,20 @@ class Game {
 							lvlInfo->setPosition((config->screenWidth / 2) - lvlInfo->getSize().width / 2, (config->screenHeight / 2) - lvlInfo->getSize().height / 2);
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //если разрешение экрана 2560 х 1440
-								DC->push_back(new DestroerCastle(ptr_on_image_castl_destr, config->screenWidth + 100, 700, 1000));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 500, 300, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 700, 500, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 570, 900, 500));
+								DC->push_back(new DestroerCastle(ptr_on_texture_castl_destr, config->screenWidth + 100, 700, 1000));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 500, 300, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 700, 500, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 570, 900, 500));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //если разрешение 1280 х 720
-								DC->push_back(new DestroerCastle(ptr_on_image_castl_destr, config->screenWidth + 100, 200, 1000));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 500, 150, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 700, 200, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 570, 250, 500));
+								DC->push_back(new DestroerCastle(ptr_on_texture_castl_destr, config->screenWidth + 100, 200, 1000));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 500, 150, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 700, 200, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 570, 250, 500));
 							} else { // если любое другое
-								DC->push_back(new DestroerCastle(ptr_on_image_castl_destr, config->screenWidth + 100, 300, 1000));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 500, 300, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 700, 400, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 570, 600, 500));
+								DC->push_back(new DestroerCastle(ptr_on_texture_castl_destr, config->screenWidth + 100, 300, 1000));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 500, 300, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 700, 400, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 570, 600, 500));
 							}
 
 							change_numlvl = false;
@@ -1203,113 +1203,113 @@ class Game {
 							mp_need_cast_expl -= 1; //mp_need_cast_expl = 8
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //если разрешение экрана 2560 х 1440
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 500, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 600, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 10, 700, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 900, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 1000, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140, 1100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 600, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 10, 700, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 900, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 1000, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140, 1100, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130 + 400, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100 + 400, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70 + 400, 500, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40 + 400, 600, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 10 + 400, 700, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40 + 400, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70 + 400, 900, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100 + 400, 1000, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140 + 400, 1100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130 + 400, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100 + 400, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70 + 400, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40 + 400, 600, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 10 + 400, 700, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40 + 400, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70 + 400, 900, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100 + 400, 1000, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140 + 400, 1100, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130 + 800, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100 + 800, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70 + 800, 500, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40 + 800, 600, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 10 + 800, 700, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40 + 800, 800, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70 + 800, 900, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100 + 800, 1000, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140 + 800, 1100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130 + 800, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100 + 800, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70 + 800, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40 + 800, 600, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 10 + 800, 700, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40 + 800, 800, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70 + 800, 900, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100 + 800, 1000, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140 + 800, 1100, 45));
 
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 1300, 300, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 1400, 800, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 1300, 300, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 1400, 800, 500));
 
-								DC->push_back(new DestroerCastle(ptr_on_image_castl_destr, config->screenWidth + 2000, 100, 1000));
-								DC->push_back(new DestroerCastle(ptr_on_image_castl_destr, config->screenWidth + 2700, 700, 1000));
+								DC->push_back(new DestroerCastle(ptr_on_texture_castl_destr, config->screenWidth + 2000, 100, 1000));
+								DC->push_back(new DestroerCastle(ptr_on_texture_castl_destr, config->screenWidth + 2700, 700, 1000));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //если разрешение 1280 х 720
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 10, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 10, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140, 450, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130 + 400, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100 + 400, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70 + 400, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40 + 400, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 10 + 400, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40 + 400, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70 + 400, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100 + 400, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140 + 400, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130 + 400, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100 + 400, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70 + 400, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40 + 400, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 10 + 400, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40 + 400, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70 + 400, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100 + 400, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140 + 400, 450, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130 + 800, 50, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100 + 800, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70 + 800, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40 + 800, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 10 + 800, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40 + 800, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70 + 800, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100 + 800, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140 + 800, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130 + 800, 50, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100 + 800, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70 + 800, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40 + 800, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 10 + 800, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40 + 800, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70 + 800, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100 + 800, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140 + 800, 450, 45));
 
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 1300, 100, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 1400, 400, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 1300, 100, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 1400, 400, 500));
 
-								DC->push_back(new DestroerCastle(ptr_on_image_castl_destr, config->screenWidth + 2000, 50, 1000));
-								DC->push_back(new DestroerCastle(ptr_on_image_castl_destr, config->screenWidth + 2700, 300, 1000));
+								DC->push_back(new DestroerCastle(ptr_on_texture_castl_destr, config->screenWidth + 2000, 50, 1000));
+								DC->push_back(new DestroerCastle(ptr_on_texture_castl_destr, config->screenWidth + 2700, 300, 1000));
 							} else { // если любое другое
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 10, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 10, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140, 500, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130 + 400, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100 + 400, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70 + 400, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40 + 400, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 10 + 400, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40 + 400, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70 + 400, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100 + 400, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140 + 400, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130 + 400, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100 + 400, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70 + 400, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40 + 400, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 10 + 400, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40 + 400, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70 + 400, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100 + 400, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140 + 400, 500, 45));
 
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 130 + 800, 100, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100 + 800, 150, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70 + 800, 200, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40 + 800, 250, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 10 + 800, 300, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 40 + 800, 350, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 70 + 800, 400, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 100 + 800, 450, 45));
-								Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 140 + 800, 500, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 130 + 800, 100, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100 + 800, 150, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70 + 800, 200, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40 + 800, 250, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 10 + 800, 300, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 40 + 800, 350, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 70 + 800, 400, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 100 + 800, 450, 45));
+								Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 140 + 800, 500, 45));
 
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 1300, 300, 500));
-								Pers->push_back(new Character(ptr_on_image_gg, config->screenWidth + 1400, 500, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 1300, 300, 500));
+								Pers->push_back(new Character(ptr_on_texture_gg, config->screenWidth + 1400, 500, 500));
 
-								DC->push_back(new DestroerCastle(ptr_on_image_castl_destr, config->screenWidth + 2000, 100, 1000));
-								DC->push_back(new DestroerCastle(ptr_on_image_castl_destr, config->screenWidth + 2700, 560, 1000));
+								DC->push_back(new DestroerCastle(ptr_on_texture_castl_destr, config->screenWidth + 2000, 100, 1000));
+								DC->push_back(new DestroerCastle(ptr_on_texture_castl_destr, config->screenWidth + 2700, 560, 1000));
 							}
 
 							change_numlvl = false;
@@ -1749,7 +1749,7 @@ class Game {
 			MP = new _interface::bar(5, HP->getSize().left + HP->getSize().width + 5, 100, 0, L"MP:", Color::White, Color::Blue, Color::Black);
 			Camera = new Camer(CENTER_SCREEN_X, CENTER_SCREEN_Y, config->screenWidth, config->screenHeight);
 
-			Castle = new ObjectStatic(ptr_on_image_castle, 0, 0);
+			Castle = new ObjectStatic(ptr_on_texture_castle, 0, 0);
 			Castle->setRect(IntRect(0, 0, 400, 1500));
 			Castle->rect_collis->setBounds(IntRect(0, 0, 400, 1500));
 			//int sd = 0;
@@ -1829,10 +1829,10 @@ class Game {
 						if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Right && !men->active) {
 							if (barmp >= 100) {
 								if (Ice->empty()) {
-									Ice->push_back(new IceBall(ptr_on_image_ice, realPos.x - 55, realPos.y - 65, 60));
+									Ice->push_back(new IceBall(ptr_on_texture_ice, realPos.x - 55, realPos.y - 65, 60));
 								} else {
 									Ice->back()->health = 0;
-									Ice->push_back(new IceBall(ptr_on_image_ice, realPos.x - 55, realPos.y - 65, 60));
+									Ice->push_back(new IceBall(ptr_on_texture_ice, realPos.x - 55, realPos.y - 65, 60));
 								}
 								barmp -= 100;
 							}
@@ -1846,10 +1846,10 @@ class Game {
 							barmp = 100;
 							if (barmp >= 100) {
 								if (Ice->empty()) {
-									Ice->push_back(new IceBall(ptr_on_image_ice, realPos.x - 55, realPos.y - 65, 60));
+									Ice->push_back(new IceBall(ptr_on_texture_ice, realPos.x - 55, realPos.y - 65, 60));
 								} else {
 									Ice->back()->health = 0;
-									Ice->push_back(new IceBall(ptr_on_image_ice, realPos.x - 55, realPos.y - 65, 60));
+									Ice->push_back(new IceBall(ptr_on_texture_ice, realPos.x - 55, realPos.y - 65, 60));
 								}
 							}
 							mltAboutIce->visible = false;
@@ -1882,7 +1882,7 @@ class Game {
 					if (!message_end->active && !mlt->visible && !mltAboutHP->visible && !mltAboutMP->visible) {
 						if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Left && !men->active) {
 							if (barmp >= 20 && mltAboutEnemy->visible) {
-								Expl_list->push_back(new ObjectAnimated(ptr_on_image_expl, realPos.x - 200, realPos.y - 200));
+								Expl_list->push_back(new ObjectAnimated(ptr_on_texture_expl, realPos.x - 200, realPos.y - 200));
 								expl_sound.play();
 								barmp -= 10;
 							}
@@ -2088,7 +2088,7 @@ class Game {
 						MP->freeze(Camera, 5, 40);
 
 						if (EnemyActive) { //----------------------------------------------Скрипт с врагом
-							Spman->push_back(new Spearman(ptr_on_image_sprman, config->screenWidth + 20, config->screenHeight / 2, 45));
+							Spman->push_back(new Spearman(ptr_on_texture_sprman, config->screenWidth + 20, config->screenHeight / 2, 45));
 							EnemyActive = false;
 						}	
 					}
