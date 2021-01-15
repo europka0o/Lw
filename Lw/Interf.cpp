@@ -868,7 +868,11 @@ _interface::multiline_text::multiline_text(float x, float y, Color lbcol, Color 
 
 _interface::multiline_text::~multiline_text() noexcept {
 	if (SIZE_MSTX > 0) {
-		mass_string.clear();
+		for (dyn_vector_text::iterator it_ms = mass_string.begin(); it_ms != mass_string.end();) {
+			delete* it_ms;
+			it_ms = mass_string.erase(it_ms);
+		}
+		mass_string.shrink_to_fit();
 	}
 	delete font_main, bevel, bevel_cl, label_cl;
 }
