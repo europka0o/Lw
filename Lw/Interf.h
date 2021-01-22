@@ -1,4 +1,4 @@
-#pragma once
+п»ї#pragma once
 #include "Map.h"
 #include <SFML/Graphics.hpp>
 #include <iostream>
@@ -11,37 +11,39 @@ using namespace sf;
 #ifndef _INTERFACE_G
 #define _INTERFACE_G
 
+enum class settings_save_code {
+	sound_or_sound_volume_or_verticalS = 1,
+	other = 0
+};
+
 typedef struct settings {
 	bool fullScreen;
 	bool verticalSync;
+	bool sound;
 	unsigned int screenHeight;
 	unsigned int screenWidth;
 	int textSize;
+	int soundVolume;
 	int saveSettings();
 	int loadSettings();
-	int createSettings(int ScreenW, int ScreenH, bool VertS, int TxtS, bool FullS);
+	int createSettings(int ScreenW = 1600, int ScreenH = 900, bool VertS = false, int TxtS = 24, bool FullS = true, bool Sound = true, int SoundV = 50);
 	//1280 x 720
 	//1600 x 900
 	//1600 x 1200
 	//1920 x 1080
-	//2048 x 1152 ----------Под сомнениями, это не формат 16:9
 	//2560 x 1440
 } configuration;
 
 /// <summary>
-/// Преобразует целочисленное число к строке
+/// РџСЂРµРѕР±СЂР°Р·СѓРµС‚ С†РµР»РѕС‡РёСЃР»РµРЅРЅРѕРµ С‡РёСЃР»Рѕ Рє СЃС‚СЂРѕРєРµ
 /// </summary>
-/// <typeparam name="arg">Выходная строка</typeparam>
-/// <param name="input">Целочисленное число</param>
-/// <returns>Строка</returns>
+/// <typeparam name="arg">Р’С‹С…РѕРґРЅР°СЏ СЃС‚СЂРѕРєР°</typeparam>
+/// <param name="input">Р¦РµР»РѕС‡РёСЃР»РµРЅРЅРѕРµ С‡РёСЃР»Рѕ</param>
+/// <returns>РЎС‚СЂРѕРєР°</returns>
 template<typename arg>
-arg intToStr(int input) {
-	std::ostringstream output;
-	output << input;
-	return output.str();
-}
+arg IntToStr(int input);
 
-#define intToStr(type, input) intToStr<type>(input)
+#define intToStr(type, input) IntToStr<type>(input)
 
 enum direcrion8{
 	non,
@@ -68,50 +70,50 @@ typedef axes<float> axes_f;
 class Camer {
 private:
 	axes_i pos;
-	int screen_H, screen_W; //координата объекта по оси X, координата объекта по оси Y, ширина камеры в пикселях, высота камеры в пикселях
+	int screen_H, screen_W; //Р’С‹СЃРѕС‚Р° Рё С€РёСЂР°РЅР° РІСЊСЋРїРѕСЂС‚Р° РєР°РјРµСЂС‹
 public:
 	/// <summary>
-	/// Конструктор
+	/// РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
 	/// </summary>
-	/// <param name="x">Позиция по оси X</param>
-	/// <param name="y">озиция по оси Y</param>
-	/// <param name="screen_width">Ширина вида в пикселях</param>
-	/// <param name="screen_height">Высота вида в пикселях</param>
+	/// <param name="x">РџРѕР·РёС†РёСЏ РїРѕ РѕСЃРё X</param>
+	/// <param name="y">РџРѕР·РёС†РёСЏ РїРѕ РѕСЃРё Y</param>
+	/// <param name="screen_width">РЁРёСЂРёРЅР° РІСЊСЋРїРѕСЂС‚Р° РІ РїРёРєСЃРµР»СЏС…</param>
+	/// <param name="screen_height">Р’С‹СЃРѕС‚Р° РІСЊСЋРїРѕСЂС‚Р° РІ РїРёРєСЃРµР»СЏС…</param>
 	/// <returns></returns>
-	Camer(int x, int y, int screen_width, int screen_height); //координата объекта по оси X, координата объекта по оси Y, высота камеры в пикселях, ширина камеры в пикселях
-	Camer(); //конструктор по умолчанию
-	~Camer(); //деструктор
+	Camer(int x, int y, int screen_width, int screen_height);
+	Camer(); //РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
+	~Camer(); //Р”РµСЃС‚СЂСѓРєС‚РѕСЂ
 	View *Vid;
 	/// <summary>
-	/// Перемещает камеру
+	/// РџРµСЂРµРјРµС‰Р°РµС‚ РєР°РјРµСЂСѓ
 	/// </summary>
-	/// <param name="x">Новая позиция по оси X</param>
-	/// <param name="y">Новая позиция по оси Y</param>
-	void __fastcall move(int x, int y); //движение камеры
+	/// <param name="x">РќРѕРІР°СЏ РїРѕР·РёС†РёСЏ РїРѕ РѕСЃРё X</param>
+	/// <param name="y">РќРѕРІР°СЏ РїРѕР·РёС†РёСЏ РїРѕ РѕСЃРё Y</param>
+	void __fastcall move(int x, int y); //РџРµСЂРµРґРІРёРіР°РµС‚ РєР°РјРµСЂСѓ РЅР° РЅРѕРІСѓСЋ РїРѕР·РёС†РёСЋ РїРѕ РѕСЃСЏРј X, Y
 	/// <summary>
-	/// Устанавливает зум
+	/// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ Р·СѓРј РєР°РјРµСЂС‹
 	/// </summary>
-	/// <param name="zoom">Прибавка к текущему зуму, зум по умолчанию равен 1</param>
-	void setZoom(float zoom); //изменение размера изображения
+	/// <param name="zoom">РџСЂРёР±Р°РІРєР° Рє С‚РµРєСѓС‰РµРјСѓ Р·СѓРјСѓ, Р·СѓРј РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ СЂР°РІРµРЅ 1</param>
+	void setZoom(float zoom);
 	/// <summary>
-	/// Возвращает позицию 
+	/// Р’РѕР·РІСЂР°С‰Р°РµС‚ РїРѕР·РёС†РёСЋ РєР°РјРµСЂС‹
 	/// </summary>
-	/// <returns>Структура axes_i</returns>
-	axes_i getPosition() noexcept; //возвращает координаты камеры по оси X и Y
+	/// <returns>РЎС‚СЂСѓРєС‚СѓСЂР° axes_i</returns>
+	axes_i getPosition() noexcept;
 	/// <summary>
-	/// Возвращает ширину вида камеры в пикселях 
+	/// Р’РѕР·РІСЂР°С‰Р°РµС‚ С€РёСЂРёРЅСѓ РІСЊСЋРїРѕСЂС‚Р° РєР°РјРµСЂС‹ РІ РїРёРєСЃРµР»СЏС…  
 	/// </summary>
-	/// <returns>Количество пикселей в int</returns>
-	int getScreenWidth() noexcept; //возвращает высоту камеры в пикселях
+	/// <returns>РљРѕР»РёС‡РµСЃС‚РІРѕ РїРёРєСЃРµР»РµР№ РІ int</returns>
+	int getScreenWidth() noexcept;
 	/// <summary>
-	/// Возвращает высоту вида камеры в пикселях 
+	/// Р’РѕР·РІСЂР°С‰Р°РµС‚ РІС‹СЃРѕС‚Сѓ РІСЊСЋРїРѕСЂС‚Р° РєР°РјРµСЂС‹ РІ РїРёРєСЃРµР»СЏС… 
 	/// </summary>
-	/// <returns>Количество пикселей в int</returns>
-	int getScreenHeight() noexcept; //возвращает ширину камеры в пикселях
+	/// <returns>РљРѕР»РёС‡РµСЃС‚РІРѕ РїРёРєСЃРµР»РµР№ РІ int</returns>
+	int getScreenHeight() noexcept;
 	/// <summary>
-	/// Возвращает данные о хитбоке: ширина, высота, функции проверки пересечения
+	/// Р’РѕР·РІСЂР°С‰Р°РµС‚ РґР°РЅРЅС‹Рµ Рѕ С…РёС‚Р±РѕРєРµ: С€РёСЂРёРЅР°, РІС‹СЃРѕС‚Р°, С„СѓРЅРєС†РёРё РїСЂРѕРІРµСЂРєРё РїРµСЂРµСЃРµС‡РµРЅРёСЏ
 	/// </summary>
-	/// <returns>Структура FloatRect</returns>
+	/// <returns>РЎС‚СЂСѓРєС‚СѓСЂР° FloatRect</returns>
 	FloatRect getBounds();
 	void setView(RenderWindow &wd);
 	void setView(RenderWindow *wd);
@@ -125,37 +127,37 @@ class Collision {
 	public:
 		bool active, visible_deb;
 		/// <summary>
-		/// Конструктор
+		/// РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
 		/// </summary>
-		/// <param name="rect">Хитбокс</param>
+		/// <param name="rect">РҐРёС‚Р±РѕРєСЃ</param>
 		/// <returns></returns>
 		Collision(const IntRect &rect);
 		~Collision();
 		/// <summary>
-		/// Устанавливает позицию хитбокса по осям X и Y
+		/// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РїРѕР·РёС†РёСЋ С…РёС‚Р±РѕРєСЃР° РїРѕ РѕСЃСЏРј X Рё Y
 		/// </summary>
-		/// <param name="x">Ось X</param>
-		/// <param name="y">Ось Y</param>
+		/// <param name="x">РћСЃСЊ X</param>
+		/// <param name="y">РћСЃСЊ Y</param>
 		void __fastcall setPosition(int x, int y);
 		/// <summary>
-		/// Устанавливает позицию хитбокса по осям X и Y
+		/// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РїРѕР·РёС†РёСЋ С…РёС‚Р±РѕРєСЃР° РїРѕ РѕСЃСЏРј X Рё Y
 		/// </summary>
-		/// <param name="xy">Структура axes_i</param>
+		/// <param name="xy">РЎС‚СЂСѓРєС‚СѓСЂР° axes_i СЃ РєРѕРѕСЂРґРёРЅР°С‚Р°РјРё РїРѕ РѕСЃСЏРј X Рё Y</param>
 		void setPosition(const axes_i &xy);
 		/// <summary>
-		/// Возвращает позицию хитбокса по осям X и Y
+		/// Р’РѕР·РІСЂР°С‰Р°РµС‚ РїРѕР·РёС†РёСЋ С…РёС‚Р±РѕРєСЃР° РїРѕ РѕСЃСЏРј X Рё Y
 		/// </summary>
-		/// <returns>Структура axes_i</returns>
+		/// <returns>РЎС‚СЂСѓРєС‚СѓСЂР° axes_i</returns>
 		axes_i getPosition();
 		/// <summary>
-		/// Возвращает данные о хитбоке: ширина, высота, функции проверки пересечения
+		/// Р’РѕР·РІСЂР°С‰Р°РµС‚ РґР°РЅРЅС‹Рµ Рѕ С…РёС‚Р±РѕРєРµ: С€РёСЂРёРЅР°, РІС‹СЃРѕС‚Р°, С„СѓРЅРєС†РёРё РїСЂРѕРІРµСЂРєРё РїРµСЂРµСЃРµС‡РµРЅРёСЏ
 		/// </summary>
-		/// <returns>Структура IntRect</returns>
+		/// <returns>РЎС‚СЂСѓРєС‚СѓСЂР° IntRect</returns>
 		IntRect getBounds();
 		/// <summary>
-		/// Устанавливает новые данные о хитбоксе
+		/// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РЅРѕРІС‹Рµ РґР°РЅРЅС‹Рµ Рѕ С…РёС‚Р±РѕРєСЃРµ
 		/// </summary>
-		/// <param name="rect">Струткура IntRect с новыми параметрами</param>
+		/// <param name="rect">РЎС‚СЂСѓС‚РєСѓСЂР° IntRect СЃ РЅРѕРІС‹РјРё РїР°СЂР°РјРµС‚СЂР°РјРё</param>
 		void setBounds(const IntRect &rect);
 		void render(RenderWindow& wd);
 		void render(RenderWindow* wd);
@@ -188,69 +190,67 @@ class BaseCharacter {
 class ObjectStatic {
 	protected:
 		axes_i pos;
-		//Texture *texture;
 		Sprite *sprt;
-		FloatRect react_obj_stat;
 	public:
 		Collision *rect_collis;
 		/// <summary>
-		/// Конструктор
+		/// РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
 		/// </summary>
-		/// <param name="i">Указатель на изображение</param>
-		/// <param name="X">Координаты по оси X</param>
-		/// <param name="Y">Координаты по оси Y</param>
+		/// <param name="i">РЈРєР°Р·Р°С‚РµР»СЊ РЅР° С‚РµРєСЃС‚СѓСЂСѓ</param>
+		/// <param name="X">РљРѕРѕСЂРґРёРЅР°С‚С‹ РїРѕ РѕСЃРё X</param>
+		/// <param name="Y">РљРѕРѕСЂРґРёРЅР°С‚С‹ РїРѕ РѕСЃРё Y</param>
 		/// <returns></returns>
 		ObjectStatic(Texture* ptr_texture, float X, float Y);
 		~ObjectStatic();
 		/// <summary>
-		/// Возвращает позицию 
+		/// Р’РѕР·РІСЂР°С‰Р°РµС‚ РїРѕР·РёС†РёСЋ
 		/// </summary>
-		/// <returns>Структура axes_i</returns>
+		/// <returns>РЎС‚СЂСѓРєС‚СѓСЂР° axes_i</returns>
 		virtual axes_i getPosition();
 		/// <summary>
-		/// Возвращает данные о хитбоке: ширина, высота, функции проверки пересечения
+		/// Р’РѕР·РІСЂР°С‰Р°РµС‚ РґР°РЅРЅС‹Рµ Рѕ С…РёС‚Р±РѕРєРµ: С€РёСЂРёРЅР°, РІС‹СЃРѕС‚Р°, С„СѓРЅРєС†РёРё РїСЂРѕРІРµСЂРєРё РїРµСЂРµСЃРµС‡РµРЅРёСЏ
 		/// </summary>
-		/// <returns>Структура IntRect</returns>
+		/// <returns>РЎС‚СЂСѓРєС‚СѓСЂР° IntRect</returns>
 		virtual FloatRect getSize();
 		/// <summary>
-		/// Устанавливает новые данные о хитбоксе
+		/// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РЅРѕРІС‹Рµ РґР°РЅРЅС‹Рµ Рѕ С…РёС‚Р±РѕРєСЃРµ
 		/// </summary>
-		/// <param name="bound">Струткура IntRect с новыми параметрами</param>
+		/// <param name="bound">РЎС‚СЂСѓС‚РєСѓСЂР° IntRect СЃ РЅРѕРІС‹РјРё РїР°СЂР°РјРµС‚СЂР°РјРё</param>
 		virtual void setRect(const IntRect &bound);
 		/// <summary>
-		/// Устанавливает позицию хитбокса по осям X и Y
+		/// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РїРѕР·РёС†РёСЋ С…РёС‚Р±РѕРєСЃР° РїРѕ РѕСЃСЏРј X Рё Y
 		/// </summary>
-		/// <param name="x">Ось X</param>
-		/// <param name="y">Ось Y</param>
+		/// <param name="x">РћСЃСЊ X</param>
+		/// <param name="y">РћСЃСЊ Y</param>
 		virtual void __fastcall setPosition(int x, int y);
 		/// <summary>
-		/// Устанавливает позицию хитбокса по осям X и Y
+		/// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РїРѕР·РёС†РёСЋ С…РёС‚Р±РѕРєСЃР° РїРѕ РѕСЃСЏРј X Рё Y
 		/// </summary>
-		/// <param name="xy">Структура axes_i</param>
+		/// <param name="xy">РЎС‚СЂСѓРєС‚СѓСЂР° axes_i СЃ РєРѕРѕСЂРґРёРЅР°С‚Р°РјРё РїРѕ РѕСЃСЏРј X Рё Y</param>
 		virtual void setPosition(const axes_i &xy);
 		virtual void render(RenderWindow &wd);
 		virtual void render(RenderWindow *wd);
 };
 
 class ObjectAnimated : public ObjectStatic {
-	private:
+	protected:
 		float frame;
 	public:
-		bool end, cooldown;
+		bool end;
 		/// <summary>
-		/// Конструктор
+		/// РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
 		/// </summary>
-		/// <param name="i">Указатель на изображение</param>
-		/// <param name="X">Координаты по оси X</param>
-		/// <param name="Y">Координаты по оси Y</param>
+		/// <param name="i">РЈРєР°Р·Р°С‚РµР»СЊ РЅР° С‚РµРєСЃС‚СѓСЂСѓ</param>
+		/// <param name="X">РљРѕРѕСЂРґРёРЅР°С‚С‹ РїРѕ РѕСЃРё X</param>
+		/// <param name="Y">РљРѕРѕСЂРґРёРЅР°С‚С‹ РїРѕ РѕСЃРё Y</param>
 		/// <returns></returns>
 		ObjectAnimated(Texture* ptr_texture, float X, float Y);
 		~ObjectAnimated();
 		/// <summary>
-		/// Обновление объекта
+		/// РћР±РЅРѕРІР»РµРЅРёРµ РѕР±СЉРµРєС‚Р°
 		/// </summary>
-		/// <param name="time">Время, чем больше переменная, тем быстрее происходит обновление</param>
-		void __fastcall update(float time);
+		/// <param name="time">Р’СЂРµРјСЏ, С‡РµРј Р±РѕР»СЊС€Рµ Р·РЅР°С‡РµРЅРёРµ РїРµСЂРµРјРµРЅРЅРѕР№, С‚РµРј Р±С‹СЃС‚СЂРµРµ РїСЂРѕРёСЃС…РѕРґРёС‚ РѕР±РЅРѕРІР»РµРЅРёРµ</param>
+		virtual void __fastcall update(float time);
 };
 
 namespace _interface {
@@ -273,6 +273,7 @@ namespace _interface {
 			virtual void render(RenderWindow *wd);
 	};
 
+	//РќР°РїСЂР°РІР»РµРЅРёРµ РіСЂР°РґРёРµРЅС‚Р°
 	enum gradient_direction {
 		leftOnRight,
 		rightOnLeft,
@@ -280,31 +281,22 @@ namespace _interface {
 		bottomOnTop
 	};
 
+	//Р Р°Р·РјРµСЂ С‚РµРєСЃС‚Р° РІ РїРёРєСЃРµР»СЏС…
 	enum text_size { 
-		small = 24,   // отклонение для оси X = 0.01 для Y = 7
-		normal = 30,  // отклонение для оси X = 1 для Y = 8
-		medium = 48,  // отклонение для оси X = 2 для Y = 12
-		big = 68      // отклонение для оси X = 2 для Y = 17
+		small = 24,   
+		normal = 30,  
+		medium = 48, 
+		big = 68
 	};
 	
 	template<typename arg>
-	arg repoz_x(arg X, arg size, arg indent = 0) {
-		arg A = 0;
-		A = size - X;
-		X = X - A;
-		return X + indent;
-	}
+	arg repoz_X(arg X, arg size, arg indent = 0);
 
 	template<typename arg>
-	arg repoz_y(arg Y, arg size, arg indent = 0) {
-		arg A = 0;
-		A = size - Y;
-		Y = Y - A;
-		return Y + indent;
-	}
+	arg repoz_Y(arg Y, arg size, arg indent = 0);
 
-	#define repoz_x(type, X, size, indent) repoz_x <type>(X, size, indent) //вычисляет погрешность позиции текста в пикселях и выравнивает его относительно заданных координат для оси X
-	#define repoz_y(type, Y, size, indent) repoz_y <type>(Y, size, indent) //вычисляет погрешность позиции текста в пикселях и выравнивает его относительно заданных координат для оси Y
+	#define repoz_x(type, X, size, indent) repoz_X <type>(X, size, indent) //Р’С‹С‡РёСЃР»СЏРµС‚ РїРѕРіСЂРµС€РЅРѕСЃС‚СЊ РїРѕР·РёС†РёРё С‚РµРєСЃС‚Р° РІ РїРёРєСЃРµР»СЏС… Рё РІС‹СЂР°РІРЅРёРІР°РµС‚ РµРіРѕ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ Р·Р°РґР°РЅРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚ РґР»СЏ РѕСЃРё X
+	#define repoz_y(type, Y, size, indent) repoz_Y <type>(Y, size, indent) //Р’С‹С‡РёСЃР»СЏРµС‚ РїРѕРіСЂРµС€РЅРѕСЃС‚СЊ РїРѕР·РёС†РёРё С‚РµРєСЃС‚Р° РІ РїРёРєСЃРµР»СЏС… Рё РІС‹СЂР°РІРЅРёРІР°РµС‚ РµРіРѕ РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ Р·Р°РґР°РЅРЅС‹С… РєРѕРѕСЂРґРёРЅР°С‚ РґР»СЏ РѕСЃРё Y
 	
 
 	class gradient : public BaseInerface {
@@ -312,22 +304,22 @@ namespace _interface {
 			std::vector<sf::Color> colors;
 			sf::VertexArray *rect;
 		public:
-			/// <param name="rt">Размер и положение хитбокса</param>
-			/// <param name="gd">Направление градиента</param>
-			/// <param name="first">Первый цвет градиента</param>
-			/// <param name="second">Второй цвет градиента</param>
+			/// <param name="rt">Р Р°Р·РјРµСЂ Рё РїРѕР»РѕР¶РµРЅРёРµ С…РёС‚Р±РѕРєСЃР°</param>
+			/// <param name="gd">РќР°РїСЂР°РІР»РµРЅРёРµ РіСЂР°РґРёРµРЅС‚Р°</param>
+			/// <param name="first">РџРµСЂРІС‹Р№ С†РІРµС‚ РіСЂР°РґРёРµРЅС‚Р°</param>
+			/// <param name="second">Р’С‚РѕСЂРѕР№ С†РІРµС‚ РіСЂР°РґРёРµРЅС‚Р°</param>
 			gradient(const FloatRect &rt, gradient_direction gd, Color first, Color second);
 			~gradient();
 			/// <summary>
-			/// Устанавливает позицию объекта по осям X и Y
+			/// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РїРѕР·РёС†РёСЋ РѕР±СЉРµРєС‚Р° РїРѕ РѕСЃСЏРј X Рё Y
 			/// </summary>
-			/// <param name="xy">Структура с координатами по осям X и Y</param>
+			/// <param name="xy">РЎС‚СЂСѓРєС‚СѓСЂР° axes_i СЃ РєРѕРѕСЂРґРёРЅР°С‚Р°РјРё РїРѕ РѕСЃСЏРј X Рё Y</param>
 			void setPosition(const axes_i &xy) override;
 			/// <summary>
-			/// Устанавливает позицию объекта по осям X и Y
+			/// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РїРѕР·РёС†РёСЋ РѕР±СЉРµРєС‚Р° РїРѕ РѕСЃСЏРј X Рё Y
 			/// </summary>
-			/// <param name="x">Координаты по оси X</param>
-			/// <param name="x">Координаты по оси Y</param>
+			/// <param name="x">РљРѕРѕСЂРґРёРЅР°С‚С‹ РїРѕ РѕСЃРё X</param>
+			/// <param name="x">РљРѕРѕСЂРґРёРЅР°С‚С‹ РїРѕ РѕСЃРё Y</param>
 			void __fastcall setPosition(int x, int y) override;
 			void render(RenderWindow &wd) noexcept override;
 			void render(RenderWindow *wd) noexcept override;
@@ -348,8 +340,8 @@ namespace _interface {
 			void render(RenderWindow &wd) noexcept override;
 			void render(RenderWindow *wd) noexcept override;
 			void resize(int size);
-			void freeze(Camer *camera, const axes_i &xy); //замораживает позицию компонента относительно камеры
-			void freeze(Camer *camera, int x, int y); //замораживает позицию компонента относительно камеры
+			void freeze(Camer *camera, const axes_i &xy); //Р—Р°РјРѕСЂР°Р¶РёРІР°РµС‚ РїРѕР·РёС†РёСЋ РєРѕРјРїРѕРЅРµРЅС‚Р° РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РєР°РјРµСЂС‹
+			void freeze(Camer *camera, int x, int y); //Р—Р°РјРѕСЂР°Р¶РёРІР°РµС‚ РїРѕР·РёС†РёСЋ РєРѕРјРїРѕРЅРµРЅС‚Р° РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РєР°РјРµСЂС‹
 			bool __fastcall isAction(int x, int y);
 			bool isAction(const axes_i &xy);
 	};
@@ -401,22 +393,22 @@ namespace _interface {
 
 	class text : public BaseInerface {
 		private:
-			RectangleShape* bevel; //прямоугольник под текстом 
+			RectangleShape* bevel; //РџСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРє РїРѕРґ С‚РµРєСЃС‚РѕРј 
 			Font* font_main;
 		public:
-			bool visible_bevel; //видимость прямоугольника под текстом 
+			bool visible_bevel; //Р’РёРґРёРјРѕСЃС‚СЊ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР° РїРѕРґ С‚РµРєСЃС‚РѕРј 
 			Text* label;
 			Color* bevel_cl;
 			Color* label_cl;
-			text(int x = 0, int y = 0, const std::wstring& txt = L"ERR:", Color lbcol = Color::White, Color bvcol = Color::Black); //координата объекта по оси X, координата объекта по оси Y, текст, цвет текста, цвет прямоугольника
+			text(int x = 0, int y = 0, const std::wstring& txt = L"NON:", Color lbcol = Color::White, Color bvcol = Color::Black);
 			~text();
-			void setString(const std::wstring &txt) noexcept; //задаетс текст 
-			void setFont(const String &txt) noexcept; //путь к фону для текста
-			void __fastcall setPosition(int x, int y) noexcept override; //устанавливает позицию объекта по осям X, Y 
-			void setPosition(const axes_i &xy) noexcept override; //устанавливает позицию объекта по осям X, Y 
-			void resize(int size = normal) noexcept; //задает размер объекта в пикселях
-			void freeze(Camer* camera, const axes_i &xy); //замораживает позицию компонента относительно камеры
-			void freeze(Camer* camera, int x, int y); //замораживает позицию компонента относительно камеры
+			void setString(const std::wstring &txt) noexcept; //Р—Р°РґР°РµС‚ С‚РµРєСЃС‚ 
+			void setFont(const String &txt) noexcept; //РџСѓС‚СЊ Рє С„РѕРЅСѓ РґР»СЏ С‚РµРєСЃС‚Р°
+			void __fastcall setPosition(int x, int y) noexcept override; //РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РїРѕР·РёС†РёСЋ РѕР±СЉРµРєС‚Р° РїРѕ РѕСЃСЏРј X, Y
+			void setPosition(const axes_i &xy) noexcept override; //РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РїРѕР·РёС†РёСЋ РѕР±СЉРµРєС‚Р° РїРѕ РѕСЃСЏРј X, Y 
+			void resize(int size = normal) noexcept; //Р—Р°РґР°РµС‚ СЂР°Р·РјРµСЂ РѕР±СЉРµРєС‚Р° РІ РїРёРєСЃРµР»СЏС…
+			void freeze(Camer* camera, const axes_i &xy); //Р—Р°РјРѕСЂР°Р¶РёРІР°РµС‚ РїРѕР·РёС†РёСЋ РєРѕРјРїРѕРЅРµРЅС‚Р° РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РєР°РјРµСЂС‹
+			void freeze(Camer* camera, int x, int y); //Р—Р°РјРѕСЂР°Р¶РёРІР°РµС‚ РїРѕР·РёС†РёСЋ РєРѕРјРїРѕРЅРµРЅС‚Р° РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РєР°РјРµСЂС‹
 			void render(RenderWindow& wd) noexcept override;
 			void render(RenderWindow* wd) noexcept override;
 	};
@@ -465,14 +457,14 @@ namespace _interface {
 		public:
 			bool active, blackout_visible;
 			button *btBack, *btSave;
-			text *txVertS, *txFullS, *txScreen;
-			check_box *cbVertS, *cbFullS;
-			combo_box *combScreen;
+			text *txVertS, *txFullS, *txScreen, *txSound, *txSoundV;
+			check_box *cbVertS, *cbFullS, *cbSound;
+			combo_box *combScreen, *combSoundV;
 			settings_menu(configuration *cf, Camer *camera, Color maincl, Color bordercl);
 			settings_menu(configuration *cf, Color maincl, Color bordercl);
 			~settings_menu();
 			void backSettings(configuration *cf);
-			void saveSettings(configuration *cf);
+			int saveSettings(configuration *cf);
 			void render(RenderWindow &wd, Camer *camera) noexcept;
 			void render(RenderWindow *wd, Camer *camera) noexcept;
 			void render(RenderWindow &wd) noexcept;
@@ -495,104 +487,102 @@ namespace _interface {
 
 	class bar : public BaseInerface {
 		private:
-			int max_bar, min_bar, curr_bar; //координата объекта по оси Y, координата объекта по оси X, макс значение полосы, мин значение полосы, текущее значение полосы 
-			RectangleShape *main; //прямоугольник под объектом
-			RectangleShape *bevel; //полоса
+			int max_bar, min_bar, curr_bar; //РњР°РєСЃРёРјР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РїРѕР»РѕСЃС‹, РјРёРЅРёРјР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РїРѕР»РѕСЃС‹, С‚РµРєСѓС‰РµРµ Р·РЅР°С‡РµРЅРёРµ РїРѕР»РѕСЃС‹
+			RectangleShape *main; //РџСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРє РїРѕРґ РѕР±СЉРµРєС‚РѕРј
+			RectangleShape *bevel; //РџРѕР»РѕСЃР°
 			Font *font_main;
 			Text *label;
 		public:
 			/// <summary>
-			/// Конструктор
+			/// РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
 			/// </summary>
-			/// <param name="x">Позиция по оси X</param>
-			/// <param name="y">Позиция по оси Y</param>
-			/// <param name="br_ma">Максимальное значение полосы</param>
-			/// <param name="br_mi">Минимальное значение полосы</param>
-			/// <param name="name">Текст перед полосой</param>
-			/// <param name="mcol">Цвет полосы</param>
-			/// <param name="bcol">Цвет прямоугольника под полосой</param>
-			/// <param name="tcol">Цвет текста</param>
+			/// <param name="x">РџРѕР·РёС†РёСЏ РїРѕ РѕСЃРё X</param>
+			/// <param name="y">РџРѕР·РёС†РёСЏ РїРѕ РѕСЃРё Y</param>
+			/// <param name="br_ma">РњР°РєСЃРёРјР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РїРѕР»РѕСЃС‹</param>
+			/// <param name="br_mi">РњРёРЅРёРјР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РїРѕР»РѕСЃС‹</param>
+			/// <param name="name">РўРµРєСЃС‚ РїРµСЂРµРґ РїРѕР»РѕСЃРѕР№</param>
+			/// <param name="mcol">Р¦РІРµС‚ РїРѕР»РѕСЃС‹</param>
+			/// <param name="bcol">Р¦РІРµС‚ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР° РїРѕРґ РїРѕР»РѕСЃРѕР№</param>
+			/// <param name="tcol">Р¦РІРµС‚ С‚РµРєСЃС‚Р°</param>
 			/// <returns></returns>
 			bar(int x = 0, int y = 0, int br_ma = 100, int br_mi = 0, const std::wstring& name = L"NON:", Color mcol = Color::White, Color bcol = Color::Red, Color tcol = Color::Black);
-			bar(); //конструктор по умолчанию
-			~bar(); //деструктор
+			bar(); //РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
+			~bar(); //Р”РµСЃС‚СЂСѓРєС‚РѕСЂ
 			/// <summary>
-			/// Изменяет состояние полосы
+			/// РР·РјРµРЅСЏРµС‚ СЃРѕСЃС‚РѕСЏРЅРёРµ РїРѕР»РѕСЃС‹
 			/// </summary>
-			/// <param name="arg">Новое значение полосы</param>
+			/// <param name="arg">РќРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ РїРѕР»РѕСЃС‹</param>
 			/// <returns></returns>
-			void __fastcall changeBar(int arg) noexcept; //изменяет состояние полосы 
+			void __fastcall changeBar(int arg) noexcept; 
 			void render(RenderWindow &wd) noexcept override;
 			void render(RenderWindow *wd) noexcept override;
 			/// <summary>
-			/// Устанавливает позицию 
+			/// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РЅРѕРІСѓСЋ РїРѕР·РёС†РёСЋ РѕР±СЉРµРєС‚Р° 
 			/// </summary>
-			/// <param name="x">Позиция по оси X</param>
-			/// <param name="y">Позиция по оси Y</param>
+			/// <param name="x">РџРѕР·РёС†РёСЏ РїРѕ РѕСЃРё X</param>
+			/// <param name="y">РџРѕР·РёС†РёСЏ РїРѕ РѕСЃРё Y</param>
 			/// <returns></returns>
-			void __fastcall setPosition(int x, int y) noexcept override; //устанавливает позицию объекта по осям X, Y 
+			void __fastcall setPosition(int x, int y) noexcept override;
 			/// <summary>
-			/// Устанавливает позицию объекта по осям X и Y
+			/// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РЅРѕРІСѓСЋ РїРѕР·РёС†РёСЋ РѕР±СЉРµРєС‚Р°
 			/// </summary>
-			/// <param name="xy">Структура с координатами по осям X и Y</param>
-			void setPosition(const axes_i &xy) noexcept override; //устанавливает позицию объекта по осям X, Y 
+			/// <param name="xy">РЎС‚СЂСѓРєС‚СѓСЂР° axes_i СЃ РєРѕРѕСЂРґРёРЅР°С‚Р°РјРё РїРѕ РѕСЃСЏРј X Рё Y</param>
+			void setPosition(const axes_i &xy) noexcept override;
 			/// <summary>
-			/// Изменяет размер текста
+			/// РР·РјРµРЅСЏРµС‚ СЂР°Р·РјРµСЂ С‚РµРєСЃС‚Р°
 			/// </summary>
-			/// <param name="size">Новый размер текста в пикселях</param>
+			/// <param name="size">РќРѕРІС‹Р№ СЂР°Р·РјРµСЂ С‚РµРєСЃС‚Р° РІ РїРёРєСЃРµР»СЏС…</param>
 			/// <returns></returns>
-			void resize(int size = normal) noexcept; //задает размер объекта в пикселях 
+			void resize(int size = normal) noexcept; 
 			/// <summary>
-			/// Замораживает позицию объекта относительно камеры
+			/// Р—Р°РјРѕСЂР°Р¶РёРІР°РµС‚ РїРѕР·РёС†РёСЋ РѕР±СЉРµРєС‚Р° РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РєР°РјРµСЂС‹
 			/// </summary>
-			/// <param name="camera">Указатель на камеру</param>
-			/// <param name="xy">Структура с координатами заморозки</param>
-			void freeze(Camer* camera, const axes_i &xy); //замораживает позицию компонента относительно камеры
+			/// <param name="camera">РЈРєР°Р·Р°С‚РµР»СЊ РЅР° РєР°РјРµСЂСѓ</param>
+			/// <param name="xy">РЎС‚СЂСѓРєС‚СѓСЂР° СЃ РєРѕРѕСЂРґРёРЅР°С‚Р°РјРё Р·Р°РјРѕСЂРѕР·РєРё</param>
+			void freeze(Camer* camera, const axes_i &xy); 
 			/// <summary>
-			/// Замораживает позицию объекта относительно камеры
+			/// Р—Р°РјРѕСЂР°Р¶РёРІР°РµС‚ РїРѕР·РёС†РёСЋ РѕР±СЉРµРєС‚Р° РѕС‚РЅРѕСЃРёС‚РµР»СЊРЅРѕ РєР°РјРµСЂС‹
 			/// </summary>
-			/// <param name="camera">Указатель на камеру</param>
-			/// <param name="x">Координаты по оси X</param>
-			/// <param name="y">Координаты по оси Y</param>
-			void freeze(Camer* camera, int x, int y); //замораживает позицию компонента относительно камеры
+			/// <param name="camera">РЈРєР°Р·Р°С‚РµР»СЊ РЅР° РєР°РјРµСЂСѓ</param>
+			/// <param name="x">РљРѕРѕСЂРґРёРЅР°С‚С‹ РїРѕ РѕСЃРё X</param>
+			/// <param name="y">РљРѕРѕСЂРґРёРЅР°С‚С‹ РїРѕ РѕСЃРё Y</param>
+			void freeze(Camer* camera, int x, int y);
 	};
 
 	class min_bar : public BaseInerface {
 		private:
-			//axes_i pos;
-			int max_br, min_br, curr_br; //координата объекта по оси Y, координата объекта по оси X, макс значение полосы, мин значение полосы, текущее значение полосы 
-			RectangleShape* main; //прямоугольник под объектом
-			RectangleShape* bevel; //полоса
-			//FloatRect rect_br;
+			int max_br, min_br, curr_br; //РњР°РєСЃРёРјР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РїРѕР»РѕСЃС‹, РјРёРЅРёРјР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РїРѕР»РѕСЃС‹, С‚РµРєСѓС‰РµРµ Р·РЅР°С‡РµРЅРёРµ РїРѕР»РѕСЃС‹ 
+			RectangleShape* main; //РџСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРє РїРѕРґ РѕР±СЉРµРєС‚РѕРј
+			RectangleShape* bevel; //РџРѕР»РѕСЃР°
 		public:
 			/// <summary>
-			/// Конструктор
+			/// РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
 			/// </summary>
-			/// <param name="x">Позиция по оси X</param>
-			/// <param name="y">Позиция по оси Y</param>
-			/// <param name="br_ma">Максимальное значение полосы</param>
-			/// <param name="br_mi">Минимальное значение полосы</param>
-			/// <param name="mcol">Цвет полосы</param>
-			/// <param name="bcol">Цвет прямоугольника под полосой</param>
+			/// <param name="x">РџРѕР·РёС†РёСЏ РїРѕ РѕСЃРё X</param>
+			/// <param name="y">РџРѕР·РёС†РёСЏ РїРѕ РѕСЃРё Y</param>
+			/// <param name="br_ma">РњР°РєСЃРёРјР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РїРѕР»РѕСЃС‹</param>
+			/// <param name="br_mi">РњРёРЅРёРјР°Р»СЊРЅРѕРµ Р·РЅР°С‡РµРЅРёРµ РїРѕР»РѕСЃС‹</param>
+			/// <param name="mcol">Р¦РІРµС‚ РїРѕР»РѕСЃС‹</param>
+			/// <param name="bcol">Р¦РІРµС‚ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР° РїРѕРґ РїРѕР»РѕСЃРѕР№</param>
 			/// <returns></returns>
 			min_bar(int x, int y, int br_ma, int br_mi, Color mcol, Color bcol);
 			~min_bar();
 			/// <summary>
-			/// Устанавливает позицию 
+			/// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РїРѕР·РёС†РёСЋ РѕР±СЉРµРєС‚Р° РїРѕ РѕСЃСЏРј X, Y
 			/// </summary>
-			/// <param name="x">Позиция по оси X</param>
-			/// <param name="y">Позиция по оси Y</param>
+			/// <param name="x">РџРѕР·РёС†РёСЏ РїРѕ РѕСЃРё X</param>
+			/// <param name="y">РџРѕР·РёС†РёСЏ РїРѕ РѕСЃРё Y</param>
 			/// <returns></returns>
-			void __fastcall setPosition(int x, int y) noexcept override; //устанавливает позицию объекта по осям X, Y 
+			void __fastcall setPosition(int x, int y) noexcept override;
 			/// <summary>
-			/// Устанавливает позицию объекта по осям X и Y
+			/// РЈСЃС‚Р°РЅР°РІР»РёРІР°РµС‚ РїРѕР·РёС†РёСЋ РѕР±СЉРµРєС‚Р° РїРѕ РѕСЃСЏРј X, Y
 			/// </summary>
-			/// <param name="xy">Структура с координатами по осям X и Y</param>
+			/// <param name="xy">РЎС‚СЂСѓРєС‚СѓСЂР° axes_i СЃ РєРѕРѕСЂРґРёРЅР°С‚Р°РјРё РїРѕ РѕСЃСЏРј X Рё Y</param>
 			void setPosition(const axes_i &xy) noexcept override;
 			/// <summary>
-			/// Изменяет состояние полосы
+			/// РР·РјРµРЅСЏРµС‚ СЃРѕСЃС‚РѕСЏРЅРёРµ РїРѕР»РѕСЃС‹
 			/// </summary>
-			/// <param name="arg">Новое значение полосы</param>
+			/// <param name="arg">РќРѕРІРѕРµ Р·РЅР°С‡РµРЅРёРµ РїРѕР»РѕСЃС‹</param>
 			/// <returns></returns>
 			void changeBar(int arg) noexcept;
 			void render(RenderWindow& wd) noexcept override;
@@ -602,41 +592,39 @@ namespace _interface {
 
 	class multiline_text {
 		private:
-			int SIZE_MSTX, max_length; //размерность массива(кол-во строк в нем), максимальная длина текста в пикселях 
-			axes_f pos; //координата объекта по оси Y, координата объекта по оси X
-			RectangleShape *bevel; //прямоугольник под текстом 
+			int SIZE_MSTX, max_length; //Р Р°Р·РјРµСЂРЅРѕСЃС‚СЊ РјР°СЃСЃРёРІР°(РєРѕР»-РІРѕ СЃС‚СЂРѕРє РІ РЅРµРј), РјР°РєСЃРёРјР°Р»СЊРЅР°СЏ РґР»РёРЅР° С‚РµРєСЃС‚Р° РІ РїРёРєСЃРµР»СЏС…
+			axes_f pos; //РЎС‚СЂСѓРєС‚СѓСЂР° axes_i СЃ РєРѕРѕСЂРґРёРЅР°С‚Р°РјРё РїРѕ РѕСЃСЏРј X Рё Y
+			RectangleShape *bevel; //РџСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРє РїРѕРґ С‚РµРєСЃС‚РѕРј  
 			Font *font_main;
 		public:
 			using dyn_vector_text = std::vector<Text*>;
 			dyn_vector_text mass_string;
-			//Text* mass; //указатель на массив строк
-			//Text* ptr; //указатель на первый элемент массива строк (итерратор)
-			bool visible; //видимость объекта
-			bool visible_bevel; //видимость прямоугольника под текстом
+			bool visible; //Р’РёРґРёРјРѕСЃС‚СЊ РѕР±СЉРµРєС‚Р°
+			bool visible_bevel; //Р’РёРґРёРјРѕСЃС‚СЊ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР° РїРѕРґ С‚РµРєСЃС‚РѕРј
 			Color *bevel_cl;
 			Color *label_cl;
 			/// <summary>
-			/// Конструктор
+			/// РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
 			/// </summary>
-			/// <param name="x">Позиция по оси X</param>
-			/// <param name="y">Позиция по оси Y</param>
-			/// <param name="lbcol">Цвет текста</param>
-			/// <param name="bvcol">Цвет ограничивающего прямоугольника под текстом</param>
+			/// <param name="x">РџРѕР·РёС†РёСЏ РїРѕ РѕСЃРё X</param>
+			/// <param name="y">РџРѕР·РёС†РёСЏ РїРѕ РѕСЃРё Y</param>
+			/// <param name="lbcol">Р¦РІРµС‚ С‚РµРєСЃС‚Р°</param>
+			/// <param name="bvcol">Р¦РІРµС‚ РїСЂСЏРјРѕСѓРіРѕР»СЊРЅРёРєР° РїРѕРґ С‚РµРєСЃС‚РѕРј</param>
 			/// <returns></returns>
-			multiline_text(float x = 0, float y = 0, Color lbcol = Color::White, Color bvcol = Color::Black); //координата объекта по оси X, координата объекта по оси Y, цвет текста, цвет прямоугольника
+			multiline_text(float x = 0, float y = 0, Color lbcol = Color::White, Color bvcol = Color::Black);
 			~multiline_text() noexcept;
 			/// <summary>
-			/// Изменяет размер текста
+			/// РР·РјРµРЅСЏРµС‚ СЂР°Р·РјРµСЂ С‚РµРєСЃС‚Р°
 			/// </summary>
-			/// <param name="size">Размер текста в пикселях</param>
+			/// <param name="size">Р Р°Р·РјРµСЂ С‚РµРєСЃС‚Р° РІ РїРёРєСЃРµР»СЏС…</param>
 			/// <returns></returns>
-			void resize(int size = normal) noexcept; //задает размер объекта в пикселях
+			void resize(int size = normal) noexcept;
 			/// <summary>
-			/// Добавление новой линии текста
+			/// Р”РѕР±Р°РІР»РµРЅРёРµ РЅРѕРІРѕР№ Р»РёРЅРёРё С‚РµРєСЃС‚Р°
 			/// </summary>
-			/// <param name="txt">Текст на новой линии</param>
+			/// <param name="txt">РўРµРєСЃС‚ РЅР° РЅРѕРІРѕР№ Р»РёРЅРёРё</param>
 			/// <returns></returns>
-			void add(const std::wstring &txt) noexcept; //добавляет новую строку в массив
+			void add(const std::wstring &txt) noexcept;
 			void render(RenderWindow &wd) noexcept;
 			void render(RenderWindow *wd) noexcept;
 	};
@@ -648,25 +636,24 @@ namespace _interface {
 		public:
 			bool visible;
 			/// <summary>
-			/// Конструктор
+			/// РљРѕРЅСЃС‚СЂСѓРєС‚РѕСЂ
 			/// </summary>
-			/// <param name="x">Позиция по оси X</param>
-			/// <param name="y">Позиция по оси Y</param>
-			/// <param name="cl">Цвет</param>
-			/// <param name="cf">Указатель на структуру настроек</param>
-			/// <returns></returns>
+			/// <param name="x">РџРѕР·РёС†РёСЏ РїРѕ РѕСЃРё X</param>
+			/// <param name="y">РџРѕР·РёС†РёСЏ РїРѕ РѕСЃРё Y</param>
+			/// <param name="cl">Р¦РІРµС‚</param>
+			/// <param name="cf">РЈРєР°Р·Р°С‚РµР»СЊ РЅР° СЃС‚СЂСѓРєС‚СѓСЂСѓ РЅР°СЃС‚СЂРѕРµРє</param>
 			background_color(int x, int y, Color cl, configuration *cf);
 			~background_color();
 			/// <summary>
-			/// Изменяет цвет
+			/// РР·РјРµРЅСЏРµС‚ С†РІРµС‚
 			/// </summary>
-			/// <param name="cl">Новый Цвет</param>
+			/// <param name="cl">РќРѕРІС‹Р№ Р¦РІРµС‚</param>
 			void setColor(Color cl);
 			void render(RenderWindow& wd) noexcept;
 			void render(RenderWindow* wd) noexcept;
 	};
 
-}; //конец пространства имен 
+}; //РљРѕРЅРµС† РїСЂРѕСЃС‚СЂР°РЅСЃС‚РІР° РёРјРµРЅ _interface
 
 class Character : public BaseCharacter { 
 	private:
@@ -674,14 +661,14 @@ class Character : public BaseCharacter {
 		_interface::min_bar* HP;
 	public:
 		Collision* rect_collis;
-		Character(Texture* ptr_texture, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
-		~Character(); //деструктор
-		void __fastcall setPosition(float x, float y) noexcept override; //устанавливает позицию спрайта по осям X, Y
-		void setPosition(const axes_f &xy) noexcept override; //устанавливает позицию спрайта по осям X, Y
-		float getPositionX_forCamer() noexcept; //возвращает центр координата спрайта по оси X
-		float getPositionY_forCamer() noexcept; //возвращает центр координата спрайта по оси Y
-		void __fastcall move(float time, int direct = 0) noexcept; //перезаписывает положение спрайта
-		void __fastcall move(float time) noexcept; //перезаписывает положение спрайта
+		Character(Texture* ptr_texture, float X_POS, float Y_POS, int hp); 
+		~Character(); 
+		void __fastcall setPosition(float x, float y) noexcept override; 
+		void setPosition(const axes_f &xy) noexcept override; 
+		float getPositionX_forCamer() noexcept; 
+		float getPositionY_forCamer() noexcept; 
+		void __fastcall move(float time, int direct = 0) noexcept; 
+		void __fastcall move(float time) noexcept; 
 		void __fastcall attack(float time);
 		bool isCooldown(float time);
 		void render(RenderWindow& wd) noexcept override;
@@ -690,17 +677,15 @@ class Character : public BaseCharacter {
 
 class DestroerCastle : public BaseCharacter {
 	private:
-		int direction, last_direction; //ширина изображения, высота изображения, положение спрайта по оси X, положение спрайта по оси Y, направление движения персонажа 
+		int direction, last_direction; 
 		_interface::min_bar* HP;
 	public:
-		DestroerCastle(Texture* ptr_texture, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
-		~DestroerCastle(); //деструктор
-		void __fastcall setPosition(float x, float y) noexcept override; //устанавливает позицию спрайта по осям X, Y
-		void setPosition(const axes_f &xy) noexcept override; //устанавливает позицию спрайта по осям X, Y
-		//float getPositionX_forCamer() noexcept; //возвращает центр координата спрайта по оси X
-		//float getPositionY_forCamer() noexcept; //возвращает центр координата спрайта по оси Y
-		void __fastcall move(float time, int direct) noexcept; //перезаписывает положение спрайта
-		//void move(float time) noexcept; //перезаписывает положение спрайта
+		DestroerCastle(Texture* ptr_texture, float X_POS, float Y_POS, int hp); 
+		~DestroerCastle(); 
+		void __fastcall setPosition(float x, float y) noexcept override; 
+		void setPosition(const axes_f &xy) noexcept override; 
+		void __fastcall move(float time, int direct) noexcept; 
+		//void move(float time) noexcept; 
 		void __fastcall attack(float time);
 		bool isCooldown(float time);
 		void render(RenderWindow& wd) noexcept override;
@@ -709,15 +694,15 @@ class DestroerCastle : public BaseCharacter {
 
 class Spearman : public BaseCharacter {
 	private:
-		int direction, last_direction; //ширина изображения, высота изображения, положение спрайта по оси X, положение спрайта по оси Y, направление движения персонажа 
+		int direction, last_direction; 
 		_interface::min_bar* HP;
 	public:
 		Collision* rect_collis;
-		Spearman(Texture* ptr_texture, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
-		~Spearman(); //деструктор
-		void __fastcall setPosition(float x, float y) noexcept override; //устанавливает позицию спрайта по осям X, Y
-		void setPosition(const axes_f &xy) noexcept override; //устанавливает позицию спрайта по осям X, Y
-		void __fastcall move(float time, int direct) noexcept; //перезаписывает положение спрайта
+		Spearman(Texture* ptr_texture, float X_POS, float Y_POS, int hp);
+		~Spearman(); 
+		void __fastcall setPosition(float x, float y) noexcept override;
+		void setPosition(const axes_f &xy) noexcept override;
+		void __fastcall move(float time, int direct) noexcept;
 		void __fastcall attack(float time);
 		bool isCooldown(float time);
 		void render(RenderWindow& wd) noexcept override;
@@ -729,14 +714,29 @@ class IceBall : public BaseCharacter {
 		_interface::min_bar* HP;
 	public:
 		Collision* rect_collis;
-		IceBall(Texture* ptr_texture, float X_POS, float Y_POS, int hp); //путь к спрайту, координата объекта по оси X, координата объекта по оси Y, ширина изображения, высота изображения,
-		~IceBall(); //деструктор
-		void __fastcall setPosition(float x, float y) noexcept override; //устанавливает позицию спрайта по осям X, Y
-		void setPosition(const axes_f &xy) noexcept override; //устанавливает позицию спрайта по осям X, Y
-		void __fastcall update(float time) noexcept; //перезаписывает положение спрайта
+		IceBall(Texture* ptr_texture, float X_POS, float Y_POS, int hp);
+		~IceBall();
+		void __fastcall setPosition(float x, float y) noexcept override;
+		void setPosition(const axes_f &xy) noexcept override;
+		void __fastcall update(float time) noexcept;
 		bool isCooldown(float time);
 		void render(RenderWindow& wd) noexcept override;
 		void render(RenderWindow* wd) noexcept override;
 };
+
+class Meteor : public ObjectAnimated {
+	private:
+		Sprite* sprt_meteor;
+		Vector2f start_point, mouse_point;
+		float current_len, full_len;
+		void isReachedPoint(float time);
+	public:
+		bool cooldown, reached_point, is_sound_play;
+		Meteor(Texture* ptr_texture, Texture* ptr_texture2, float X, float Y);
+		~Meteor();
+		void __fastcall update(float time) override final;
+		void render(RenderWindow& wd) override final;
+		void render(RenderWindow* wd) override final;
+	};
 
 #endif

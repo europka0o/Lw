@@ -1,12 +1,14 @@
-#include "Interf.h"
+п»ї#include "Interf.h"
 
-// ----------------------------------Настройки-Settings-Начало------------------------------
-int settings::createSettings(int ScreenW, int ScreenH, bool VertS, int TxtS, bool FullS) {
+//----------------------------------РќР°СЃС‚СЂРѕР№РєРё-Settings-РќР°С‡Р°Р»Рѕ------------------------------
+int settings::createSettings(int ScreenW, int ScreenH, bool VertS, int TxtS, bool FullS, bool Sound, int SoundV) {
 	fullScreen = FullS;
 	verticalSync = VertS;
 	screenHeight = ScreenH;
 	screenWidth = ScreenW;
 	textSize = TxtS;
+	sound = Sound;
+	soundVolume = SoundV;
 	return saveSettings();
 }
 
@@ -18,6 +20,8 @@ int settings::saveSettings() {
 	zap << "screenHeight = " << screenHeight << ";\n";
 	zap << "screenWidth = " << screenWidth << ";\n";
 	zap << "textSize = " << textSize << ";\n";
+	zap << "sound = " << sound << ";\n";
+	zap << "soundVolume = " << soundVolume << ";\n";
 	zap.close();
 	return 0;
 }
@@ -43,7 +47,7 @@ int settings::loadSettings() {
 			if (line_num == 0) {
 				if (*it == '=') {
 					it++;
-					while (*it != ';') {
+					while (*it != ';') { //РџРѕР»СѓС‡Р°РµРј СЃС‚СЂРѕРєСѓ СЃ РёРЅС„РѕСЂРјР°С†РёРµР№ Рѕ РїРѕР»РЅРѕСЌРєСЂР°РЅРЅРѕРј СЂРµР¶РёРјРµ Рё Р·Р°РїРёСЃС‹РІР°РµРј РµС‘ РІ РїРµСЂРµРјРµРЅРЅСѓСЋ fullScreen
 						*command += *it;
 						it++;
 					}
@@ -52,7 +56,7 @@ int settings::loadSettings() {
 					*command = "";
 					line_num++;
 				}
-			} else if (line_num == 1) {
+			} else if (line_num == 1) { //РџРѕР»СѓС‡Р°РµРј СЃС‚СЂРѕРєСѓ СЃ РёРЅС„РѕСЂРјР°С†РёРµР№ Рѕ РІРµСЂС‚РёРєР°Р»СЊРЅРѕР№ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёРё Рё Р·Р°РїРёСЃС‹РІР°РµРј РµС‘ РІ РїРµСЂРµРјРµРЅРЅСѓСЋ verticalSync
 				if (*it == '=') {
 					it++;
 					while (*it != ';') {
@@ -64,7 +68,7 @@ int settings::loadSettings() {
 					*command = "";
 					line_num++;
 				}
-			} else if (line_num == 2) {
+			} else if (line_num == 2) { //РџРѕР»СѓС‡Р°РµРј СЃС‚СЂРѕРєСѓ СЃ РёРЅС„РѕСЂРјР°С†РёРµР№ Рѕ РІС‹СЃРѕС‚Рµ СЂР°Р·СЂРµС€РµРЅРёСЏ СЌРєСЂР°РЅР° Рё Р·Р°РїРёСЃС‹РІР°РµРј РµС‘ РІ РїРµСЂРµРјРµРЅРЅСѓСЋ screenHeight
 				if (*it == '=') {
 					it++;
 					while (*it != ';') {
@@ -76,7 +80,7 @@ int settings::loadSettings() {
 					*command = "";
 					line_num++;
 				}
-			} else if (line_num == 3) {
+			} else if (line_num == 3) { //РџРѕР»СѓС‡Р°РµРј СЃС‚СЂРѕРєСѓ СЃ РёРЅС„РѕСЂРјР°С†РёРµР№ Рѕ С€РёСЂРёРЅРµ СЂР°Р·СЂРµС€РµРЅРёСЏ СЌРєСЂР°РЅР° Рё Р·Р°РїРёСЃС‹РІР°РµРј РµС‘ РІ РїРµСЂРµРјРµРЅРЅСѓСЋ screenWidth
 				if (*it == '=') {
 					it++;
 					while (*it != ';') {
@@ -88,7 +92,7 @@ int settings::loadSettings() {
 					*command = "";
 					line_num++;
 				}
-			}  else if (line_num == 4) {
+			}  else if (line_num == 4) { //РџРѕР»СѓС‡Р°РµРј СЃС‚СЂРѕРєСѓ СЃ РёРЅС„РѕСЂРјР°С†РёРµР№ Рѕ СЂР°Р·РјРµСЂРµ С‚РµРєСЃС‚Р° Рё Р·Р°РїРёСЃС‹РІР°РµРј РµС‘ РІ РїРµСЂРµРјРµРЅРЅСѓСЋ textSize
 				if (*it == '=') {
 					it++;
 					while (*it != ';') {
@@ -97,19 +101,43 @@ int settings::loadSettings() {
 					}
 					std::istringstream iss(*command);
 					iss >> textSize;
+					*command = "";
+					line_num++;
 				}
-			} 
+			} else if (line_num == 5) { //РџРѕР»СѓС‡Р°РµРј СЃС‚СЂРѕРєСѓ СЃ РёРЅС„РѕСЂРјР°С†РёРµР№ Рѕ РїСЂРѕРёРіСЂС‹РІР°РЅРёРё Р·РІСѓРєРѕРІ Рё Р·Р°РїРёСЃС‹РІР°РµРј РµС‘ РІ РїРµСЂРµРјРµРЅРЅСѓСЋ sound
+				if (*it == '=') { 
+					it++;
+					while (*it != ';') {
+						*command += *it;
+						it++;
+					}
+					std::istringstream iss(*command);
+					iss >> sound;
+					*command = "";
+					line_num++;
+				}
+			} else if (line_num == 6) { //РџРѕР»СѓС‡Р°РµРј СЃС‚СЂРѕРєСѓ СЃ РёРЅС„РѕСЂРјР°С†РёРµР№ Рѕ РіСЂРѕРјРєРѕСЃС‚Рё Р·РІСѓРєРѕРІ Рё Р·Р°РїРёСЃС‹РІР°РµРј РµС‘ РІ РїРµСЂРµРјРµРЅРЅСѓСЋ soundVolume
+				if (*it == '=') {
+					it++;
+					while (*it != ';') {
+						*command += *it;
+						it++;
+					}
+					std::istringstream iss(*command);
+					iss >> soundVolume;
+				}
+			}
 		}
 
 		delete st, command;
-		return 1;
+		return 1; //Р’РѕР·РІСЂР°С‰Р°РµРј 1, РµСЃР»Рё РІСЃРµ РїРµСЂРµРјРµРЅРЅС‹Рµ РёР· РєРѕРЅС„РёРіР° Р±С‹Р»Рё Р·Р°РїРёСЃР°РЅС‹ СѓСЃРїРµС€РЅРѕ
 	} else {
-		return 0;
+		return 0; //Р’РѕР·РІСЂР°С‰Р°РµРј 0, РµСЃР»Рё С‡С‚Рѕ-С‚Рѕ РїРѕС€Р»Рѕ РЅРµ С‚Р°Рє
 	}
 }
-// ----------------------------------Настройки-Settings-Конец-------------------------------
+//----------------------------------РќР°СЃС‚СЂРѕР№РєРё-Settings-РљРѕРЅРµС†-------------------------------
 
-//----------------------------------Структура-оси-axes-Начало-------------------------------
+//----------------------------------РЎС‚СЂСѓРєС‚СѓСЂР°-РѕСЃРё-axes-РќР°С‡Р°Р»Рѕ-------------------------------
 template<typename type>
 axes<type>::axes() {
 	x = 0;
@@ -118,9 +146,9 @@ axes<type>::axes() {
 
 template<typename type>
 axes<type>::axes(type _x, type _y) : x(_x), y(_y) {}
-//----------------------------------Структура-оси-axes-Конец-------------------------------
+//----------------------------------РЎС‚СЂСѓРєС‚СѓСЂР°-РѕСЃРё-axes-РљРѕРЅРµС†-------------------------------
 
-// ----------------------------------Персанаж-Character-Начало------------------------------
+// ----------------------------------РџРµСЂСЃР°РЅР°Р¶-Character-РќР°С‡Р°Р»Рѕ------------------------------
 Character::Character(Texture* ptr_texture, float X_POS, float Y_POS, int hp) :
 	BaseCharacter(ptr_texture, X_POS, Y_POS, hp)
 	{
@@ -135,8 +163,6 @@ Character::Character(Texture* ptr_texture, float X_POS, float Y_POS, int hp) :
 }
 
 Character::~Character() {
-	//sprt->~Sprite();
-	//texture->~Texture();
 	delete HP;
 }
 
@@ -169,68 +195,68 @@ float Character::getPositionY_forCamer() noexcept {
 void __fastcall Character::move(float time) noexcept {
 	if (!((Keyboard::isKeyPressed(Keyboard::Up) && Keyboard::isKeyPressed(Keyboard::Right)) || (Keyboard::isKeyPressed(Keyboard::Up) && Keyboard::isKeyPressed(Keyboard::Left)) ||
 			(Keyboard::isKeyPressed(Keyboard::Down) && Keyboard::isKeyPressed(Keyboard::Right)) || (Keyboard::isKeyPressed(Keyboard::Down) && Keyboard::isKeyPressed(Keyboard::Left)))) {
-		if (Keyboard::isKeyPressed(Keyboard::Right)) { //-------------вправо
+		if (Keyboard::isKeyPressed(Keyboard::Right)) { //-------------Р’РїСЂР°РІРѕ
 				direction = 1;
 		}
-		if (Keyboard::isKeyPressed(Keyboard::Left)) { //-------------влево 
+		if (Keyboard::isKeyPressed(Keyboard::Left)) { //-------------Р’Р»РµРІРѕ
 				direction = 2;
 		}
-		if (Keyboard::isKeyPressed(Keyboard::Up)) { //-------------вверх 
+		if (Keyboard::isKeyPressed(Keyboard::Up)) { //-------------Р’РІРµСЂС… 
 				direction = 3;
 		}
-		if (Keyboard::isKeyPressed(Keyboard::Down)) { //-------------вниз 
+		if (Keyboard::isKeyPressed(Keyboard::Down)) { //-------------Р’РЅРёР· 
 				direction = 4;
 		}
 	}
 
-	if (Keyboard::isKeyPressed(Keyboard::Up) && Keyboard::isKeyPressed(Keyboard::Right)) { //-------------вверх и вправо
+	if (Keyboard::isKeyPressed(Keyboard::Up) && Keyboard::isKeyPressed(Keyboard::Right)) { //-------------Р’РІРµСЂС… Рё РІРїСЂР°РІРѕ
 			direction = 5;
 	}
-	if (Keyboard::isKeyPressed(Keyboard::Up) && Keyboard::isKeyPressed(Keyboard::Left)) { //-------------вверх и влево 
+	if (Keyboard::isKeyPressed(Keyboard::Up) && Keyboard::isKeyPressed(Keyboard::Left)) { //-------------Р’РІРµСЂС… Рё РІР»РµРІРѕ 
 			direction = 6;
 	}
-	if (Keyboard::isKeyPressed(Keyboard::Down) && Keyboard::isKeyPressed(Keyboard::Right)) { //-------------вниз и вправо
+	if (Keyboard::isKeyPressed(Keyboard::Down) && Keyboard::isKeyPressed(Keyboard::Right)) { //-------------Р’РЅРёР· Рё РІРїСЂР°РІРѕ
 			direction = 7;
 	}
-	if (Keyboard::isKeyPressed(Keyboard::Down) && Keyboard::isKeyPressed(Keyboard::Left)) { //-------------вниз и влево
+	if (Keyboard::isKeyPressed(Keyboard::Down) && Keyboard::isKeyPressed(Keyboard::Left)) { //-------------Р’РЅРёР· Рё РІР»РµРІРѕ
 			direction = 8;
 	}
 
-	switch (direction) { //направление движения персонажа
+	switch (direction) { //РќР°РїСЂР°РІР»РµРЅРёРµ РґРІРёР¶РµРЅРёСЏ РїРµСЂСЃРѕРЅР°Р¶Р°
 	case 1:
 		frame += 0.023 * time;
 		if (frame > 7) {
 			frame = 0;
 		}
-		sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); //108 * int(frame), 136 * 9, 108, 136
+		sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); 
 		sprt->move(0.5 * time, 0); break;
 	case 2:
 		frame += 0.023 * time;
 		if (frame > 7) {
 			frame = 0;
 		}
-		sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250)); //108 * int(frame) + 108, 136 * 9, -108, 136
+		sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250)); 
 		sprt->move(-0.5 * time, 0); break;
 	case 3:
 		frame += 0.023 * time;
 		if (frame > 7) {
 			frame = 0;
 		}
-		sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); //108 * int(frame), 136 * 0, 108, 136
+		sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); 
 		sprt->move(0, -0.5 * time); break;
 	case 4:
 		frame += 0.023 * time;
 		if (frame > 7) {
 			frame = 0;
 		}
-		sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); //108 * int(frame), 136 * 17, 108, 136
+		sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250));
 		sprt->move(0, 0.5 * time); break;
 	case 5:
 		frame += 0.023 * time;
 		if (frame > 7) {
 			frame = 0;
 		}
-		sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); //108 * int(frame), 136 * 5, 108, 136
+		sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250));
 		sprt->move(0.5 * time, -0.5 * time); 
 		last_direction = 1; break;
 	case 6:
@@ -238,7 +264,7 @@ void __fastcall Character::move(float time) noexcept {
 		if (frame > 7) {
 			frame = 0;
 		}
-		sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250)); //108 * int(frame) + 108, 136 * 5, -108, 136
+		sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250));
 		sprt->move(-0.5 * time, -0.5 * time); 
 		last_direction = 2; break;
 	case 7:
@@ -246,7 +272,7 @@ void __fastcall Character::move(float time) noexcept {
 		if (frame > 7) {
 			frame = 0;
 		}
-		sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); //108 * int(frame), 136 * 13, 108, 136
+		sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250));
 		sprt->move(0.5 * time, 0.5 * time); 
 		last_direction = 1; break;
 	case 8:
@@ -254,7 +280,7 @@ void __fastcall Character::move(float time) noexcept {
 		if (frame > 7) {
 			frame = 0;
 		}
-		sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250)); //108 * int(frame) + 108, 136 * 13, -108, 136
+		sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250));
 		sprt->move(-0.5 * time, 0.5 * time); 
 		last_direction = 2; break;
 	default: 
@@ -293,41 +319,41 @@ void __fastcall Character::move(float time, int direct) noexcept {
 		}
 		sprt->setTextureRect(IntRect(400 * int(frame) + 400, 0, -400, 250));
 	} else {
-		switch (direction) { //направление движения персонажа
+		switch (direction) { //РќР°РїСЂР°РІР»РµРЅРёРµ РґРІРёР¶РµРЅРёСЏ РїРµСЂСЃРѕРЅР°Р¶Р°
 		case 1:
 			frame += 0.023 * time;
 			if (frame > 7) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); //108 * int(frame), 136 * 9, 108, 136
+			sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); 
 			sprt->move(0.5 * time, 0); break;
 		case 2:
 			frame += 0.023 * time;
 			if (frame > 7) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250)); //108 * int(frame) + 108, 136 * 9, -108, 136
+			sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250)); 
 			sprt->move(-0.5 * time, 0); break;
 		case 3:
 			frame += 0.023 * time;
 			if (frame > 7) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); //108 * int(frame), 136 * 0, 108, 136
+			sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250));
 			sprt->move(0, -0.5 * time); break;
 		case 4:
 			frame += 0.023 * time;
 			if (frame > 7) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); //108 * int(frame), 136 * 17, 108, 136
+			sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250));
 			sprt->move(0, 0.5 * time); break;
 		case 5:
 			frame += 0.023 * time;
 			if (frame > 7) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); //108 * int(frame), 136 * 5, 108, 136
+			sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250));
 			sprt->move(0.5 * time, -0.5 * time);
 			last_direction = 1; break;
 		case 6:
@@ -335,7 +361,7 @@ void __fastcall Character::move(float time, int direct) noexcept {
 			if (frame > 7) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250)); //108 * int(frame) + 108, 136 * 5, -108, 136
+			sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250));
 			sprt->move(-0.5 * time, -0.5 * time);
 			last_direction = 2; break;
 		case 7:
@@ -343,7 +369,7 @@ void __fastcall Character::move(float time, int direct) noexcept {
 			if (frame > 7) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); //108 * int(frame), 136 * 13, 108, 136
+			sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250));
 			sprt->move(0.5 * time, 0.5 * time);
 			last_direction = 1; break;
 		case 8:
@@ -351,7 +377,7 @@ void __fastcall Character::move(float time, int direct) noexcept {
 			if (frame > 7) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250)); //108 * int(frame) + 108, 136 * 13, -108, 136
+			sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250));
 			sprt->move(-0.5 * time, 0.5 * time);
 			last_direction = 2; break;
 		default:
@@ -426,9 +452,9 @@ void Character::render(RenderWindow *wd) noexcept {
 	HP->changeBar(health);
 	HP->render(wd);
 }
-// ----------------------------------Персанаж-Character-Конец------------------------------
+//----------------------------------РџРµСЂСЃР°РЅР°Р¶-Character-РљРѕРЅРµС†------------------------------
 
-// ---------------------------Статический-объект-ObjectStatic-Начало------------------------------
+//---------------------------РЎС‚Р°С‚РёС‡РµСЃРєРёР№-РѕР±СЉРµРєС‚-ObjectStatic-РќР°С‡Р°Р»Рѕ------------------------------
 ObjectStatic::ObjectStatic(Texture* ptr_texture, float X, float Y) {
 	pos.x = X;
 	pos.y = Y;
@@ -437,8 +463,6 @@ ObjectStatic::ObjectStatic(Texture* ptr_texture, float X, float Y) {
 	sprt->setTexture(*ptr_texture);
 	sprt->setTextureRect(IntRect(0, 0, ptr_texture->getSize().x, ptr_texture->getSize().y));
 	sprt->setPosition(pos.x, pos.y);
-
-	react_obj_stat = sprt->getGlobalBounds();
 
 	rect_collis = new Collision(IntRect(0, 0, 0, 0));
 }
@@ -453,7 +477,7 @@ axes_i ObjectStatic::getPosition() {
 }
 
 FloatRect ObjectStatic::getSize() {
-	return react_obj_stat;
+	return sprt->getGlobalBounds();
 }
 
 void ObjectStatic::setRect(const IntRect &bound) {
@@ -465,16 +489,14 @@ void __fastcall ObjectStatic::setPosition(int x, int y) {
 	pos.y = y;
 
 	sprt->setPosition(pos.x, pos.y);
-
-	react_obj_stat = sprt->getGlobalBounds();
+	rect_collis->setPosition(pos.x, pos.y);
 }
 
 void ObjectStatic::setPosition(const axes_i &xy) {
 	pos = xy;
 
 	sprt->setPosition(pos.x, pos.y);
-
-	react_obj_stat = sprt->getGlobalBounds();
+	rect_collis->setPosition(xy);
 }
 
 void ObjectStatic::render(RenderWindow &wd) {
@@ -484,47 +506,22 @@ void ObjectStatic::render(RenderWindow &wd) {
 void ObjectStatic::render(RenderWindow *wd) {
 	wd->draw(*sprt);
 }
-// ----------------------------------Статический-объект-ObjectStatic-Конец-------------------------------
+//----------------------------------РЎС‚Р°С‚РёС‡РµСЃРєРёР№-РѕР±СЉРµРєС‚-ObjectStatic-РљРѕРЅРµС†-------------------------------
 
-// -------------------------------Анимированный-объект-ObjectAnimated-Начало------------------------------
+//-------------------------------РђРЅРёРјРёСЂРѕРІР°РЅРЅС‹Р№-РѕР±СЉРµРєС‚-ObjectAnimated-РќР°С‡Р°Р»Рѕ------------------------------
 ObjectAnimated::ObjectAnimated(Texture* ptr_texture, float X, float Y) :
 	frame(0),
 	end(false),
-	cooldown(false),
 	ObjectStatic(ptr_texture, X, Y)
 	{	
-	sprt->setTextureRect(IntRect(400, 0, ptr_texture->getSize().x, ptr_texture->getSize().y));
-	sprt->setPosition(pos.x, pos.y);
-
-	react_obj_stat = sprt->getGlobalBounds();
-
-	rect_collis->setBounds(IntRect(pos.x, pos.y, 400, 400));
 }
 
 ObjectAnimated::~ObjectAnimated() {}
 
-void __fastcall ObjectAnimated::update(float time) {
-	frame += 0.022 * time;
-	if (frame > 24) {
-		//frame = 0;
-		end = true;
-	}
+void __fastcall ObjectAnimated::update(float time) {}
+//-------------------------------РђРЅРёРјРёСЂРѕРІР°РЅРЅС‹Р№-РѕР±СЉРµРєС‚-ObjectAnimated-РљРѕРЅРµС†-------------------------------
 
-	if (frame >= 0 && frame <= 5) {
-		sprt->setTextureRect(IntRect(400 * int(frame), 0, 400, 400));
-	} else if (frame >= 6 && frame <= 11) {
-		sprt->setTextureRect(IntRect(400 * (int(frame) - 6), 400, 400, 400));
-	} else if (frame >= 12 && frame <= 17) {
-		sprt->setTextureRect(IntRect(400 * (int(frame) - 12), 800, 400, 400));
-	} else if (frame >= 18 && frame <= 23) {
-		sprt->setTextureRect(IntRect(400 * (int(frame) - 18), 1200, 400, 400));
-	}
-
-	react_obj_stat = sprt->getGlobalBounds();
-}
-// -------------------------------Анимированный-объект-ObjectAnimated-Конец-------------------------------
-
-// ----------------------------------Камера-Camer-Начало------------------------------
+//----------------------------------РљР°РјРµСЂР°-Camer-РќР°С‡Р°Р»Рѕ------------------------------
 Camer::Camer(int x, int y, int screen_width, int screen_height) :
 	screen_H(screen_height),
 	screen_W(screen_width)
@@ -583,9 +580,9 @@ void Camer::setView(RenderWindow *wd) {
 	wd->setView(*Vid);
 }
 
-// ----------------------------------Камера-Camer-Конец-------------------------------
+//----------------------------------РљР°РјРµСЂР°-Camer-РљРѕРЅРµС†-------------------------------
 
-//-----------------------------------Мир-World-Начало-------------------------------------
+//-----------------------------------РњРёСЂ-World-РќР°С‡Р°Р»Рѕ-------------------------------------
 World::World(Image *ptr_on_img, int X_SIZE, int Y_SIZE) :
 	size_x(X_SIZE),
 	size_y(Y_SIZE)
@@ -613,7 +610,7 @@ World::~World() noexcept {
 }
 
 void World::render(RenderWindow& wd) noexcept {
-	for (int i = 0; i < size_y; i++) { //отрисовка мира
+	for (int i = 0; i < size_y; i++) { //РћС‚СЂРёСЃРѕРІРєР° РјРёСЂР°
 		for (int j = 0; j < size_x; j++) {
 			if (mass_sp[i][j] == '0') {
 				worldSpr->setTextureRect(IntRect(0, 0, worldTexture->getSize().x, worldTexture->getSize().y)); //0, 0, 128, 128
@@ -625,7 +622,7 @@ void World::render(RenderWindow& wd) noexcept {
 }
 
 void World::render(RenderWindow *wd) noexcept {
-	for (int i = 0; i < size_y; i++) { //отрисовка мира
+	for (int i = 0; i < size_y; i++) { //РћС‚СЂРёСЃРѕРІРєР° РјРёСЂР°
 		for (int j = 0; j < size_x; j++) {
 			if (mass_sp[i][j] == '0') {
 				worldSpr->setTextureRect(IntRect(0, 0, worldTexture->getSize().x, worldTexture->getSize().y)); //0, 0, 128, 128
@@ -635,9 +632,9 @@ void World::render(RenderWindow *wd) noexcept {
 		}
 	}
 }
-//-----------------------------------Мир-World-Конец-------------------------------------
+//-----------------------------------РњРёСЂ-World-РљРѕРЅРµС†-------------------------------------
 
-//-----------------------------------Полоса-bar-Начало-------------------------------------
+//-----------------------------------РџРѕР»РѕСЃР°-bar-РќР°С‡Р°Р»Рѕ-------------------------------------
 _interface::bar::bar(int x, int y, int br_ma, int br_mi, const std::wstring &name, Color mcol, Color bcol, Color tcol) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	max_bar(br_ma),
@@ -748,9 +745,9 @@ void _interface::bar::resize(int size) noexcept {
 
 	fl_rect = main->getGlobalBounds();
 }
-//-----------------------------------Полоса-bar-Конец--------------------------------------
+//-----------------------------------РџРѕР»РѕСЃР°-bar-РљРѕРЅРµС†--------------------------------------
 
-//-----------------------------------Текст-text-Начало-------------------------------------
+//-----------------------------------РўРµРєСЃС‚-text-РќР°С‡Р°Р»Рѕ-------------------------------------
 _interface::text::text(int x, int y, const std::wstring& txt, Color lbcol, Color bvcol) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	visible_bevel(true)
@@ -844,9 +841,9 @@ void _interface::text::render(RenderWindow *wd) noexcept {
 		wd->draw(*label);
 	}
 }
-//-----------------------------------Текст-text-Конец-------------------------------------
+//-----------------------------------РўРµРєСЃС‚-text-РљРѕРЅРµС†-------------------------------------
 
-//-----------------------------------Многострочный-текст-multiline_text-Конец-------------------------------------
+//-----------------------------------РњРЅРѕРіРѕСЃС‚СЂРѕС‡РЅС‹Р№-С‚РµРєСЃС‚-multiline_text-РљРѕРЅРµС†-------------------------------------
 _interface::multiline_text::multiline_text(float x, float y, Color lbcol, Color bvcol) :
 	visible(true),
 	visible_bevel(true)
@@ -954,9 +951,9 @@ void _interface::multiline_text::render(RenderWindow *wd) noexcept {
 		}
 	}
 }
-//-----------------------------------Многострочный-текст-multiline_text-Конец-------------------------------------
+//-----------------------------------РњРЅРѕРіРѕСЃС‚СЂРѕС‡РЅС‹Р№-С‚РµРєСЃС‚-multiline_text-РљРѕРЅРµС†-------------------------------------
 
-//-----------------------------------Кнопка-button-Начало-------------------------------------
+//-----------------------------------РљРЅРѕРїРєР°-button-РќР°С‡Р°Р»Рѕ-------------------------------------
 _interface::button::button(int x, int y, const std::wstring& text, Color maincl, Color textcl, Color activecl) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	active(false)
@@ -1065,9 +1062,9 @@ bool _interface::button::isAction(const axes_i &xy) {
 	fl_rect.contains(xy.x, xy.y) ? active = true : active = false;
 	return active;
 }
-//-----------------------------------Кнопка-button-Конец--------------------------------------
+//-----------------------------------РљРЅРѕРїРєР°-button-РљРѕРЅРµС†--------------------------------------
 
-//-----------------------------------Меню-menu-Начало--------------------------------------
+//-----------------------------------РњРµРЅСЋ-menu-РќР°С‡Р°Р»Рѕ--------------------------------------
 _interface::menu::menu(Camer *camera, Color maincl, Color bordercl) : 
 	active(true),
 	blackout_visible(true)
@@ -1092,11 +1089,11 @@ _interface::menu::menu(Camer *camera, Color maincl, Color bordercl) :
 	blackout->setFillColor(Color(0, 0, 0, 255 / 2));
 	blackout->setPosition(camera->getPosition().x - (camera->getScreenWidth() / 2), camera->getPosition().y - (camera->getScreenHeight() / 2));
 
-	btContinue = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 20,  L"Продолжить", Color::Black, Color::Yellow, Color::Yellow);
-	btOptions = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 100, L"Настройки", Color::Black, Color::Yellow, Color::Yellow);
-	btExit = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 180, L"Выйти", Color::Black, Color::Yellow, Color::Yellow);
+	btContinue = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 20,  L"РџСЂРѕРґРѕР»Р¶РёС‚СЊ", Color::Black, Color::Yellow, Color::Yellow);
+	btOptions = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 100, L"РќР°СЃС‚СЂРѕР№РєРё", Color::Black, Color::Yellow, Color::Yellow);
+	btExit = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 180, L"Р’С‹Р№С‚Рё", Color::Black, Color::Yellow, Color::Yellow);
 
-	txMenu = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 450, L"Меню", Color::Yellow, Color::Black);
+	txMenu = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 450, L"РњРµРЅСЋ", Color::Yellow, Color::Black);
 	txMenu->visible_bevel = false;
 	grFirst = new gradient(FloatRect(Vector2f(100, 100), Vector2f(200, 5)), gradient_direction::rightOnLeft, Color::Transparent, Color::Yellow);
 	grSecond = new gradient(FloatRect(Vector2f(150, 150), Vector2f(200, 5)), gradient_direction::leftOnRight, Color::Transparent, Color::Yellow);
@@ -1170,9 +1167,9 @@ void _interface::menu::render(RenderWindow *wd, Camer *camera) noexcept {
 		grSecond->render(wd);
 	}
 }
-//-----------------------------------Меню-menu-Конец---------------------------------------
+//-----------------------------------РњРµРЅСЋ-menu-РљРѕРЅРµС†---------------------------------------
 
-//------------------------------Чекбокс-check_box-Начало--------------------------------------
+//------------------------------Р§РµРєР±РѕРєСЃ-check_box-РќР°С‡Р°Р»Рѕ--------------------------------------
 _interface::check_box::check_box(int x, int y, Color maincl, Color bordercl, Color checkcl) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	isCheck(false)
@@ -1253,16 +1250,16 @@ void _interface::check_box::render(RenderWindow *wd) noexcept {
 		}
 	}
 }
-//------------------------------Чекбокс-check_box-Конец---------------------------------------
+//------------------------------Р§РµРєР±РѕРєСЃ-check_box-РљРѕРЅРµС†---------------------------------------
 
-//------------------------Меню-настроек-settings_menu-Начало--------------------------------------
+//------------------------РњРµРЅСЋ-РЅР°СЃС‚СЂРѕРµРє-settings_menu-РќР°С‡Р°Р»Рѕ--------------------------------------
 _interface::settings_menu::settings_menu(configuration *cf, Camer *camera, Color maincl, Color bordercl) :
 	active(false), 
 	blackout_visible(false)
 	{
 		pos = camera->getPosition();
 		main = new RectangleShape;
-		main->setSize(Vector2f(500, 500));
+		main->setSize(Vector2f(550, 600));
 		main_cl = new Color;
 		*main_cl = maincl;
 		main->setFillColor(*main_cl);
@@ -1280,38 +1277,62 @@ _interface::settings_menu::settings_menu(configuration *cf, Camer *camera, Color
 		blackout->setFillColor(Color(0, 0, 0, 255 / 2));
 		blackout->setPosition(camera->getPosition().x - (camera->getScreenWidth() / 2), camera->getPosition().y - (camera->getScreenHeight() / 2));
 
-		btBack = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 260, L"Назад", Color::Black, Color::Yellow, Color::Yellow);
-		btSave = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 340, L"Сохранить", Color::Black, Color::Yellow, Color::Yellow); 
+		btBack = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 410, L"РќР°Р·Р°Рґ", Color::Black, Color::Yellow, Color::Yellow);
+		btSave = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 480, L"РЎРѕС…СЂР°РЅРёС‚СЊ", Color::Black, Color::Yellow, Color::Yellow); 
 
 		std::string *t = new std::string(intToStr(std::string, cf->screenWidth));
 		*t += " x ";
 		*t += intToStr(std::string, cf->screenHeight);
 
-		txVertS = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 20, L"Вертикальная синхронизация:", Color::Yellow, Color::Black);
+		txVertS = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 20, L"Р’РµСЂС‚РёРєР°Р»СЊРЅР°СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ:", Color::Yellow, Color::Black);
 		txVertS->visible_bevel = false;
-		txFullS = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 100, L"На весь экран:", Color::Yellow, Color::Black);
+		txFullS = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 100, L"РќР° РІРµСЃСЊ СЌРєСЂР°РЅ:", Color::Yellow, Color::Black);
 		txFullS->visible_bevel = false;
-		txScreen = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 180, L"Разрешение экрана:", Color::Yellow, Color::Black);
+		txScreen = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 180, L"Р Р°Р·СЂРµС€РµРЅРёРµ СЌРєСЂР°РЅР°:", Color::Yellow, Color::Black);
 		txScreen->visible_bevel = false;
+		txSound = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 260, L"Р—РІСѓРє:", Color::Yellow, Color::Black);
+		txSound->visible_bevel = false;
+		txSoundV = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 340, L"Р“СЂРѕРјРєРѕСЃС‚СЊ Р·РІСѓРєР°:", Color::Yellow, Color::Black);
+		txSoundV->visible_bevel = false;
 
 		combScreen = new combo_box(txScreen->getSize().left + txScreen->getSize().width + 5, txScreen->getSize().top, Color::Yellow, Color::Yellow);
 		combScreen->add(L"1280 x 720", 0);
 		combScreen->add(L"1600 x 900", 1);
 		combScreen->add(L"1600 x 1200", 2);
 		combScreen->add(L"1920 x 1080", 3);
-		combScreen->add(L"2048 x 1152", 4);
-		combScreen->add(L"2560 x 1440", 5);
+		combScreen->add(L"2560 x 1440", 4);
+
+		combSoundV = new combo_box(txSoundV->getSize().left + txSoundV->getSize().width + 5, txSoundV->getSize().top, Color::Yellow, Color::Yellow);
+		combSoundV->add(L"0", 0);
+		combSoundV->add(L"10", 10);
+		combSoundV->add(L"20", 20);
+		combSoundV->add(L"30", 30);
+		combSoundV->add(L"40", 40);
+		combSoundV->add(L"50", 50);
+		combSoundV->add(L"60", 60);
+		combSoundV->add(L"70", 70);
+		combSoundV->add(L"80", 80);
+		combSoundV->add(L"90", 90);
+		combSoundV->add(L"100", 100);
 
 		while (std::wstring(t->begin(), t->end()) != combScreen->getText()) {
 			combScreen->back();
+		}
+
+		*t = intToStr(std::string, cf->soundVolume);
+
+		while (std::wstring(t->begin(), t->end()) != combSoundV->getText()) {
+			combSoundV->back();
 		}
 
 		cbVertS = new check_box((main->getGlobalBounds().width / 2) + 0 + (txVertS->getSize().width / 2) + 5, main->getGlobalBounds().top + 20, Color::Black, Color::Yellow, Color::Yellow);
 		cbVertS->isCheck = cf->verticalSync;
 		cbFullS = new check_box((main->getGlobalBounds().width / 2) + 0 + (txFullS->getSize().width / 2) + 5, main->getGlobalBounds().top + 100, Color::Black, Color::Yellow, Color::Yellow);
 		cbFullS->isCheck = cf->fullScreen;
+		cbSound = new check_box((main->getGlobalBounds().width / 2) + 0 + (txVertS->getSize().width / 2) + 5, main->getGlobalBounds().top + 260, Color::Black, Color::Yellow, Color::Yellow);
+		cbSound->isCheck = cf->sound;
 
-		txMenuSettings = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 450, L"Настройки", Color::Yellow, Color::Black);
+		txMenuSettings = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 550, L"РќР°СЃС‚СЂРѕР№РєРё", Color::Yellow, Color::Black);
 		txMenuSettings->visible_bevel = false;
 		grFirst = new gradient(FloatRect(Vector2f(100, 100), Vector2f(180, 5)), gradient_direction::rightOnLeft, Color::Transparent, Color::Yellow);
 		grSecond = new gradient(FloatRect(Vector2f(150, 150), Vector2f(180, 5)), gradient_direction::leftOnRight, Color::Transparent, Color::Yellow);
@@ -1326,7 +1347,7 @@ _interface::settings_menu::settings_menu(configuration *cf, Color maincl, Color 
 	pos.x = cf->screenWidth / 2;
 	pos.y = cf->screenHeight / 2;
 	main = new RectangleShape;
-	main->setSize(Vector2f(500, 500));
+	main->setSize(Vector2f(550, 600));
 	main_cl = new Color;
 	*main_cl = maincl;
 	main->setFillColor(*main_cl);
@@ -1344,50 +1365,80 @@ _interface::settings_menu::settings_menu(configuration *cf, Color maincl, Color 
 	blackout->setFillColor(Color(0, 0, 0, 255 / 2));
 	blackout->setPosition(0,0);
 
-	btBack = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 260, L"Назад", Color::Black, Color::Yellow, Color::Yellow);
-	btSave = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 340, L"Сохранить", Color::Black, Color::Yellow, Color::Yellow);
-	btBack->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btBack->getSize().width / 2), main->getGlobalBounds().top + 260);
-	btSave->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btSave->getSize().width / 2), main->getGlobalBounds().top + 340);
+	btBack = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 410, L"РќР°Р·Р°Рґ", Color::Black, Color::Yellow, Color::Yellow);
+	btSave = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 480, L"РЎРѕС…СЂР°РЅРёС‚СЊ", Color::Black, Color::Yellow, Color::Yellow);
+	btBack->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btBack->getSize().width / 2), main->getGlobalBounds().top + 410);
+	btSave->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btSave->getSize().width / 2), main->getGlobalBounds().top + 480);
 
 
 	auto *t = new std::string(intToStr(std::string, cf->screenWidth));
 	*t += " x ";
 	*t += intToStr(std::string, cf->screenHeight);
 
-	txVertS = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 20, L"Вертикальная синхронизация:", Color::Yellow, Color::Black);
+	txVertS = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 20, L"Р’РµСЂС‚РёРєР°Р»СЊРЅР°СЏ СЃРёРЅС…СЂРѕРЅРёР·Р°С†РёСЏ:", Color::Yellow, Color::Black);
 	txVertS->visible_bevel = false;
-	txFullS = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 100, L"На весь экран:", Color::Yellow, Color::Black);
+	txFullS = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 100, L"РќР° РІРµСЃСЊ СЌРєСЂР°РЅ:", Color::Yellow, Color::Black);
 	txFullS->visible_bevel = false;
-	txScreen = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 180, L"Разрешение экрана:", Color::Yellow, Color::Black);
+	txScreen = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 180, L"Р Р°Р·СЂРµС€РµРЅРёРµ СЌРєСЂР°РЅР°:", Color::Yellow, Color::Black);
 	txScreen->visible_bevel = false;
+	txSound = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 260, L"Р—РІСѓРє:", Color::Yellow, Color::Black);
+	txSound->visible_bevel = false;
+	txSoundV = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 340, L"Р“СЂРѕРјРєРѕСЃС‚СЊ Р·РІСѓРєР°:", Color::Yellow, Color::Black);
+	txSoundV->visible_bevel = false;
+
 	txVertS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txVertS->getSize().width / 2), main->getGlobalBounds().top + 20);
 	txFullS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txFullS->getSize().width / 2), main->getGlobalBounds().top + 100);
-	txScreen->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txScreen->getSize().width / 2) - 50, main->getGlobalBounds().top + 190);
+	txScreen->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txScreen->getSize().width / 2) - 50, main->getGlobalBounds().top + 180); 
+	txSound->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSound->getSize().width / 2), main->getGlobalBounds().top + 260);
+	txSoundV->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSoundV->getSize().width / 2) - 50, main->getGlobalBounds().top + 340);
+
 
 	combScreen = new combo_box(txScreen->getSize().left + txScreen->getSize().width + 5, txScreen->getSize().top, Color::Yellow, Color::Yellow);
 	combScreen->add(L"1280 x 720", 0);
 	combScreen->add(L"1600 x 900", 1);
 	combScreen->add(L"1600 x 1200", 2);
 	combScreen->add(L"1920 x 1080", 3);
-	combScreen->add(L"2048 x 1152", 4);
-	combScreen->add(L"2560 x 1440", 5);
+	combScreen->add(L"2560 x 1440", 4);
+
+	combSoundV = new combo_box(txSoundV->getSize().left + txSoundV->getSize().width + 5, txSoundV->getSize().top, Color::Yellow, Color::Yellow);
+	combSoundV->add(L"0", 0);
+	combSoundV->add(L"10", 10);
+	combSoundV->add(L"20", 20);
+	combSoundV->add(L"30", 30);
+	combSoundV->add(L"40", 40);
+	combSoundV->add(L"50", 50);
+	combSoundV->add(L"60", 60);
+	combSoundV->add(L"70", 70);
+	combSoundV->add(L"80", 80);
+	combSoundV->add(L"90", 90);
+	combSoundV->add(L"100", 100);
 	
 	while (std::wstring(t->begin(), t->end()) != combScreen->getText()) {
 		combScreen->back();
+	}
+
+	*t = intToStr(std::string, cf->soundVolume);
+
+	while (std::wstring(t->begin(), t->end()) != combSoundV->getText()) {
+		combSoundV->back();
 	}
 
 	cbVertS = new check_box((main->getGlobalBounds().width / 2) + 0 + (txVertS->getSize().width / 2) + 5, main->getGlobalBounds().top + 20, Color::Black, Color::Yellow, Color::Yellow);
 	cbVertS->isCheck = cf->verticalSync;
 	cbFullS = new check_box((main->getGlobalBounds().width / 2) + 0 + (txFullS->getSize().width / 2) + 5, main->getGlobalBounds().top + 100, Color::Black, Color::Yellow, Color::Yellow);
 	cbFullS->isCheck = cf->fullScreen;
+	cbSound = new check_box((main->getGlobalBounds().width / 2) + 0 + (txVertS->getSize().width / 2) + 5, main->getGlobalBounds().top + 260, Color::Black, Color::Yellow, Color::Yellow);
+	cbSound->isCheck = cf->sound;
+
 	cbVertS->setPosition(txVertS->getSize().left + txVertS->getSize().width + 5, main->getGlobalBounds().top + 20);
 	cbFullS->setPosition(txFullS->getSize().left + txFullS->getSize().width + 5, main->getGlobalBounds().top + 100);
+	cbSound->setPosition(txSound->getSize().left + txSound->getSize().width + 5, main->getGlobalBounds().top + 260);
 
-	txMenuSettings = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 450, L"Настройки", Color::Yellow, Color::Black);
+	txMenuSettings = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 550, L"РќР°СЃС‚СЂРѕР№РєРё", Color::Yellow, Color::Black);
 	txMenuSettings->visible_bevel = false;
 	grFirst = new gradient(FloatRect(Vector2f(100, 100), Vector2f(180, 5)), gradient_direction::rightOnLeft, Color::Transparent, Color::Yellow);
 	grSecond = new gradient(FloatRect(Vector2f(150, 150), Vector2f(180, 5)), gradient_direction::leftOnRight, Color::Transparent, Color::Yellow);
-	txMenuSettings->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txMenuSettings->getSize().width / 2), main->getGlobalBounds().top + 450);
+	txMenuSettings->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txMenuSettings->getSize().width / 2), main->getGlobalBounds().top + 550);
 	grFirst->setPosition(txMenuSettings->getPosition().x - 5 - grFirst->getSize().width, txMenuSettings->getPosition().y + (txMenuSettings->getSize().height / 2) - (grSecond->getSize().height / 2));
 	grSecond->setPosition(txMenuSettings->getPosition().x + 5 + txMenuSettings->getSize().width, txMenuSettings->getPosition().y + (txMenuSettings->getSize().height / 2) - (grSecond->getSize().height / 2));
 
@@ -1397,16 +1448,17 @@ _interface::settings_menu::settings_menu(configuration *cf, Color maincl, Color 
 _interface::settings_menu::~settings_menu() {
 	delete main, border, blackout, main_cl, border_cl;
 	delete btBack, btSave;
-	delete txVertS, txFullS, txScreen;
-	delete cbFullS, cbVertS;
+	delete txVertS, txFullS, txScreen, txSound, txSoundV;
+	delete cbFullS, cbVertS, cbSound;
 	delete txMenuSettings;
 	delete grFirst, grSecond;
-	delete combScreen;
+	delete combScreen, combSoundV;
 }
 
 void _interface::settings_menu::backSettings(configuration *cf) {
 	cbFullS->isCheck = cf->fullScreen;
 	cbVertS->isCheck = cf->verticalSync;
+	cbSound->isCheck = cf->sound;
 
 	std::string* t = new std::string(intToStr(std::string, cf->screenWidth));
 	*t += " x ";
@@ -1416,36 +1468,45 @@ void _interface::settings_menu::backSettings(configuration *cf) {
 		combScreen->back();
 	}
 
+	*t = intToStr(std::string, cf->soundVolume);
+
+	while (std::wstring(t->begin(), t->end()) != combSoundV->getText()) {
+		combSoundV->back();
+	}
+
 	delete t;
 }
 
-void _interface::settings_menu::saveSettings(configuration *cf) {
-	cf->fullScreen = cbFullS->isCheck;
-	cf->verticalSync = cbVertS->isCheck;
-	
-	switch (combScreen->getValue()) {
-	case 0: cf->screenWidth = 1280; break;
-	case 1: cf->screenWidth = 1600; break;
-	case 2: cf->screenWidth = 1600; break;
-	case 3: cf->screenWidth = 1920; break;
-	case 4: cf->screenWidth = 2048; break;
-	case 5: cf->screenWidth = 2560; break;
-	default:
-		break;
-	}
+int _interface::settings_menu::saveSettings(configuration *cf) {
+
+	int H = 0, W = 0;
 
 	switch (combScreen->getValue()) {
-	case 0: cf->screenHeight = 720; break;
-	case 1: cf->screenHeight = 900; break;
-	case 2: cf->screenHeight = 1200; break;
-	case 3: cf->screenHeight = 1080; break;
-	case 4: cf->screenHeight = 1152; break;
-	case 5: cf->screenHeight = 1440; break;
-	default:
-		break;
+		case 0: W = 1280; H = 720; break;
+		case 1: W = 1600; H = 900; break;
+		case 2: W = 1600; H = 1200; break;
+		case 3: W = 1920; H = 1080; break;
+		case 4: W = 2560; H = 1440; break;
+		default: break;
 	}
-	
-	cf->saveSettings();
+
+
+	if (cf->fullScreen != cbFullS->isCheck || (cf->screenWidth != W && cf->screenHeight != H)) {
+		cf->fullScreen = cbFullS->isCheck;
+		cf->verticalSync = cbVertS->isCheck;
+		cf->sound = cbSound->isCheck;
+		cf->soundVolume = combSoundV->getValue();
+		cf->screenWidth = W;
+		cf->screenHeight = H;
+		cf->saveSettings();
+		return static_cast<int>(settings_save_code::other);
+	} else {
+		cf->verticalSync = cbVertS->isCheck;
+		cf->sound = cbSound->isCheck;
+		cf->soundVolume = combSoundV->getValue();
+		cf->saveSettings();
+		return static_cast<int>(settings_save_code::sound_or_sound_volume_or_verticalS);
+	}
 }
 
 void _interface::settings_menu::render(RenderWindow &wd, Camer *camera) noexcept {
@@ -1456,13 +1517,19 @@ void _interface::settings_menu::render(RenderWindow &wd, Camer *camera) noexcept
 		border->setPosition(pos.x - 5 - main->getGlobalBounds().width / 2, pos.y - 5 - main->getGlobalBounds().height / 2);
 		txVertS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txVertS->getSize().width / 2), main->getGlobalBounds().top + 20);
 		txFullS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txFullS->getSize().width / 2), main->getGlobalBounds().top + 100);
-		txScreen->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txScreen->getSize().width / 2) - 50, main->getGlobalBounds().top + 190);
+		txScreen->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txScreen->getSize().width / 2) - 50, main->getGlobalBounds().top + 180);
+		
+		txSound->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSound->getSize().width / 2), main->getGlobalBounds().top + 260);
+		txSoundV->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSoundV->getSize().width / 2), main->getGlobalBounds().top + 340);
+		combSoundV->setPosition(txSoundV->getSize().left + txSoundV->getSize().width + 5, txSoundV->getSize().top);
+		cbSound->setPosition(txSound->getSize().left + txSound->getSize().width + 5, main->getGlobalBounds().top + 260);
+
 		combScreen->setPosition(txScreen->getSize().left + txScreen->getSize().width + 5, txScreen->getSize().top);
-		btBack->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btBack->getSize().width / 2), main->getGlobalBounds().top + 260);
-		btSave->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btSave->getSize().width / 2), main->getGlobalBounds().top + 340);
+		btBack->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btBack->getSize().width / 2), main->getGlobalBounds().top + 410);
+		btSave->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btSave->getSize().width / 2), main->getGlobalBounds().top + 480);
 		cbVertS->setPosition(txVertS->getSize().left + txVertS->getSize().width + 5, main->getGlobalBounds().top + 20);
 		cbFullS->setPosition(txFullS->getSize().left + txFullS->getSize().width + 5, main->getGlobalBounds().top + 100);
-		txMenuSettings->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txMenuSettings->getSize().width / 2), main->getGlobalBounds().top + 450);
+		txMenuSettings->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txMenuSettings->getSize().width / 2), main->getGlobalBounds().top + 550);
 		grFirst->setPosition(txMenuSettings->getPosition().x - 5 - grFirst->getSize().width, txMenuSettings->getPosition().y + (txMenuSettings->getSize().height / 2) - (grSecond->getSize().height / 2));
 		grSecond->setPosition(txMenuSettings->getPosition().x + 5 + txMenuSettings->getSize().width, txMenuSettings->getPosition().y + (txMenuSettings->getSize().height / 2) - (grSecond->getSize().height / 2));
 		
@@ -1476,11 +1543,15 @@ void _interface::settings_menu::render(RenderWindow &wd, Camer *camera) noexcept
 		txVertS->render(wd);
 		txScreen->render(wd);
 		txFullS->render(wd);
+		txSound->render(wd);
+		txSoundV->render(wd);
 
 		combScreen->render(wd);
+		combSoundV->render(wd);
 
 		cbVertS->render(wd);
 		cbFullS->render(wd);
+		cbSound->render(wd);
 
 		btBack->render(wd);
 		btSave->render(wd);
@@ -1499,13 +1570,19 @@ void _interface::settings_menu::render(RenderWindow *wd, Camer *camera) noexcept
 		border->setPosition(pos.x - 5 - main->getGlobalBounds().width / 2, pos.y - 5 - main->getGlobalBounds().height / 2);
 		txVertS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txVertS->getSize().width / 2), main->getGlobalBounds().top + 20);
 		txFullS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txFullS->getSize().width / 2), main->getGlobalBounds().top + 100);
-		txScreen->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txScreen->getSize().width / 2) - 50, main->getGlobalBounds().top + 190);
+		txScreen->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txScreen->getSize().width / 2) - 50, main->getGlobalBounds().top + 180);
+
+		txSound->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSound->getSize().width / 2), main->getGlobalBounds().top + 260);
+		txSoundV->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSoundV->getSize().width / 2), main->getGlobalBounds().top + 340);
+		combSoundV->setPosition(txSoundV->getSize().left + txSoundV->getSize().width + 5, txSoundV->getSize().top);
+		cbSound->setPosition(txSound->getSize().left + txSound->getSize().width + 5, main->getGlobalBounds().top + 260);
+
 		combScreen->setPosition(txScreen->getSize().left + txScreen->getSize().width + 5, txScreen->getSize().top);
-		btBack->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btBack->getSize().width / 2), main->getGlobalBounds().top + 260);
-		btSave->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btSave->getSize().width / 2), main->getGlobalBounds().top + 340);
+		btBack->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btBack->getSize().width / 2), main->getGlobalBounds().top + 410);
+		btSave->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btSave->getSize().width / 2), main->getGlobalBounds().top + 480);
 		cbVertS->setPosition(txVertS->getSize().left + txVertS->getSize().width + 5, main->getGlobalBounds().top + 20);
 		cbFullS->setPosition(txFullS->getSize().left + txFullS->getSize().width + 5, main->getGlobalBounds().top + 100);
-		txMenuSettings->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txMenuSettings->getSize().width / 2), main->getGlobalBounds().top + 450);
+		txMenuSettings->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txMenuSettings->getSize().width / 2), main->getGlobalBounds().top + 550);
 		grFirst->setPosition(txMenuSettings->getPosition().x - 5 - grFirst->getSize().width, txMenuSettings->getPosition().y + (txMenuSettings->getSize().height / 2) - (grSecond->getSize().height / 2));
 		grSecond->setPosition(txMenuSettings->getPosition().x + 5 + txMenuSettings->getSize().width, txMenuSettings->getPosition().y + (txMenuSettings->getSize().height / 2) - (grSecond->getSize().height / 2));
 
@@ -1519,11 +1596,15 @@ void _interface::settings_menu::render(RenderWindow *wd, Camer *camera) noexcept
 		txVertS->render(wd);
 		txScreen->render(wd);
 		txFullS->render(wd);
+		txSound->render(wd);
+		txSoundV->render(wd);
 
 		combScreen->render(wd);
+		combSoundV->render(wd);
 
 		cbVertS->render(wd);
 		cbFullS->render(wd);
+		cbSound->render(wd);
 
 		btBack->render(wd);
 		btSave->render(wd);
@@ -1545,11 +1626,15 @@ void _interface::settings_menu::render(RenderWindow &wd) noexcept {
 		txVertS->render(wd);
 		txScreen->render(wd);
 		txFullS->render(wd);
+		txSound->render(wd);
+		txSoundV->render(wd);
 		
 		combScreen->render(wd);
+		combSoundV->render(wd);
 
 		cbVertS->render(wd);
 		cbFullS->render(wd);
+		cbSound->render(wd);
 
 		btBack->render(wd);
 		btSave->render(wd);
@@ -1571,11 +1656,15 @@ void _interface::settings_menu::render(RenderWindow *wd) noexcept {
 		txVertS->render(wd);
 		txScreen->render(wd);
 		txFullS->render(wd);
+		txSound->render(wd);
+		txSoundV->render(wd);
 
 		combScreen->render(wd);
+		combSoundV->render(wd);
 
 		cbVertS->render(wd);
 		cbFullS->render(wd);
+		cbSound->render(wd);
 
 		btBack->render(wd);
 		btSave->render(wd);
@@ -1585,9 +1674,9 @@ void _interface::settings_menu::render(RenderWindow *wd) noexcept {
 		grSecond->render(wd);
 	}
 }
-//------------------------Меню-настроек-settings_menu-Конец---------------------------------------
+//------------------------РњРµРЅСЋ-РЅР°СЃС‚СЂРѕРµРє-settings_menu-РљРѕРЅРµС†---------------------------------------
 
-//------------------------Главное-меню-main_menu-Начало---------------------------------------
+//------------------------Р“Р»Р°РІРЅРѕРµ-РјРµРЅСЋ-main_menu-РќР°С‡Р°Р»Рѕ---------------------------------------
 _interface::main_menu::main_menu(configuration *cf, Color maincl) {
 	main = new RectangleShape;
 	main->setSize(Vector2f(500, cf->screenHeight));
@@ -1596,10 +1685,10 @@ _interface::main_menu::main_menu(configuration *cf, Color maincl) {
 	main->setFillColor(*main_cl);
 	main->setPosition(0,0);
 
-	btStart = new button(0, 0, L"Начать игру", Color::Black, Color::Yellow, Color::Yellow);
-	btStartTren = new button(0, 0, L"Пройти обучение", Color::Black, Color::Yellow, Color::Yellow);
-	btOptions = new button(0, 0, L"Настройки", Color::Black, Color::Yellow, Color::Yellow);
-	btExit = new button(0, 0, L"Выйти", Color::Black, Color::Yellow, Color::Yellow);
+	btStart = new button(0, 0, L"РќРѕРІР°СЏ РёРіСЂР°", Color::Black, Color::Yellow, Color::Yellow);
+	btStartTren = new button(0, 0, L"РџСЂРѕР№С‚Рё РѕР±СѓС‡РµРЅРёРµ", Color::Black, Color::Yellow, Color::Yellow);
+	btOptions = new button(0, 0, L"РќР°СЃС‚СЂРѕР№РєРё", Color::Black, Color::Yellow, Color::Yellow);
+	btExit = new button(0, 0, L"Р’С‹Р№С‚Рё", Color::Black, Color::Yellow, Color::Yellow);
 
 	btStart->setPosition((main->getGlobalBounds().width / 2) - (btStart->getSize().width / 2), main->getGlobalBounds().top + 340);
 	btStartTren->setPosition((main->getGlobalBounds().width / 2) - (btStartTren->getSize().width / 2), main->getGlobalBounds().top + 440);
@@ -1607,7 +1696,7 @@ _interface::main_menu::main_menu(configuration *cf, Color maincl) {
 	btExit->setPosition((main->getGlobalBounds().width / 2) - (btExit->getSize().width / 2), main->getGlobalBounds().top + 640);
 
 
-	txMainMenu = new text(0, 0, L"Главное меню", Color::Yellow, Color::Black);
+	txMainMenu = new text(0, 0, L"Р“Р»Р°РІРЅРѕРµ РјРµРЅСЋ", Color::Yellow, Color::Black);
 	txMainMenu->visible_bevel = false;
 	grFirst = new gradient(FloatRect(Vector2f(0, 0), Vector2f(100, 5)), gradient_direction::rightOnLeft, Color::Transparent, Color::Yellow);
 	grSecond = new gradient(FloatRect(Vector2f(0, 0), Vector2f(100, 5)), gradient_direction::leftOnRight, Color::Transparent, Color::Yellow);
@@ -1618,7 +1707,6 @@ _interface::main_menu::main_menu(configuration *cf, Color maincl) {
 }
 
 _interface::main_menu::~main_menu() {
-	//main->~RectangleShape();
 	delete main, main_cl;
 	delete btStart, btOptions, btExit, btStartTren;
 	delete txMainMenu;
@@ -1648,9 +1736,9 @@ void _interface::main_menu::render(RenderWindow *wd) noexcept {
 	grFirst->render(wd);
 	grSecond->render(wd);
 }
-//------------------------Главное-меню-main_menu-Конец----------------------------------------
+//------------------------Р“Р»Р°РІРЅРѕРµ-РјРµРЅСЋ-main_menu-РљРѕРЅРµС†----------------------------------------
 
-//------------------------------Градиент-gradient-Начало---------------------------------------
+//------------------------------Р“СЂР°РґРёРµРЅС‚-gradient-РќР°С‡Р°Р»Рѕ---------------------------------------
 _interface::gradient::gradient(const FloatRect &rt, gradient_direction gd, Color first, Color second) :
 	BaseInerface(0, 0, rt)
 	{
@@ -1734,9 +1822,9 @@ void _interface::gradient::render(RenderWindow *wd) noexcept {
 		wd->draw(*rect);
 	}
 }
-//-------------------------------Градиент-gradient-Конец---------------------------------------
+//-------------------------------Р“СЂР°РґРёРµРЅС‚-gradient-РљРѕРЅРµС†---------------------------------------
 
-//----------------------------Комбо-бокс-combo_box-Начало---------------------------------------
+//----------------------------РљРѕРјР±Рѕ-Р±РѕРєСЃ-combo_box-РќР°С‡Р°Р»Рѕ---------------------------------------
 _interface::combo_box::cell::cell(Text txt, int val) :
 	text(txt),
 	value(val)
@@ -1893,9 +1981,9 @@ void _interface::combo_box::render(RenderWindow *wd) {
 		wd->draw((*it)->text);
 	}
 }
-//-----------------------------Комбо-бокс-combo_box-Конец---------------------------------------
+//-----------------------------РљРѕРјР±Рѕ-Р±РѕРєСЃ-combo_box-РљРѕРЅРµС†---------------------------------------
 
-//-----------------------------Сообщение-message-Начало---------------------------------------
+//-----------------------------РЎРѕРѕР±С‰РµРЅРёРµ-message-РќР°С‡Р°Р»Рѕ---------------------------------------
 _interface::message::message(int x, int y, const std::wstring &txt, Color maincl, Color bordercl, Color textcl) :
 	active(false)
 	{
@@ -1914,7 +2002,7 @@ _interface::message::message(int x, int y, const std::wstring &txt, Color maincl
 
 	txInfo = new text(0, 0, txt, textcl);
 	txInfo->visible_bevel = false;
-	txMess = new text(0, 0, L"Сообщение", Color::Yellow);
+	txMess = new text(0, 0, L"РЎРѕРѕР±С‰РµРЅРёРµ", Color::Yellow);
 	txMess->visible_bevel = false;
 	
 	main->setSize(Vector2f(txInfo->getSize().width + 10, 150));
@@ -1931,7 +2019,7 @@ _interface::message::message(int x, int y, const std::wstring &txt, Color maincl
 	grFirst->setPosition(txMess->getPosition().x - 5 - grFirst->getSize().width, txMess->getPosition().y + (txMess->getSize().height / 2) - (grFirst->getSize().height / 2));
 	grSecond->setPosition(txMess->getPosition().x + 5 + txMess->getSize().width, txMess->getPosition().y + (txMess->getSize().height / 2) - (grSecond->getSize().height / 2));
 
-	btOk = new button(0, 0, L"Ок", Color::Black, Color::Yellow, Color::Yellow);
+	btOk = new button(0, 0, L"РћРє", Color::Black, Color::Yellow, Color::Yellow);
 	btOk->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btOk->getSize().width / 2), txMess->getSize().top - 35);
 }
 
@@ -2021,9 +2109,9 @@ void _interface::message::render(RenderWindow *wd) noexcept {
 		grSecond->render(wd);
 	}
 }
-//-----------------------------Сообщение-message-Конец---------------------------------------
+//-----------------------------РЎРѕРѕР±С‰РµРЅРёРµ-message-РљРѕРЅРµС†---------------------------------------
 
-//-----------------------------Коллизия-Collision-Начало---------------------------------------
+//-----------------------------РљРѕР»Р»РёР·РёСЏ-Collision-РќР°С‡Р°Р»Рѕ---------------------------------------
 Collision::Collision(const IntRect &rect) :
 	active(true),
 	visible_deb(false)
@@ -2039,7 +2127,6 @@ Collision::Collision(const IntRect &rect) :
 }
 
 Collision::~Collision() {
-	//main->~RectangleShape();
 	delete main;
 }
 
@@ -2073,6 +2160,7 @@ void Collision::setBounds(const IntRect &rect) {
 	pos.y = rect.top;
 	rect_collis = rect;
 	main->setPosition(Vector2f(pos.x, pos.y));
+	main->setSize(Vector2f(rect_collis.width, rect_collis.height));
 }
 
 void Collision::render(RenderWindow &wd) {
@@ -2086,9 +2174,9 @@ void Collision::render(RenderWindow *wd) {
 		wd->draw(*main);
 	}
 }
-//-----------------------------Коллизия-Collision-Конец----------------------------------------
+//-----------------------------РљРѕР»Р»РёР·РёСЏ-Collision-РљРѕРЅРµС†----------------------------------------
 
-//-----------------------------Мини-полоса-min_bar-Начало----------------------------------------
+//-----------------------------РњРёРЅРё-РїРѕР»РѕСЃР°-min_bar-РќР°С‡Р°Р»Рѕ----------------------------------------
 _interface::min_bar::min_bar(int x, int y, int br_ma, int br_mi, Color mcol, Color bcol) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	max_br(br_ma),
@@ -2152,9 +2240,9 @@ void _interface::min_bar::render(RenderWindow *wd) noexcept {
 		wd->draw(*bevel);
 	}
 }
-//-----------------------------Мини-полоса-min_bar-Конец-----------------------------------------
+//-----------------------------РњРёРЅРё-РїРѕР»РѕСЃР°-min_bar-РљРѕРЅРµС†-----------------------------------------
 
-//-----------------------------------Разрушитель-замков-DestroerCastle-Начало-----------------------------------------
+//-----------------------------------Р Р°Р·СЂСѓС€РёС‚РµР»СЊ-Р·Р°РјРєРѕРІ-DestroerCastle-РќР°С‡Р°Р»Рѕ-----------------------------------------
 DestroerCastle::DestroerCastle(Texture* ptr_texture, float X_POS, float Y_POS, int hp) :
 	BaseCharacter(ptr_texture, X_POS, Y_POS, hp)
 	{
@@ -2167,8 +2255,6 @@ DestroerCastle::DestroerCastle(Texture* ptr_texture, float X_POS, float Y_POS, i
 }
 
 DestroerCastle::~DestroerCastle() {
-	//sprt->~Sprite();
-	//texture->~Texture();
 	delete HP;
 }
 
@@ -2201,20 +2287,20 @@ void __fastcall DestroerCastle::move(float time, int direct) noexcept {
 		}
 		sprt->setTextureRect(IntRect(600 * int(frame), 700, 600, 350));
 	} else {
-		switch (direction) { //направление движения
+		switch (direction) { //РќР°РїСЂР°РІР»РµРЅРёРµ РґРІРёР¶РµРЅРёСЏ
 		case direcrion8::right:
 			frame += 0.023 * time;
 			if (frame > 4) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(600 * int(frame) + 600, 0, -600, 350)); //108 * int(frame), 136 * 9, 108, 136
+			sprt->setTextureRect(IntRect(600 * int(frame) + 600, 0, -600, 350)); 
 			sprt->move(0.5 * time, 0); break;
 		case direcrion8::left:
 			frame += 0.023 * time;
 			if (frame > 4) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(600 * int(frame), 0, 600, 350)); //108 * int(frame) + 108, 136 * 9, -108, 136
+			sprt->setTextureRect(IntRect(600 * int(frame), 0, 600, 350));
 			sprt->move(-0.5 * time, 0); break;
 		default:
 			break;
@@ -2277,9 +2363,9 @@ void DestroerCastle::render(RenderWindow *wd) noexcept {
 	HP->changeBar(health);
 	HP->render(wd);
 }
-//-----------------------------------Разрушитель-замков-DestroerCastle-Конец------------------------------------------
+//-----------------------------------Р Р°Р·СЂСѓС€РёС‚РµР»СЊ-Р·Р°РјРєРѕРІ-DestroerCastle-РљРѕРЅРµС†------------------------------------------
 
-//-----------------------------------------Копейщик-Spearman-Начало------------------------------------------
+//-----------------------------------------РљРѕРїРµР№С‰РёРє-Spearman-РќР°С‡Р°Р»Рѕ------------------------------------------
 Spearman::Spearman(Texture* ptr_texture, float X_POS, float Y_POS, int hp) :
 	BaseCharacter(ptr_texture, X_POS, Y_POS, hp)
 	{
@@ -2295,8 +2381,6 @@ Spearman::Spearman(Texture* ptr_texture, float X_POS, float Y_POS, int hp) :
 }
 
 Spearman::~Spearman() {
-	//sprt->~Sprite();
-	//texture->~Texture();
 	delete rect_collis, HP;
 }
 
@@ -2333,7 +2417,7 @@ void __fastcall Spearman::move(float time, int direct) noexcept {
 		}
 		sprt->setTextureRect(IntRect(300 * int(frame) + 300, 360, -300, 180));
 	} else {
-		switch (direction) { //направление движения
+		switch (direction) { //РќР°РїСЂР°РІР»РµРЅРёРµ РґРІРёР¶РµРЅРёСЏ
 		case direcrion8::right:
 			frame += 0.023 * time;
 			if (frame > 7) {
@@ -2412,9 +2496,9 @@ void Spearman::render(RenderWindow *wd) noexcept {
 	HP->changeBar(health);
 	HP->render(wd);
 }
-//------------------------------------------Копейщик-Spearman-Конец------------------------------------------
+//------------------------------------------РљРѕРїРµР№С‰РёРє-Spearman-РљРѕРЅРµС†------------------------------------------
 
-//-------------------------------------Задний-фон-background_color-Начало------------------------------------------
+//-------------------------------------Р—Р°РґРЅРёР№-С„РѕРЅ-background_color-РќР°С‡Р°Р»Рѕ------------------------------------------
 _interface::background_color::background_color(int x, int y, Color cl, configuration *cf) :
 	visible(false)
 	{
@@ -2446,9 +2530,9 @@ void _interface::background_color::render(RenderWindow *wd) noexcept {
 		wd->draw(*background);
 	}
 }
-//-------------------------------------Задний-фон-background_color-Конец------------------------------------------
+//-------------------------------------Р—Р°РґРЅРёР№-С„РѕРЅ-background_color-РљРѕРЅРµС†------------------------------------------
 
-//---------------------------------------Ледяной-шар-IceBall-Начало------------------------------------------
+//---------------------------------------Р›РµРґСЏРЅРѕР№-С€Р°СЂ-IceBall-РќР°С‡Р°Р»Рѕ------------------------------------------
 IceBall::IceBall(Texture* ptr_texture, float X_POS, float Y_POS, int hp) :
 	BaseCharacter(ptr_texture, X_POS, Y_POS, hp)
 	{
@@ -2463,8 +2547,6 @@ IceBall::IceBall(Texture* ptr_texture, float X_POS, float Y_POS, int hp) :
 }
 
 IceBall::~IceBall() {
-	//sprt->~Sprite();
-	//texture->~Texture();
 	delete rect_collis, HP;
 }
 
@@ -2540,9 +2622,9 @@ void IceBall::render(RenderWindow *wd) noexcept {
 		HP->render(wd);
 	}
 }
-//--------------------------------------Ледяной-шар-IceBall-Конец------------------------------------------
+//--------------------------------------Р›РµРґСЏРЅРѕР№-С€Р°СЂ-IceBall-РљРѕРЅРµС†------------------------------------------
 
-//--------------------------------База-Характера-BaseCharacter-Начало------------------------------------------
+//--------------------------------Р‘Р°Р·Р°-РҐР°СЂР°РєС‚РµСЂР°-BaseCharacter-РќР°С‡Р°Р»Рѕ------------------------------------------
 BaseCharacter::BaseCharacter() :
 	pos(axes_f(0, 0)),
 	health(0),
@@ -2616,9 +2698,9 @@ void BaseCharacter::render(RenderWindow *wd) {
 		wd->draw(*sprt);
 	}
 }
-//--------------------------------База-Характера-BaseCharacter-Конец------------------------------------------
+//--------------------------------Р‘Р°Р·Р°-РҐР°СЂР°РєС‚РµСЂР°-BaseCharacter-РљРѕРЅРµС†------------------------------------------
 
-//--------------------------------База-Интерфейса-BaseInterface-Начало------------------------------------------
+//--------------------------------Р‘Р°Р·Р°-РРЅС‚РµСЂС„РµР№СЃР°-BaseInterface-РќР°С‡Р°Р»Рѕ------------------------------------------
 _interface::BaseInerface::BaseInerface() : 
 	pos(axes_i(0, 0)),
 	visible(true)
@@ -2669,4 +2751,112 @@ void _interface::BaseInerface::render(RenderWindow &wd) {
 void _interface::BaseInerface::render(RenderWindow *wd) {
 
 }
-//--------------------------------База-Интерфейса-BaseInterface-Конец------------------------------------------
+//--------------------------------Р‘Р°Р·Р°-РРЅС‚РµСЂС„РµР№СЃР°-BaseInterface-РљРѕРЅРµС†------------------------------------------
+
+//--------------------------------------РњРµС‚РµРѕСЂРёС‚-Meteor-РќР°С‡Р°Р»Рѕ------------------------------------
+Meteor::Meteor(Texture* ptr_texture, Texture* ptr_texture2, float X, float Y) :
+	cooldown(false),
+	reached_point(false),
+	is_sound_play(false),
+	current_len(0),
+	ObjectAnimated(ptr_texture, X, Y)
+{
+	sprt_meteor = new Sprite;
+	sprt_meteor->setTexture(*ptr_texture2);
+
+	sprt->setTextureRect(IntRect(400, 0, 400, 400));
+	sprt->setPosition(pos.x, pos.y);
+
+	mouse_point.x = X + 200;
+	mouse_point.y = Y + 200;
+
+	start_point.x = mouse_point.x - 270;
+	start_point.y = mouse_point.y - 1440;
+
+	full_len = sqrt(pow(mouse_point.x - start_point.x, 2) + pow(mouse_point.y - start_point.y, 2));
+}
+
+Meteor::~Meteor() {
+	delete sprt_meteor;
+}
+
+void __fastcall Meteor::update(float time) {
+
+	isReachedPoint(time);
+
+	if (reached_point) {
+		frame += 0.022 * time;
+		if (frame > 24) {
+			end = true;
+		}
+
+		if (frame >= 0 && frame <= 5) {
+			sprt->setTextureRect(IntRect(400 * int(frame), 0, 400, 400));
+		} else if (frame >= 6 && frame <= 11) {
+			sprt->setTextureRect(IntRect(400 * (int(frame) - 6), 400, 400, 400));
+		} else if (frame >= 12 && frame <= 17) {
+			sprt->setTextureRect(IntRect(400 * (int(frame) - 12), 800, 400, 400));
+		} else if (frame >= 18 && frame <= 23) {
+			sprt->setTextureRect(IntRect(400 * (int(frame) - 18), 1200, 400, 400));
+		}
+		rect_collis->setBounds(IntRect(pos.x, pos.y, 400, 400));
+	}
+}
+
+void Meteor::isReachedPoint(float time) {
+	Vector2f C;
+
+	if (current_len < full_len) {
+		C = (mouse_point - start_point);
+		C.x = C.x * (current_len / full_len);
+		C.y = C.y * (current_len / full_len);
+		C = start_point + C;
+		sprt_meteor->setPosition(C.x - (sprt_meteor->getGlobalBounds().width / 2), C.y - (sprt_meteor->getGlobalBounds().height / 2));
+		current_len += 3.6 * time;
+	} else {
+		reached_point = true;
+	}
+}
+
+void Meteor::render(RenderWindow& wd) {
+	if (reached_point) {
+		wd.draw(*sprt);
+	} else {
+		wd.draw(*sprt_meteor);
+	}
+}
+
+void Meteor::render(RenderWindow* wd) {
+	if (reached_point) {
+		wd->draw(*sprt);
+	} else {
+		wd->draw(*sprt_meteor);
+	}
+}
+//--------------------------------------РњРµС‚РµРѕСЂРёС‚-Meteor-РљРѕРЅРµС†------------------------------------
+
+//---------------------------------------Р’СЃРїРѕРјРѕРіР°С‚РµР»СЊРЅС‹Рµ-С„СѓРЅРєС†РёРё-----------------------------------------------
+
+template<typename arg>
+arg IntToStr(int input) {
+	std::ostringstream output;
+	output << input;
+	return output.str();
+}
+
+template<typename arg>
+arg _interface::repoz_X(arg X, arg size, arg indent) {
+	arg A = 0;
+	A = size - X;
+	X = X - A;
+	return X + indent;
+}
+
+template<typename arg>
+arg _interface::repoz_Y(arg Y, arg size, arg indent) {
+	arg A = 0;
+	A = size - Y;
+	Y = Y - A;
+	return Y + indent;
+}
+//-------------------------------------------------------------------------------------------------------------
