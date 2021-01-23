@@ -635,16 +635,14 @@ void World::render(RenderWindow *wd) noexcept {
 //-----------------------------------Мир-World-Конец-------------------------------------
 
 //-----------------------------------Полоса-bar-Начало-------------------------------------
-_interface::bar::bar(int x, int y, int br_ma, int br_mi, const std::wstring &name, Color mcol, Color bcol, Color tcol) :
+_interface::bar::bar(const Font &font, int x, int y, int br_ma, int br_mi, const std::wstring &name, const Color &mcol, const Color &bcol, const Color &tcol) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	max_bar(br_ma),
 	min_bar(br_mi),
 	curr_bar(br_ma)
 	{
-	font_main = new Font;
-	font_main->loadFromFile("Img/18094.ttf");
 	label = new Text;
-	label->setFont(*font_main);
+	label->setFont(font);
 	label->setString(name);
 	label->setCharacterSize(small);
 	label->setFillColor(tcol);
@@ -670,14 +668,13 @@ _interface::bar::bar() :
 	min_bar(0),
 	curr_bar(100)
 	{
-	font_main = new Font;
 	label = new Text;
 	main = new RectangleShape;
 	bevel = new RectangleShape;
 }
 
 _interface::bar::~bar() {
-	delete font_main, label, main, bevel;
+	delete label, main, bevel;
 }
 
 void __fastcall _interface::bar::changeBar(int arg) noexcept {
@@ -748,35 +745,33 @@ void _interface::bar::resize(int size) noexcept {
 //-----------------------------------Полоса-bar-Конец--------------------------------------
 
 //-----------------------------------Текст-text-Начало-------------------------------------
-_interface::text::text(int x, int y, const std::wstring& txt, Color lbcol, Color bvcol) :
+_interface::text::text(const Font& font, int x, int y, const std::wstring& txt, const Color &lbcol, const Color &bvcol) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	visible_bevel(true)
 	{
-	font_main = new Font;
-	font_main->loadFromFile("Img/18094.ttf");
 	label = new Text;
-	label->setFont(*font_main);
+	label->setFont(font);
 	label->setString(txt);
 	label->setCharacterSize(small);
 
-	label_cl = new Color;  
-	*label_cl = lbcol;
-	label->setFillColor(*label_cl);
+	//label_cl = new Color;  
+	//*label_cl = lbcol;
+	label->setFillColor(lbcol);
 	label->setPosition(pos.x, pos.y);
 	label->setPosition(repoz_x(int, pos.x, label->getGlobalBounds().left, 5), repoz_y(int, pos.y, label->getGlobalBounds().top, 5));
 
 	bevel = new RectangleShape;
 	bevel->setSize(Vector2f(label->getGlobalBounds().width + 10, label->getGlobalBounds().height + 10));
-	bevel_cl = new Color;
-	*bevel_cl = bvcol;
-	bevel->setFillColor(*bevel_cl);
+	//bevel_cl = new Color;
+	//*bevel_cl = bvcol;
+	bevel->setFillColor(bvcol);
 	bevel->setPosition(pos.x ,pos.y);
 
 	fl_rect = bevel->getGlobalBounds();
 }
 
 _interface::text::~text() {
-	delete font_main, label, label_cl, bevel, bevel_cl;
+	delete label, bevel;
 }
 
 void _interface::text::setString(const std::wstring& txt) noexcept {
@@ -784,8 +779,8 @@ void _interface::text::setString(const std::wstring& txt) noexcept {
 	_interface::text::resize(label->getCharacterSize());
 }
 
-void _interface::text::setFont(const String& txt) noexcept {
-	font_main->loadFromFile(txt);
+void _interface::text::setFont(const Font &font) noexcept {
+	label->setFont(font);
 }
 
 void _interface::text::setPosition(const axes_i &xy) noexcept {
@@ -844,7 +839,7 @@ void _interface::text::render(RenderWindow *wd) noexcept {
 //-----------------------------------Текст-text-Конец-------------------------------------
 
 //-----------------------------------Многострочный-текст-multiline_text-Конец-------------------------------------
-_interface::multiline_text::multiline_text(float x, float y, Color lbcol, Color bvcol) :
+_interface::multiline_text::multiline_text(float x, float y, const Color &lbcol, const Color &bvcol) :
 	visible(true),
 	visible_bevel(true)
 	{
@@ -954,46 +949,43 @@ void _interface::multiline_text::render(RenderWindow *wd) noexcept {
 //-----------------------------------Многострочный-текст-multiline_text-Конец-------------------------------------
 
 //-----------------------------------Кнопка-button-Начало-------------------------------------
-_interface::button::button(int x, int y, const std::wstring& text, Color maincl, Color textcl, Color activecl) :
+_interface::button::button(int x, int y, const Font &font, const std::wstring& text, const Color &maincl, const Color &textcl, const Color &activecl) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	active(false)
 	{
 	pos.x = x;
 	pos.y = y;
 
-	font = new Font;
-	font->loadFromFile("Img/18094.ttf");
-
 	txt = new Text;
-	txt->setFont(*font);
+	txt->setFont(font);
 	txt->setString(text);
 	txt->setCharacterSize(small);
 
-	txt_cl = new Color;
-	*txt_cl = textcl;
-	txt->setFillColor(*txt_cl);
+	//txt_cl = new Color;
+	//*txt_cl = textcl;
+	txt->setFillColor(textcl);
 	txt->setPosition(pos.x, pos.y);
 	txt->setPosition(repoz_x(int, pos.x, txt->getGlobalBounds().left, 5), repoz_y(int, pos.y, txt->getGlobalBounds().top, 5));
 
 	main = new RectangleShape;
 	main->setSize(Vector2f(txt->getGlobalBounds().width + 10, txt->getGlobalBounds().height + 10));
-	main_cl = new Color;
-	*main_cl = maincl;
-	main->setFillColor(*main_cl);
+	//main_cl = new Color;
+	//*main_cl = maincl;
+	main->setFillColor(maincl);
 	main->setPosition(pos.x, pos.y);
 
 	active_bvl = new RectangleShape;
 	active_bvl->setSize(Vector2f(main->getGlobalBounds().width + 10, main->getGlobalBounds().height + 10));
-	active_cl = new Color;
-	*active_cl = activecl;
-	active_bvl->setFillColor(*active_cl);
+	//active_cl = new Color;
+	//*active_cl = activecl;
+	active_bvl->setFillColor(activecl);
 	active_bvl->setPosition(pos.x - 5, pos.y - 5);
 
 	fl_rect = main->getGlobalBounds();
 }
 
 _interface::button::~button() {
-	delete main, active_bvl, txt, font, active_cl, main_cl, txt_cl;
+	delete main, active_bvl, txt;
 }
 
 void _interface::button::setPosition(const axes_i &xy) {
@@ -1065,23 +1057,23 @@ bool _interface::button::isAction(const axes_i &xy) {
 //-----------------------------------Кнопка-button-Конец--------------------------------------
 
 //-----------------------------------Меню-menu-Начало--------------------------------------
-_interface::menu::menu(Camer *camera, Color maincl, Color bordercl) : 
+_interface::menu::menu(Camer *camera, const Font &font, const Color &maincl, const Color &bordercl) : 
 	active(true),
 	blackout_visible(true)
 	{
 	pos = camera->getPosition();
 	main = new RectangleShape;
 	main->setSize(Vector2f(500, 500));
-	main_cl = new Color;
-	*main_cl = maincl;
-	main->setFillColor(*main_cl);
+	//main_cl = new Color;
+	//*main_cl = maincl;
+	main->setFillColor(maincl);
 	main->setPosition(pos.x - main->getGlobalBounds().width / 2, pos.y - main->getGlobalBounds().height / 2);
 
 	border = new RectangleShape;
 	border->setSize(Vector2f(main->getGlobalBounds().width + 10, main->getGlobalBounds().height + 10));
-	border_cl = new Color;
-	*border_cl = bordercl;
-	border->setFillColor(*border_cl);
+	//border_cl = new Color;
+	//*border_cl = bordercl;
+	border->setFillColor(bordercl);
 	border->setPosition(pos.x - 5 - main->getGlobalBounds().width / 2, pos.y - 5 - main->getGlobalBounds().height / 2);
 
 	blackout = new RectangleShape;
@@ -1089,18 +1081,18 @@ _interface::menu::menu(Camer *camera, Color maincl, Color bordercl) :
 	blackout->setFillColor(Color(0, 0, 0, 255 / 2));
 	blackout->setPosition(camera->getPosition().x - (camera->getScreenWidth() / 2), camera->getPosition().y - (camera->getScreenHeight() / 2));
 
-	btContinue = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 20,  L"Продолжить", Color::Black, Color::Yellow, Color::Yellow);
-	btOptions = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 100, L"Настройки", Color::Black, Color::Yellow, Color::Yellow);
-	btExit = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 180, L"Выйти", Color::Black, Color::Yellow, Color::Yellow);
+	btContinue = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 20, font,  L"Продолжить", Color::Black, Color::Yellow, Color::Yellow);
+	btOptions = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 100, font, L"Настройки", Color::Black, Color::Yellow, Color::Yellow);
+	btExit = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 180, font, L"Выйти", Color::Black, Color::Yellow, Color::Yellow);
 
-	txMenu = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 450, L"Меню", Color::Yellow, Color::Black);
+	txMenu = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 450, L"Меню", Color::Yellow, Color::Black);
 	txMenu->visible_bevel = false;
 	grFirst = new gradient(FloatRect(Vector2f(100, 100), Vector2f(200, 5)), gradient_direction::rightOnLeft, Color::Transparent, Color::Yellow);
 	grSecond = new gradient(FloatRect(Vector2f(150, 150), Vector2f(200, 5)), gradient_direction::leftOnRight, Color::Transparent, Color::Yellow);
 }
 
 _interface::menu::~menu() {
-	delete main, border, blackout, main_cl, border_cl;
+	delete main, border, blackout;
 	delete btContinue, btOptions, btExit;
 	delete txMenu;
 	delete grFirst, grSecond;
@@ -1170,30 +1162,29 @@ void _interface::menu::render(RenderWindow *wd, Camer *camera) noexcept {
 //-----------------------------------Меню-menu-Конец---------------------------------------
 
 //------------------------------Чекбокс-check_box-Начало--------------------------------------
-_interface::check_box::check_box(int x, int y, Color maincl, Color bordercl, Color checkcl) :
+_interface::check_box::check_box(int x, int y, const Color &maincl, const Color &bordercl, const Color &checkcl) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	isCheck(false)
 	{
-
-	main_cl = new Color;
-	*main_cl = maincl;
+	//main_cl = new Color;
+	//*main_cl = maincl;
 	main = new RectangleShape;
 	main->setSize(Vector2f(24, 24));
-	main->setFillColor(*main_cl);
+	main->setFillColor(maincl);
 	main->setPosition(pos.x + 2, pos.y + 2);
 
-	border_cl = new Color;
-	*border_cl = bordercl;
+	//border_cl = new Color;
+	//*border_cl = bordercl;
 	border = new RectangleShape;
 	border->setSize(Vector2f(28, 28));
-	border->setFillColor(*border_cl);
+	border->setFillColor(bordercl);
 	border->setPosition(pos.x, pos.y);
 
-	check_cl = new Color;
-	*check_cl = checkcl;
+	//check_cl = new Color;
+	//*check_cl = checkcl;
 	check = new RectangleShape;
 	check->setSize(Vector2f(20, 20));
-	check->setFillColor(*check_cl);
+	check->setFillColor(checkcl);
 	check->setPosition(pos.x + 4, pos.y + 4);
 
 	fl_rect = border->getGlobalBounds();
@@ -1201,7 +1192,6 @@ _interface::check_box::check_box(int x, int y, Color maincl, Color bordercl, Col
 
 _interface::check_box::~check_box() {
 	delete main, border, check;
-	delete main_cl, border_cl, check_cl;
 }
 
 void _interface::check_box::setPosition(const axes_i &xy) {
@@ -1253,23 +1243,23 @@ void _interface::check_box::render(RenderWindow *wd) noexcept {
 //------------------------------Чекбокс-check_box-Конец---------------------------------------
 
 //------------------------Меню-настроек-settings_menu-Начало--------------------------------------
-_interface::settings_menu::settings_menu(configuration *cf, Camer *camera, Color maincl, Color bordercl) :
+_interface::settings_menu::settings_menu(configuration *cf, Camer *camera, const Font &font, const Color &maincl, const Color &bordercl) :
 	active(false), 
 	blackout_visible(false)
 	{
 		pos = camera->getPosition();
 		main = new RectangleShape;
 		main->setSize(Vector2f(550, 600));
-		main_cl = new Color;
-		*main_cl = maincl;
-		main->setFillColor(*main_cl);
+		//main_cl = new Color;
+		//*main_cl = maincl;
+		main->setFillColor(maincl);
 		main->setPosition(pos.x - main->getGlobalBounds().width / 2, pos.y - main->getGlobalBounds().height / 2);
 
 		border = new RectangleShape;
 		border->setSize(Vector2f(main->getGlobalBounds().width + 10, main->getGlobalBounds().height + 10));
-		border_cl = new Color;
-		*border_cl = bordercl;
-		border->setFillColor(*border_cl);
+		//border_cl = new Color;
+		//*border_cl = bordercl;
+		border->setFillColor(bordercl);
 		border->setPosition(pos.x - 5 - main->getGlobalBounds().width / 2, pos.y - 5 - main->getGlobalBounds().height / 2);
 
 		blackout = new RectangleShape;
@@ -1277,22 +1267,22 @@ _interface::settings_menu::settings_menu(configuration *cf, Camer *camera, Color
 		blackout->setFillColor(Color(0, 0, 0, 255 / 2));
 		blackout->setPosition(camera->getPosition().x - (camera->getScreenWidth() / 2), camera->getPosition().y - (camera->getScreenHeight() / 2));
 
-		btBack = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 410, L"Назад", Color::Black, Color::Yellow, Color::Yellow);
-		btSave = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 480, L"Сохранить", Color::Black, Color::Yellow, Color::Yellow); 
+		btBack = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 410, font, L"Назад", Color::Black, Color::Yellow, Color::Yellow);
+		btSave = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 480, font, L"Сохранить", Color::Black, Color::Yellow, Color::Yellow); 
 
 		std::string *t = new std::string(intToStr(std::string, cf->screenWidth));
 		*t += " x ";
 		*t += intToStr(std::string, cf->screenHeight);
 
-		txVertS = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 20, L"Вертикальная синхронизация:", Color::Yellow, Color::Black);
+		txVertS = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 20, L"Вертикальная синхронизация:", Color::Yellow, Color::Black);
 		txVertS->visible_bevel = false;
-		txFullS = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 100, L"На весь экран:", Color::Yellow, Color::Black);
+		txFullS = new text(font,(main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 100, L"На весь экран:", Color::Yellow, Color::Black);
 		txFullS->visible_bevel = false;
-		txScreen = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 180, L"Разрешение экрана:", Color::Yellow, Color::Black);
+		txScreen = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 180, L"Разрешение экрана:", Color::Yellow, Color::Black);
 		txScreen->visible_bevel = false;
-		txSound = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 260, L"Звук:", Color::Yellow, Color::Black);
+		txSound = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 260, L"Звук:", Color::Yellow, Color::Black);
 		txSound->visible_bevel = false;
-		txSoundV = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 340, L"Громкость звука:", Color::Yellow, Color::Black);
+		txSoundV = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 340, L"Громкость звука:", Color::Yellow, Color::Black);
 		txSoundV->visible_bevel = false;
 
 		combScreen = new combo_box(txScreen->getSize().left + txScreen->getSize().width + 5, txScreen->getSize().top, Color::Yellow, Color::Yellow);
@@ -1332,7 +1322,7 @@ _interface::settings_menu::settings_menu(configuration *cf, Camer *camera, Color
 		cbSound = new check_box((main->getGlobalBounds().width / 2) + 0 + (txVertS->getSize().width / 2) + 5, main->getGlobalBounds().top + 260, Color::Black, Color::Yellow, Color::Yellow);
 		cbSound->isCheck = cf->sound;
 
-		txMenuSettings = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 550, L"Настройки", Color::Yellow, Color::Black);
+		txMenuSettings = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 550, L"Настройки", Color::Yellow, Color::Black);
 		txMenuSettings->visible_bevel = false;
 		grFirst = new gradient(FloatRect(Vector2f(100, 100), Vector2f(180, 5)), gradient_direction::rightOnLeft, Color::Transparent, Color::Yellow);
 		grSecond = new gradient(FloatRect(Vector2f(150, 150), Vector2f(180, 5)), gradient_direction::leftOnRight, Color::Transparent, Color::Yellow);
@@ -1340,7 +1330,7 @@ _interface::settings_menu::settings_menu(configuration *cf, Camer *camera, Color
 		delete t;
 }
 
-_interface::settings_menu::settings_menu(configuration *cf, Color maincl, Color bordercl) :
+_interface::settings_menu::settings_menu(configuration *cf, const Font &font, const Color &maincl, const Color &bordercl) :
 	active(false),
 	blackout_visible(true)
 	{
@@ -1348,16 +1338,16 @@ _interface::settings_menu::settings_menu(configuration *cf, Color maincl, Color 
 	pos.y = cf->screenHeight / 2;
 	main = new RectangleShape;
 	main->setSize(Vector2f(550, 600));
-	main_cl = new Color;
-	*main_cl = maincl;
-	main->setFillColor(*main_cl);
+	//main_cl = new Color;
+	//*main_cl = maincl;
+	main->setFillColor(maincl);
 	main->setPosition(pos.x - main->getGlobalBounds().width / 2, pos.y - main->getGlobalBounds().height / 2);
 
 	border = new RectangleShape;
 	border->setSize(Vector2f(main->getGlobalBounds().width + 10, main->getGlobalBounds().height + 10));
-	border_cl = new Color;
-	*border_cl = bordercl;
-	border->setFillColor(*border_cl);
+	//border_cl = new Color;
+	//*border_cl = bordercl;
+	border->setFillColor(bordercl);
 	border->setPosition(pos.x - 5 - main->getGlobalBounds().width / 2, pos.y - 5 - main->getGlobalBounds().height / 2);
 
 	blackout = new RectangleShape;
@@ -1365,8 +1355,8 @@ _interface::settings_menu::settings_menu(configuration *cf, Color maincl, Color 
 	blackout->setFillColor(Color(0, 0, 0, 255 / 2));
 	blackout->setPosition(0,0);
 
-	btBack = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 410, L"Назад", Color::Black, Color::Yellow, Color::Yellow);
-	btSave = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 480, L"Сохранить", Color::Black, Color::Yellow, Color::Yellow);
+	btBack = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 410, font, L"Назад", Color::Black, Color::Yellow, Color::Yellow);
+	btSave = new button((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 480, font, L"Сохранить", Color::Black, Color::Yellow, Color::Yellow);
 	btBack->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btBack->getSize().width / 2), main->getGlobalBounds().top + 410);
 	btSave->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btSave->getSize().width / 2), main->getGlobalBounds().top + 480);
 
@@ -1375,15 +1365,15 @@ _interface::settings_menu::settings_menu(configuration *cf, Color maincl, Color 
 	*t += " x ";
 	*t += intToStr(std::string, cf->screenHeight);
 
-	txVertS = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 20, L"Вертикальная синхронизация:", Color::Yellow, Color::Black);
+	txVertS = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 20, L"Вертикальная синхронизация:", Color::Yellow, Color::Black);
 	txVertS->visible_bevel = false;
-	txFullS = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 100, L"На весь экран:", Color::Yellow, Color::Black);
+	txFullS = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 100, L"На весь экран:", Color::Yellow, Color::Black);
 	txFullS->visible_bevel = false;
-	txScreen = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 180, L"Разрешение экрана:", Color::Yellow, Color::Black);
+	txScreen = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 180, L"Разрешение экрана:", Color::Yellow, Color::Black);
 	txScreen->visible_bevel = false;
-	txSound = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 260, L"Звук:", Color::Yellow, Color::Black);
+	txSound = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 260, L"Звук:", Color::Yellow, Color::Black);
 	txSound->visible_bevel = false;
-	txSoundV = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 340, L"Громкость звука:", Color::Yellow, Color::Black);
+	txSoundV = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 340, L"Громкость звука:", Color::Yellow, Color::Black);
 	txSoundV->visible_bevel = false;
 
 	txVertS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txVertS->getSize().width / 2), main->getGlobalBounds().top + 20);
@@ -1434,7 +1424,7 @@ _interface::settings_menu::settings_menu(configuration *cf, Color maincl, Color 
 	cbFullS->setPosition(txFullS->getSize().left + txFullS->getSize().width + 5, main->getGlobalBounds().top + 100);
 	cbSound->setPosition(txSound->getSize().left + txSound->getSize().width + 5, main->getGlobalBounds().top + 260);
 
-	txMenuSettings = new text((main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 550, L"Настройки", Color::Yellow, Color::Black);
+	txMenuSettings = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 550, L"Настройки", Color::Yellow, Color::Black);
 	txMenuSettings->visible_bevel = false;
 	grFirst = new gradient(FloatRect(Vector2f(100, 100), Vector2f(180, 5)), gradient_direction::rightOnLeft, Color::Transparent, Color::Yellow);
 	grSecond = new gradient(FloatRect(Vector2f(150, 150), Vector2f(180, 5)), gradient_direction::leftOnRight, Color::Transparent, Color::Yellow);
@@ -1446,7 +1436,7 @@ _interface::settings_menu::settings_menu(configuration *cf, Color maincl, Color 
 }
 
 _interface::settings_menu::~settings_menu() {
-	delete main, border, blackout, main_cl, border_cl;
+	delete main, border, blackout;
 	delete btBack, btSave;
 	delete txVertS, txFullS, txScreen, txSound, txSoundV;
 	delete cbFullS, cbVertS, cbSound;
@@ -1677,18 +1667,16 @@ void _interface::settings_menu::render(RenderWindow *wd) noexcept {
 //------------------------Меню-настроек-settings_menu-Конец---------------------------------------
 
 //------------------------Главное-меню-main_menu-Начало---------------------------------------
-_interface::main_menu::main_menu(configuration *cf, Color maincl) {
+_interface::main_menu::main_menu(configuration *cf, const Font& font, const Color& maincl) {
 	main = new RectangleShape;
 	main->setSize(Vector2f(500, cf->screenHeight));
-	main_cl = new Color;
-	*main_cl = maincl;
-	main->setFillColor(*main_cl);
+	main->setFillColor(maincl);
 	main->setPosition(0,0);
 
-	btStart = new button(0, 0, L"Новая игра", Color::Black, Color::Yellow, Color::Yellow);
-	btStartTren = new button(0, 0, L"Пройти обучение", Color::Black, Color::Yellow, Color::Yellow);
-	btOptions = new button(0, 0, L"Настройки", Color::Black, Color::Yellow, Color::Yellow);
-	btExit = new button(0, 0, L"Выйти", Color::Black, Color::Yellow, Color::Yellow);
+	btStart = new button(0, 0, font, L"Новая игра", Color::Black, Color::Yellow, Color::Yellow);
+	btStartTren = new button(0, 0, font, L"Пройти обучение", Color::Black, Color::Yellow, Color::Yellow);
+	btOptions = new button(0, 0, font, L"Настройки", Color::Black, Color::Yellow, Color::Yellow);
+	btExit = new button(0, 0, font, L"Выйти", Color::Black, Color::Yellow, Color::Yellow);
 
 	btStart->setPosition((main->getGlobalBounds().width / 2) - (btStart->getSize().width / 2), main->getGlobalBounds().top + 340);
 	btStartTren->setPosition((main->getGlobalBounds().width / 2) - (btStartTren->getSize().width / 2), main->getGlobalBounds().top + 440);
@@ -1696,7 +1684,7 @@ _interface::main_menu::main_menu(configuration *cf, Color maincl) {
 	btExit->setPosition((main->getGlobalBounds().width / 2) - (btExit->getSize().width / 2), main->getGlobalBounds().top + 640);
 
 
-	txMainMenu = new text(0, 0, L"Главное меню", Color::Yellow, Color::Black);
+	txMainMenu = new text(font, 0, 0, L"Главное меню", Color::Yellow, Color::Black);
 	txMainMenu->visible_bevel = false;
 	grFirst = new gradient(FloatRect(Vector2f(0, 0), Vector2f(100, 5)), gradient_direction::rightOnLeft, Color::Transparent, Color::Yellow);
 	grSecond = new gradient(FloatRect(Vector2f(0, 0), Vector2f(100, 5)), gradient_direction::leftOnRight, Color::Transparent, Color::Yellow);
@@ -1707,7 +1695,7 @@ _interface::main_menu::main_menu(configuration *cf, Color maincl) {
 }
 
 _interface::main_menu::~main_menu() {
-	delete main, main_cl;
+	delete main;
 	delete btStart, btOptions, btExit, btStartTren;
 	delete txMainMenu;
 	delete grFirst, grSecond;
@@ -1739,7 +1727,7 @@ void _interface::main_menu::render(RenderWindow *wd) noexcept {
 //------------------------Главное-меню-main_menu-Конец----------------------------------------
 
 //------------------------------Градиент-gradient-Начало---------------------------------------
-_interface::gradient::gradient(const FloatRect &rt, gradient_direction gd, Color first, Color second) :
+_interface::gradient::gradient(const FloatRect &rt, gradient_direction gd, const Color &first, const Color &second) :
 	BaseInerface(0, 0, rt)
 	{
 	rect = new sf::VertexArray;
@@ -1832,7 +1820,7 @@ _interface::combo_box::cell::cell(Text txt, int val) :
 	
 }
 
-_interface::combo_box::combo_box(int x, int y, Color maincl, Color textcl) :
+_interface::combo_box::combo_box(int x, int y, const Color &maincl, const Color &textcl) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	visible_main(false),
 	active(false)
@@ -1984,25 +1972,25 @@ void _interface::combo_box::render(RenderWindow *wd) {
 //-----------------------------Комбо-бокс-combo_box-Конец---------------------------------------
 
 //-----------------------------Сообщение-message-Начало---------------------------------------
-_interface::message::message(int x, int y, const std::wstring &txt, Color maincl, Color bordercl, Color textcl) :
+_interface::message::message(int x, int y, const Font& font, const std::wstring &txt, const Color& maincl, const Color& bordercl, const Color& textcl) :
 	active(false)
 	{
 	pos.x = x;
 	pos.y = y;
 
 	main = new RectangleShape;
-	main_cl = new Color;
-	*main_cl = maincl;
-	main->setFillColor(*main_cl);
+	//main_cl = new Color;
+	//*main_cl = maincl;
+	main->setFillColor(maincl);
 
 	border = new RectangleShape;
-	border_cl = new Color;
-	*border_cl = bordercl;
-	border->setFillColor(*border_cl);
+	//border_cl = new Color;
+	//*border_cl = bordercl;
+	border->setFillColor(bordercl);
 
-	txInfo = new text(0, 0, txt, textcl);
+	txInfo = new text(font, 0, 0, txt, textcl);
 	txInfo->visible_bevel = false;
-	txMess = new text(0, 0, L"Сообщение", Color::Yellow);
+	txMess = new text(font, 0, 0, L"Сообщение", Color::Yellow);
 	txMess->visible_bevel = false;
 	
 	main->setSize(Vector2f(txInfo->getSize().width + 10, 150));
@@ -2019,12 +2007,11 @@ _interface::message::message(int x, int y, const std::wstring &txt, Color maincl
 	grFirst->setPosition(txMess->getPosition().x - 5 - grFirst->getSize().width, txMess->getPosition().y + (txMess->getSize().height / 2) - (grFirst->getSize().height / 2));
 	grSecond->setPosition(txMess->getPosition().x + 5 + txMess->getSize().width, txMess->getPosition().y + (txMess->getSize().height / 2) - (grSecond->getSize().height / 2));
 
-	btOk = new button(0, 0, L"Ок", Color::Black, Color::Yellow, Color::Yellow);
+	btOk = new button(0, 0, font, L"Ок", Color::Black, Color::Yellow, Color::Yellow);
 	btOk->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btOk->getSize().width / 2), txMess->getSize().top - 35);
 }
 
 _interface::message::~message() {
-	delete main_cl, border_cl;
 	delete main, border;
 	delete txInfo, txMess;
 	delete grFirst, grSecond;
@@ -2177,7 +2164,7 @@ void Collision::render(RenderWindow *wd) {
 //-----------------------------Коллизия-Collision-Конец----------------------------------------
 
 //-----------------------------Мини-полоса-min_bar-Начало----------------------------------------
-_interface::min_bar::min_bar(int x, int y, int br_ma, int br_mi, Color mcol, Color bcol) :
+_interface::min_bar::min_bar(int x, int y, int br_ma, int br_mi, const Color &mcol, const Color &bcol) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	max_br(br_ma),
 	min_br(br_mi),
@@ -2499,7 +2486,7 @@ void Spearman::render(RenderWindow *wd) noexcept {
 //------------------------------------------Копейщик-Spearman-Конец------------------------------------------
 
 //-------------------------------------Задний-фон-background_color-Начало------------------------------------------
-_interface::background_color::background_color(int x, int y, Color cl, configuration *cf) :
+_interface::background_color::background_color(int x, int y, const Color &cl, configuration *cf) :
 	visible(false)
 	{
 	pos.x = x;

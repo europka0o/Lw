@@ -36,11 +36,15 @@ class Game {
 		Texture *ptr_on_texture_castl_destr; //"Img/CastlDestr.png"
 		Texture *ptr_on_texture_gg; //"Img/gg.png"
 		Texture *ptr_on_texture_ice; //"Img/ice.png"
+		Texture *ptr_on_texture_world_stat;
+		Texture *ptr_on_texture_castd;
+		Texture *ptr_on_texture_d1;
 		sf::Vector2i pos;
 		sf::Vector2f realPos;
 		uint32_t CENTER_SCREEN_X;
 		uint32_t CENTER_SCREEN_Y;
 		int volume; //Громкость звука
+		Font *font_main;
 	public:
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		Game() {
@@ -74,6 +78,15 @@ class Game {
 			ptr_on_texture_ice->loadFromFile("Img/ice.png");
 			ptr_on_texture_meteor = new Texture;
 			ptr_on_texture_meteor->loadFromFile("Img/meteor.png");
+			ptr_on_texture_world_stat = new Texture;
+			ptr_on_texture_world_stat->loadFromFile("Img/World.png");
+			ptr_on_texture_castd = new Texture;
+			ptr_on_texture_castd->loadFromFile("Img/castd.png");
+			ptr_on_texture_d1 = new Texture;
+			ptr_on_texture_d1->loadFromFile("Img/d1.png");
+
+			font_main = new Font;
+			font_main->loadFromFile("Img/18094.ttf");
 
 			CENTER_SCREEN_X = config->screenWidth / 2;
 			CENTER_SCREEN_Y = config->screenHeight / 2;
@@ -81,17 +94,39 @@ class Game {
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		~Game() {
 			delete config, window; 
+			delete font_main;
 			delete ptr_on_image_world, ptr_on_texture_castle, ptr_on_texture_expl, ptr_on_texture_sprman, ptr_on_texture_castl_destr, ptr_on_texture_gg, ptr_on_texture_ice, ptr_on_texture_meteor;
+			delete ptr_on_texture_world_stat, ptr_on_texture_castd, ptr_on_texture_d1;
 		}
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		int Run() {
-			_interface::main_menu *main_men = new _interface::main_menu(config, Color(38, 38, 38, 255));
-			_interface::settings_menu *st_men = new _interface::settings_menu(config, Color::Color(38, 38, 38, 255), Color::Yellow);
+			Clock clock;
+			float timer = 0;
+
+			_interface::main_menu *main_men = new _interface::main_menu(config, *font_main, Color(38, 38, 38, 255));
+			_interface::settings_menu *st_men = new _interface::settings_menu(config, *font_main, Color::Color(38, 38, 38, 255), Color::Yellow);
 			st_men->blackout_visible = true;
 
-			_interface::message *message_settings = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, L"Изменения вступят в силу после перезапуска игры", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
+			ObjectStatic *Planet = new ObjectStatic(ptr_on_texture_world_stat, 1000, 400);
+			ObjectStatic *Castd = new ObjectStatic(ptr_on_texture_castd, 1000, 400);
+			ObjectStatic *D1 = new ObjectStatic(ptr_on_texture_d1, 1000, 400);
+
+			Planet->sprt->setOrigin(Planet->sprt->getGlobalBounds().width / 2.f, Planet->sprt->getGlobalBounds().height / 2.f);
+			Planet->setPosition(config->screenWidth / 2, config->screenHeight / 2);
+
+			D1->sprt->setOrigin((D1->sprt->getGlobalBounds().width / 2) - 20, Planet->sprt->getOrigin().y + 110);
+			D1->setPosition(config->screenWidth / 2, config->screenHeight / 2);
+
+			Castd->sprt->setOrigin((Castd->sprt->getGlobalBounds().width / 2) + 30, Planet->sprt->getOrigin().y + 137);
+			Castd->setPosition(config->screenWidth / 2, config->screenHeight / 2);
+			Castd->sprt->rotate(100);
+
+			_interface::message *message_settings = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, *font_main, L"Изменения вступят в силу после перезапуска игры", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
 
 			while (window->isOpen()) {
+
+				timer = clock.getElapsedTime().asMicroseconds();
+				timer /= 1000;
 
 				pos = sf::Mouse::getPosition(*window);
 				realPos = window->mapPixelToCoords(pos);
@@ -112,6 +147,7 @@ class Game {
 						if (main_men->btStart->isAction(realPos.x, realPos.y)) {
 							if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Left) {
 								delete main_men, st_men, message_settings;
+								delete Planet, Castd, D1;
 								return lvlnum::lvlRun;
 							}
 						}
@@ -119,6 +155,7 @@ class Game {
 						if (main_men->btStartTren->isAction(realPos.x, realPos.y)) {
 							if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Left) {
 								delete main_men, st_men, message_settings;
+								delete Planet, Castd, D1;
 								return lvlnum::lvlTraining;
 							}
 						}
@@ -199,14 +236,25 @@ class Game {
 					}
 				}
 
+				if (timer >= 1.f) {
+					Planet->sprt->rotate(0.01);
+					D1->sprt->rotate(0.17);
+					Castd->sprt->rotate(0.17);
+					clock.restart();
+				}
+
 				window->clear();
 				main_men->render(window);
+				D1->render(window);
+				Castd->render(window);
+				Planet->render(window);
 				st_men->render(window);
 				message_settings->render(window);
 				window->display();
 			}
 			
 			delete main_men, st_men, message_settings;
+			delete Planet, Castd, D1;
 			return lvlnum::exitGame;
 		}
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -247,19 +295,19 @@ class Game {
 			int mp_need_cast_expl = 20; //Нужное кол-во маны для взрыва
 			int mp_need_cast_ice = 100; //Нужное кол-во маны для призыва кристалла
 
-			HP = new _interface::bar(5, 5, barhp, 0, L"HP:", Color::White, Color::Red, Color::Black); //Полоса здоровья
-			MP = new _interface::bar(5, HP->getSize().left + HP->getSize().width + 5, barmp, 0, L"MP:", Color::White, Color::Blue, Color::Black); //Полоса маны
+			HP = new _interface::bar(*font_main, 5, 5, barhp, 0, L"HP:", Color::White, Color::Red, Color::Black); //Полоса здоровья
+			MP = new _interface::bar(*font_main, 5, HP->getSize().left + HP->getSize().width + 5, barmp, 0, L"MP:", Color::White, Color::Blue, Color::Black); //Полоса маны
 
-			_interface::message *message_end = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, L"Захватчики разрушили ваш замок, вы проиграли", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
-			_interface::message *message_vic = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, L"Вы победили всех нападающих противников! Поздравляем!", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
-			_interface::message *message_settings = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, L"Изменения вступят в силу после перезапуска игры", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
+			_interface::message *message_end = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, *font_main, L"Захватчики разрушили ваш замок, вы проиграли", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
+			_interface::message *message_vic = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, *font_main, L"Вы победили всех нападающих противников! Поздравляем!", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
+			_interface::message *message_settings = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, *font_main, L"Изменения вступят в силу после перезапуска игры", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
 
-			_interface::settings_menu *st_men = new _interface::settings_menu(config, Color::Color(38, 38, 38, 255), Color::Yellow); //Меню настроек
-			men = new _interface::menu(Camera, Color::Color(38, 38, 38, 255), Color::Yellow); //Главное меню
+			_interface::settings_menu *st_men = new _interface::settings_menu(config, *font_main, Color::Color(38, 38, 38, 255), Color::Yellow); //Меню настроек
+			men = new _interface::menu(Camera, *font_main, Color::Color(38, 38, 38, 255), Color::Yellow); //Главное меню
 			men->active = false;
 			st_men->blackout_visible = false;
 			
-			lvlInfo = new _interface::text(0, 0, L"Волна 1", Color::Black, Color::Yellow); //Надпись с номером волны
+			lvlInfo = new _interface::text(*font_main, 0, 0, L"Волна 1", Color::Black, Color::Yellow); //Надпись с номером волны
 			lvlInfo->resize(_interface::text_size::medium);
 			lvlInfo->setPosition((config->screenWidth / 2) - lvlInfo->getSize().width / 2, (config->screenHeight / 2) - lvlInfo->getSize().height / 2);
 			
@@ -1805,8 +1853,8 @@ class Game {
 			Trigger *triggerForEnemy = new Trigger(IntRect(config->screenWidth - 500, 0, 20, config->screenHeight));
 
 			MainWrd = new World(ptr_on_image_world, 60, 60);
-			HP = new _interface::bar(5, 5, 100, 0, L"HP:", Color::White, Color::Red, Color::Black);
-			MP = new _interface::bar(5, HP->getSize().left + HP->getSize().width + 5, 100, 0, L"MP:", Color::White, Color::Blue, Color::Black);
+			HP = new _interface::bar(*font_main, 5, 5, 100, 0, L"HP:", Color::White, Color::Red, Color::Black);
+			MP = new _interface::bar(*font_main, 5, HP->getSize().left + HP->getSize().width + 5, 100, 0, L"MP:", Color::White, Color::Blue, Color::Black);
 			Camera = new Camer(CENTER_SCREEN_X, CENTER_SCREEN_Y, config->screenWidth, config->screenHeight);
 
 			Castle = new ObjectStatic(ptr_on_texture_castle, 0, 0);
@@ -1817,11 +1865,11 @@ class Game {
 			float barhp = 100;
 			float barmp = 100;
 
-			_interface::message *message_end = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, L"Замок разрушен, вы проиграли", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
-			_interface::message *message_settings = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, L"Изменения вступят в силу после перезапуска игры", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
+			_interface::message *message_end = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, *font_main, L"Замок разрушен, вы проиграли", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
+			_interface::message *message_settings = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, *font_main, L"Изменения вступят в силу после перезапуска игры", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
 
-			_interface::settings_menu *st_men = new _interface::settings_menu(config, Color::Color(38, 38, 38, 255), Color::Yellow);
-			men = new _interface::menu(Camera, Color::Color(38, 38, 38, 255), Color::Yellow);
+			_interface::settings_menu *st_men = new _interface::settings_menu(config, *font_main, Color::Color(38, 38, 38, 255), Color::Yellow);
+			men = new _interface::menu(Camera, *font_main, Color::Color(38, 38, 38, 255), Color::Yellow);
 			men->active = false;
 			st_men->blackout_visible = false;
 			Expl_list = new list<Meteor*>;

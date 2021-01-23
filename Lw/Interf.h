@@ -190,8 +190,8 @@ class BaseCharacter {
 class ObjectStatic {
 	protected:
 		axes_i pos;
-		Sprite *sprt;
 	public:
+		Sprite* sprt;
 		Collision *rect_collis;
 		/// <summary>
 		/// Конструктор
@@ -308,7 +308,7 @@ namespace _interface {
 			/// <param name="gd">Направление градиента</param>
 			/// <param name="first">Первый цвет градиента</param>
 			/// <param name="second">Второй цвет градиента</param>
-			gradient(const FloatRect &rt, gradient_direction gd, Color first, Color second);
+			gradient(const FloatRect &rt, gradient_direction gd, const Color &first, const Color &second);
 			~gradient();
 			/// <summary>
 			/// Устанавливает позицию объекта по осям X и Y
@@ -327,13 +327,11 @@ namespace _interface {
 
 	class button : public BaseInerface {
 		private:
-			Font *font;
 			Text *txt;
-			Color *main_cl, *txt_cl, *active_cl;
 			RectangleShape *main, *active_bvl;
 		public:
 			bool active;
-			button(int x, int y, const std::wstring &text, Color maincl, Color textcl, Color activecl);
+			button(int x, int y, const Font &font, const std::wstring &text, const Color &maincl, const Color &textcl, const Color &activecl);
 			~button();
 			void setPosition(const axes_i &xy) override;
 			void __fastcall setPosition(int x, int y) override;
@@ -360,7 +358,7 @@ namespace _interface {
 			std::vector<cell*>::iterator it;
 		public:
 			bool visible_main, active;
-			combo_box(int x, int y, Color maincl, Color textcl);
+			combo_box(int x, int y, const Color &maincl, const Color &textcl);
 			~combo_box();
 			void setPosition(const axes_i &xy) override;
 			void __fastcall setPosition(int x, int y) override;
@@ -377,11 +375,10 @@ namespace _interface {
 
 	class check_box : public BaseInerface {
 		private:
-			Color *main_cl, *border_cl, *check_cl;
 			RectangleShape *main, *border, *check;
 		public:
 			bool isCheck;
-			check_box(int x, int y, Color maincl, Color bordercl, Color checkcl);
+			check_box(int x, int y, const Color &maincl, const Color &bordercl, const Color &checkcl);
 			~check_box();
 			void setPosition(const axes_i &xy) override;
 			void __fastcall setPosition(int x, int y) override;
@@ -394,16 +391,13 @@ namespace _interface {
 	class text : public BaseInerface {
 		private:
 			RectangleShape* bevel; //Прямоугольник под текстом 
-			Font* font_main;
 		public:
 			bool visible_bevel; //Видимость прямоугольника под текстом 
 			Text* label;
-			Color* bevel_cl;
-			Color* label_cl;
-			text(int x = 0, int y = 0, const std::wstring& txt = L"NON:", Color lbcol = Color::White, Color bvcol = Color::Black);
+			text(const Font& font, int x = 0, int y = 0, const std::wstring& txt = L"NON:", const Color &lbcol = Color::White, const Color &bvcol = Color::Black);
 			~text();
 			void setString(const std::wstring &txt) noexcept; //Задает текст 
-			void setFont(const String &txt) noexcept; //Путь к фону для текста
+			void setFont(const Font &font) noexcept; //Путь к фону для текста
 			void __fastcall setPosition(int x, int y) noexcept override; //Устанавливает позицию объекта по осям X, Y
 			void setPosition(const axes_i &xy) noexcept override; //Устанавливает позицию объекта по осям X, Y 
 			void resize(int size = normal) noexcept; //Задает размер объекта в пикселях
@@ -416,14 +410,13 @@ namespace _interface {
 	class message {
 		private:
 			axes_i pos;
-			Color *main_cl, *border_cl;
 			RectangleShape *main, *border;
 			text *txInfo, *txMess;
 			gradient *grFirst, *grSecond;
 		public:
 			bool active;
 			button *btOk;
-			message(int x, int y, const std::wstring& txt, Color maincl, Color bordercl, Color textcl);
+			message(int x, int y, const Font& font, const std::wstring& txt, const Color &maincl, const Color &bordercl, const Color &textcl);
 			~message();
 			void render(RenderWindow &wd, Camer *camera) noexcept;
 			void render(RenderWindow *wd, Camer *camera) noexcept;
@@ -434,14 +427,13 @@ namespace _interface {
 	class menu {
 		private:
 			axes_i pos;
-			Color *main_cl, *border_cl;
 			RectangleShape *main, *border, *blackout;
 			text *txMenu;
 			gradient *grFirst, *grSecond;
 		public:
 			bool active, blackout_visible;
 			button *btExit, *btContinue, *btOptions;
-			menu(Camer* camera, Color maincl, Color bordercl);
+			menu(Camer* camera, const Font &font, const Color &maincl, const Color &bordercl);
 			~menu();
 			void render(RenderWindow &wd, Camer *camera) noexcept;
 			void render(RenderWindow *wd, Camer *camera) noexcept;
@@ -450,7 +442,6 @@ namespace _interface {
 	class settings_menu {
 		private:
 			axes_i pos;
-			Color *main_cl, *border_cl;
 			RectangleShape *main, *border, *blackout;
 			text *txMenuSettings;
 			gradient *grFirst, *grSecond;
@@ -460,8 +451,8 @@ namespace _interface {
 			text *txVertS, *txFullS, *txScreen, *txSound, *txSoundV;
 			check_box *cbVertS, *cbFullS, *cbSound;
 			combo_box *combScreen, *combSoundV;
-			settings_menu(configuration *cf, Camer *camera, Color maincl, Color bordercl);
-			settings_menu(configuration *cf, Color maincl, Color bordercl);
+			settings_menu(configuration *cf, Camer *camera, const Font &font, const Color &maincl, const Color &bordercl);
+			settings_menu(configuration *cf, const Font &font, const Color &maincl, const Color &bordercl);
 			~settings_menu();
 			void backSettings(configuration *cf);
 			int saveSettings(configuration *cf);
@@ -473,13 +464,12 @@ namespace _interface {
 
 	class main_menu {
 		private:
-			Color *main_cl;
 			RectangleShape *main;
 			text *txMainMenu;
 			gradient *grFirst, *grSecond;
 		public:
 			button *btExit, *btStart, *btOptions, *btStartTren;
-			main_menu(configuration *cf, Color maincl);
+			main_menu(configuration *cf, const Font &font, const Color &maincl);
 			~main_menu();
 			void render(RenderWindow &wd) noexcept;
 			void render(RenderWindow *wd) noexcept;
@@ -490,7 +480,6 @@ namespace _interface {
 			int max_bar, min_bar, curr_bar; //Максимальное значение полосы, минимальное значение полосы, текущее значение полосы
 			RectangleShape *main; //Прямоугольник под объектом
 			RectangleShape *bevel; //Полоса
-			Font *font_main;
 			Text *label;
 		public:
 			/// <summary>
@@ -505,7 +494,7 @@ namespace _interface {
 			/// <param name="bcol">Цвет прямоугольника под полосой</param>
 			/// <param name="tcol">Цвет текста</param>
 			/// <returns></returns>
-			bar(int x = 0, int y = 0, int br_ma = 100, int br_mi = 0, const std::wstring& name = L"NON:", Color mcol = Color::White, Color bcol = Color::Red, Color tcol = Color::Black);
+			bar(const Font &font, int x = 0, int y = 0, int br_ma = 100, int br_mi = 0, const std::wstring& name = L"NON:", const Color &mcol = Color::White, const Color &bcol = Color::Red, const Color &tcol = Color::Black);
 			bar(); //Конструктор по умолчанию
 			~bar(); //Деструктор
 			/// <summary>
@@ -565,7 +554,7 @@ namespace _interface {
 			/// <param name="mcol">Цвет полосы</param>
 			/// <param name="bcol">Цвет прямоугольника под полосой</param>
 			/// <returns></returns>
-			min_bar(int x, int y, int br_ma, int br_mi, Color mcol, Color bcol);
+			min_bar(int x, int y, int br_ma, int br_mi, const Color& mcol, const Color& bcol);
 			~min_bar();
 			/// <summary>
 			/// Устанавливает позицию объекта по осям X, Y
@@ -611,7 +600,7 @@ namespace _interface {
 			/// <param name="lbcol">Цвет текста</param>
 			/// <param name="bvcol">Цвет прямоугольника под текстом</param>
 			/// <returns></returns>
-			multiline_text(float x = 0, float y = 0, Color lbcol = Color::White, Color bvcol = Color::Black);
+			multiline_text(float x = 0, float y = 0, const Color &lbcol = Color::White, const Color &bvcol = Color::Black);
 			~multiline_text() noexcept;
 			/// <summary>
 			/// Изменяет размер текста
@@ -642,7 +631,7 @@ namespace _interface {
 			/// <param name="y">Позиция по оси Y</param>
 			/// <param name="cl">Цвет</param>
 			/// <param name="cf">Указатель на структуру настроек</param>
-			background_color(int x, int y, Color cl, configuration *cf);
+			background_color(int x, int y, const Color &cl, configuration *cf);
 			~background_color();
 			/// <summary>
 			/// Изменяет цвет
@@ -685,7 +674,6 @@ class DestroerCastle : public BaseCharacter {
 		void __fastcall setPosition(float x, float y) noexcept override; 
 		void setPosition(const axes_f &xy) noexcept override; 
 		void __fastcall move(float time, int direct) noexcept; 
-		//void move(float time) noexcept; 
 		void __fastcall attack(float time);
 		bool isCooldown(float time);
 		void render(RenderWindow& wd) noexcept override;
@@ -737,6 +725,6 @@ class Meteor : public ObjectAnimated {
 		void __fastcall update(float time) override final;
 		void render(RenderWindow& wd) override final;
 		void render(RenderWindow* wd) override final;
-	};
+};
 
 #endif
