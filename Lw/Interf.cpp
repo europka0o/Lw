@@ -149,17 +149,14 @@ axes<type>::axes(type _x, type _y) : x(_x), y(_y) {}
 //----------------------------------Структура-оси-axes-Конец-------------------------------
 
 // ----------------------------------Персанаж-Character-Начало------------------------------
-Character::Character(Texture* ptr_texture, float X_POS, float Y_POS, int hp) :
-	BaseCharacter(ptr_texture, X_POS, Y_POS, hp)
+Character::Character(const Sprite& ptr_sprite, float X_POS, float Y_POS, int hp) :
+	BaseCharacter(ptr_sprite, X_POS, Y_POS, hp)
 	{
-	sprt->setTextureRect(IntRect(0, 250, 300, 250));
-	sprt->setPosition(pos.x, pos.y);
 	direction = 0;
 	last_direction = direction;
-		
-	rect_collis = new Collision(IntRect(sprt->getGlobalBounds().left + 140, sprt->getGlobalBounds().top, 165, sprt->getGlobalBounds().height));
-
-	HP = new _interface::min_bar(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2), sprt->getGlobalBounds().top + sprt->getGlobalBounds().height, health, 0, Color::Black, Color::Red);
+	sprite_rect = IntRect(400 * int(frame), 250, 300, 250);
+	rect_collis = new Collision(IntRect(pos.x, pos.y, abs(sprite_rect.width) - 20, abs(sprite_rect.height) - 20));
+	HP = new _interface::min_bar(pos.x + (abs(sprite_rect.width) / 2), pos.y + abs(sprite_rect.height), health, 0, Color::Black, Color::Red);
 }
 
 Character::~Character() {
@@ -169,236 +166,55 @@ Character::~Character() {
 void __fastcall Character::setPosition(float x, float y) noexcept {
 	pos.x = x;
 	pos.y = y;
-	sprt->setPosition(x, y);
-	fl_rect = sprt->getGlobalBounds();
-	rect_collis->setPosition(pos.x + 140, pos.y);
-	HP->setPosition(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2) - (HP->getSize().width / 2), sprt->getGlobalBounds().top + sprt->getGlobalBounds().height);
+	rect_collis->setPosition(pos.x, pos.y);
+	HP->setPosition(pos.x + (abs(sprite_rect.width) / 2) - (HP->getSize().width / 2) + 25, pos.y + abs(sprite_rect.height));
 }
 
-void Character::setPosition(const axes_f &xy) noexcept {
+void Character::setPosition(const axes_f& xy) noexcept {
 	pos = xy;
-
-	sprt->setPosition(pos.x, pos.y);
-	HP->setPosition(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2) - (HP->getSize().width / 2), sprt->getGlobalBounds().top + sprt->getGlobalBounds().height);
-	fl_rect = sprt->getGlobalBounds();
-	rect_collis->setPosition(pos.x + 140, pos.y);
-}
-
-float Character::getPositionX_forCamer() noexcept {
-	return sprt->getGlobalBounds().left + (sprt->getGlobalBounds().height / 2);
-}
-
-float Character::getPositionY_forCamer() noexcept {
-	return sprt->getGlobalBounds().top + (sprt->getGlobalBounds().width / 2);
-}
-
-void __fastcall Character::move(float time) noexcept {
-	if (!((Keyboard::isKeyPressed(Keyboard::Up) && Keyboard::isKeyPressed(Keyboard::Right)) || (Keyboard::isKeyPressed(Keyboard::Up) && Keyboard::isKeyPressed(Keyboard::Left)) ||
-			(Keyboard::isKeyPressed(Keyboard::Down) && Keyboard::isKeyPressed(Keyboard::Right)) || (Keyboard::isKeyPressed(Keyboard::Down) && Keyboard::isKeyPressed(Keyboard::Left)))) {
-		if (Keyboard::isKeyPressed(Keyboard::Right)) { //-------------Вправо
-				direction = 1;
-		}
-		if (Keyboard::isKeyPressed(Keyboard::Left)) { //-------------Влево
-				direction = 2;
-		}
-		if (Keyboard::isKeyPressed(Keyboard::Up)) { //-------------Вверх 
-				direction = 3;
-		}
-		if (Keyboard::isKeyPressed(Keyboard::Down)) { //-------------Вниз 
-				direction = 4;
-		}
-	}
-
-	if (Keyboard::isKeyPressed(Keyboard::Up) && Keyboard::isKeyPressed(Keyboard::Right)) { //-------------Вверх и вправо
-			direction = 5;
-	}
-	if (Keyboard::isKeyPressed(Keyboard::Up) && Keyboard::isKeyPressed(Keyboard::Left)) { //-------------Вверх и влево 
-			direction = 6;
-	}
-	if (Keyboard::isKeyPressed(Keyboard::Down) && Keyboard::isKeyPressed(Keyboard::Right)) { //-------------Вниз и вправо
-			direction = 7;
-	}
-	if (Keyboard::isKeyPressed(Keyboard::Down) && Keyboard::isKeyPressed(Keyboard::Left)) { //-------------Вниз и влево
-			direction = 8;
-	}
-
-	switch (direction) { //Направление движения персонажа
-	case 1:
-		frame += 0.023 * time;
-		if (frame > 7) {
-			frame = 0;
-		}
-		sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); 
-		sprt->move(0.5 * time, 0); break;
-	case 2:
-		frame += 0.023 * time;
-		if (frame > 7) {
-			frame = 0;
-		}
-		sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250)); 
-		sprt->move(-0.5 * time, 0); break;
-	case 3:
-		frame += 0.023 * time;
-		if (frame > 7) {
-			frame = 0;
-		}
-		sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); 
-		sprt->move(0, -0.5 * time); break;
-	case 4:
-		frame += 0.023 * time;
-		if (frame > 7) {
-			frame = 0;
-		}
-		sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250));
-		sprt->move(0, 0.5 * time); break;
-	case 5:
-		frame += 0.023 * time;
-		if (frame > 7) {
-			frame = 0;
-		}
-		sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250));
-		sprt->move(0.5 * time, -0.5 * time); 
-		last_direction = 1; break;
-	case 6:
-		frame += 0.023 * time;
-		if (frame > 7) {
-			frame = 0;
-		}
-		sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250));
-		sprt->move(-0.5 * time, -0.5 * time); 
-		last_direction = 2; break;
-	case 7:
-		frame += 0.023 * time;
-		if (frame > 7) {
-			frame = 0;
-		}
-		sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250));
-		sprt->move(0.5 * time, 0.5 * time); 
-		last_direction = 1; break;
-	case 8:
-		frame += 0.023 * time;
-		if (frame > 7) {
-			frame = 0;
-		}
-		sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250));
-		sprt->move(-0.5 * time, 0.5 * time); 
-		last_direction = 2; break;
-	default: 
-		switch (last_direction) {
-		case 1:
-			//sprt->setTextureRect(IntRect(0, 250, 300, 250)); break;
-		case 2:
-			//sprt->setTextureRect(IntRect(300, 250, -300, 250)); break;
-		default:
-			break;
-		}
-		break;
-	}
-	last_direction = direction;
-	direction = 0;
-	HP->setPosition(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2) - (HP->getSize().width / 2) + 40, sprt->getGlobalBounds().top + sprt->getGlobalBounds().height);
-	fl_rect = sprt->getGlobalBounds();
-	rect_collis->setBounds(IntRect(sprt->getGlobalBounds().left + 140, sprt->getGlobalBounds().top, 165, sprt->getGlobalBounds().height));
-	pos.x = sprt->getGlobalBounds().left;
-	pos.y = sprt->getGlobalBounds().top;
+	rect_collis->setPosition(pos.x, pos.y);
+	HP->setPosition(pos.x + (abs(sprite_rect.width) / 2) - (HP->getSize().width / 2) + 25, pos.y + abs(sprite_rect.height));
 }
 
 void __fastcall Character::move(float time, int direct) noexcept {
 	direction = direct;
-	
+
 	if (health <= 0 && !zeroing) {
 		zeroing = true;
 		frame = 0;
 	}
 
-	if (health <= 0) {		
+	if (health <= 0) {
 		frame += 0.04 * time;
 		if (frame > 7) {
 			frame = 6;
 			isDead = true;
 		}
-		sprt->setTextureRect(IntRect(400 * int(frame) + 400, 0, -400, 250));
+		sprite_rect = IntRect(400 * int(frame) + 400, 0, -400, 250);
 	} else {
-		switch (direction) { //Направление движения персонажа
-		case 1:
+		switch (direction) {
+		case direcrion8::right:
 			frame += 0.023 * time;
 			if (frame > 7) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250)); 
-			sprt->move(0.5 * time, 0); break;
-		case 2:
+			sprite_rect = IntRect(400 * int(frame), 250, 400, 250);
+			pos.x = pos.x + (0.5 * time);
+		case direcrion8::left:
 			frame += 0.023 * time;
 			if (frame > 7) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250)); 
-			sprt->move(-0.5 * time, 0); break;
-		case 3:
-			frame += 0.023 * time;
-			if (frame > 7) {
-				frame = 0;
-			}
-			sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250));
-			sprt->move(0, -0.5 * time); break;
-		case 4:
-			frame += 0.023 * time;
-			if (frame > 7) {
-				frame = 0;
-			}
-			sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250));
-			sprt->move(0, 0.5 * time); break;
-		case 5:
-			frame += 0.023 * time;
-			if (frame > 7) {
-				frame = 0;
-			}
-			sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250));
-			sprt->move(0.5 * time, -0.5 * time);
-			last_direction = 1; break;
-		case 6:
-			frame += 0.023 * time;
-			if (frame > 7) {
-				frame = 0;
-			}
-			sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250));
-			sprt->move(-0.5 * time, -0.5 * time);
-			last_direction = 2; break;
-		case 7:
-			frame += 0.023 * time;
-			if (frame > 7) {
-				frame = 0;
-			}
-			sprt->setTextureRect(IntRect(400 * int(frame), 250, 400, 250));
-			sprt->move(0.5 * time, 0.5 * time);
-			last_direction = 1; break;
-		case 8:
-			frame += 0.023 * time;
-			if (frame > 7) {
-				frame = 0;
-			}
-			sprt->setTextureRect(IntRect(400 * int(frame) + 400, 250, -400, 250));
-			sprt->move(-0.5 * time, 0.5 * time);
-			last_direction = 2; break;
-		default:
-			switch (last_direction) {
-			case 1:
-				//sprt->setTextureRect(IntRect(0, 250, 300, 250)); break;
-			case 2:
-				//sprt->setTextureRect(IntRect(300, 250, -300, 250)); break;
-			default:
-				break;
-			}
-			break;
+			sprite_rect = IntRect(400 * int(frame) + 400, 250, -400, 250);
+			pos.x = pos.x + (-0.5 * time);
+		default: break;
 		}
 	}
 	last_direction = direction;
 	direction = 0;
-	HP->setPosition(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2) - (HP->getSize().width / 2) + 40, sprt->getGlobalBounds().top + sprt->getGlobalBounds().height);
-	fl_rect = sprt->getGlobalBounds();
-	rect_collis->setBounds(IntRect(sprt->getGlobalBounds().left + 140, sprt->getGlobalBounds().top, 165, sprt->getGlobalBounds().height));
-	pos.x = sprt->getGlobalBounds().left;
-	pos.y = sprt->getGlobalBounds().top;
+
+	HP->setPosition(pos.x + (abs(sprite_rect.width) / 2) - (HP->getSize().width / 2) + 25, pos.y + abs(sprite_rect.height));
+	rect_collis->setPosition(pos.x + 100, pos.y + 20);
 }
 
 void __fastcall Character::attack(float time) {
@@ -413,13 +229,13 @@ void __fastcall Character::attack(float time) {
 			frame = 6;
 			isDead = true;
 		}
-		sprt->setTextureRect(IntRect(400 * int(frame) + 400, 0, -400, 250));
+		sprite_rect = IntRect(400 * int(frame) + 400, 0, -400, 250);
 	} else {
 		frame += 0.023 * time;
 		if (frame > 7) {
 			frame = 0;
 		}
-		sprt->setTextureRect(IntRect(400 * int(frame) + 400, 500, -400, 250));
+		sprite_rect = IntRect(400 * int(frame) + 400, 500, -400, 250);
 	}
 }
 
@@ -439,36 +255,42 @@ bool Character::isCooldown(float time) {
 	}
 }
 
-void Character::render(RenderWindow &wd) noexcept {
-	rect_collis->render(wd);
-	wd.draw(*sprt);
-	HP->changeBar(health);
-	HP->render(wd);
+void Character::render(RenderWindow& wd, Sprite* ptr_sprite) noexcept {
+	if (visible) {
+		ptr_sprite->setPosition(pos.x, pos.y);
+		ptr_sprite->setTextureRect(sprite_rect);
+		wd.draw(*ptr_sprite);
+		HP->changeBar(health);
+		HP->render(wd);
+	}
 }
 
-void Character::render(RenderWindow *wd) noexcept {
-	rect_collis->render(wd);
-	wd->draw(*sprt);
+void Character::render(RenderWindow* wd, Sprite* ptr_sprite) noexcept {
+	ptr_sprite->setPosition(pos.x, pos.y);
+	ptr_sprite->setTextureRect(sprite_rect);
+	wd->draw(*ptr_sprite);
 	HP->changeBar(health);
 	HP->render(wd);
 }
 //----------------------------------Персанаж-Character-Конец------------------------------
 
 //---------------------------Статический-объект-ObjectStatic-Начало------------------------------
-ObjectStatic::ObjectStatic(Texture* ptr_texture, float X, float Y) {
+ObjectStatic::ObjectStatic(const Sprite &ptr_sprite, float X, float Y) : 
+	visible(true)
+	{
 	pos.x = X;
 	pos.y = Y;
 
-	sprt = new Sprite;
-	sprt->setTexture(*ptr_texture);
-	sprt->setTextureRect(IntRect(0, 0, ptr_texture->getSize().x, ptr_texture->getSize().y));
-	sprt->setPosition(pos.x, pos.y);
+	//sprt = new Sprite;
+	//sprt->setTexture(*ptr_texture);
+	//sprt->setTextureRect(IntRect(0, 0, ptr_texture->getSize().x, ptr_texture->getSize().y));
+	//sprt->setPosition(pos.x, pos.y);
 
-	rect_collis = new Collision(IntRect(0, 0, 0, 0));
+	sprite_rect = IntRect(0, 0, ptr_sprite.getGlobalBounds().width, ptr_sprite.getGlobalBounds().height);
+	rect_collis = new Collision(IntRect(pos.x, pos.x, ptr_sprite.getGlobalBounds().width, ptr_sprite.getGlobalBounds().height));
 }
 
 ObjectStatic::~ObjectStatic() {
-	delete sprt;
 	delete rect_collis;
 }
 
@@ -476,43 +298,39 @@ axes_i ObjectStatic::getPosition() {
 	return pos;
 }
 
-FloatRect ObjectStatic::getSize() {
-	return sprt->getGlobalBounds();
-}
-
-void ObjectStatic::setRect(const IntRect &bound) {
-	sprt->setTextureRect(IntRect(bound.left, bound.top, bound.width, bound.height));
-}
-
 void __fastcall ObjectStatic::setPosition(int x, int y) {
 	pos.x = x;
 	pos.y = y;
-
-	sprt->setPosition(pos.x, pos.y);
 	rect_collis->setPosition(pos.x, pos.y);
 }
 
 void ObjectStatic::setPosition(const axes_i &xy) {
 	pos = xy;
-
-	sprt->setPosition(pos.x, pos.y);
 	rect_collis->setPosition(xy);
 }
 
-void ObjectStatic::render(RenderWindow &wd) {
-	wd.draw(*sprt);
+void ObjectStatic::render(RenderWindow &wd, Sprite *ptr_sprite) {
+	if (visible) {
+		ptr_sprite->setPosition(pos.x, pos.y);
+		ptr_sprite->setTextureRect(sprite_rect);
+		wd.draw(*ptr_sprite);
+	}	
 }
 
-void ObjectStatic::render(RenderWindow *wd) {
-	wd->draw(*sprt);
+void ObjectStatic::render(RenderWindow *wd, Sprite *ptr_sprite) {
+	if (visible) {
+		ptr_sprite->setPosition(pos.x, pos.y);
+		ptr_sprite->setTextureRect(sprite_rect);
+		wd->draw(*ptr_sprite);
+	}
 }
 //----------------------------------Статический-объект-ObjectStatic-Конец-------------------------------
 
 //-------------------------------Анимированный-объект-ObjectAnimated-Начало------------------------------
-ObjectAnimated::ObjectAnimated(Texture* ptr_texture, float X, float Y) :
+ObjectAnimated::ObjectAnimated(const Sprite &ptr_sprite, float X, float Y) :
 	frame(0),
 	end(false),
-	ObjectStatic(ptr_texture, X, Y)
+	ObjectStatic(ptr_sprite, X, Y)
 	{	
 }
 
@@ -2100,22 +1918,14 @@ void _interface::message::render(RenderWindow *wd) noexcept {
 
 //-----------------------------Коллизия-Collision-Начало---------------------------------------
 Collision::Collision(const IntRect &rect) :
-	active(true),
-	visible_deb(false)
+	active(true)
 	{
 	pos.x = rect.left;
 	pos.y = rect.top;
 	rect_collis = rect;
-
-	main = new RectangleShape;
-	main->setPosition(Vector2f(rect_collis.left, rect_collis.top));
-	main->setSize(Vector2f(rect_collis.width, rect_collis.height));
-	main->setFillColor(Color::Red);
 }
 
-Collision::~Collision() {
-	delete main;
-}
+Collision::~Collision() {}
 
 void __fastcall Collision::setPosition(int x, int y) {
 	pos.x = x;
@@ -2123,7 +1933,6 @@ void __fastcall Collision::setPosition(int x, int y) {
 	
 	rect_collis.left = pos.x;
 	rect_collis.top = pos.y;
-	main->setPosition(Vector2f(pos.x, pos.y));
 }
 
 void Collision::setPosition(const axes_i &xy) {
@@ -2131,7 +1940,6 @@ void Collision::setPosition(const axes_i &xy) {
 
 	rect_collis.left = pos.x;
 	rect_collis.top = pos.y;
-	main->setPosition(Vector2f(pos.x, pos.y));
 }
 
 axes_i Collision::getPosition() {
@@ -2146,20 +1954,6 @@ void Collision::setBounds(const IntRect &rect) {
 	pos.x = rect.left;
 	pos.y = rect.top;
 	rect_collis = rect;
-	main->setPosition(Vector2f(pos.x, pos.y));
-	main->setSize(Vector2f(rect_collis.width, rect_collis.height));
-}
-
-void Collision::render(RenderWindow &wd) {
-	if (visible_deb) {
-		wd.draw(*main);
-	}
-}
-
-void Collision::render(RenderWindow *wd) {
-	if (visible_deb) {
-		wd->draw(*main);
-	}
 }
 //-----------------------------Коллизия-Collision-Конец----------------------------------------
 
@@ -2230,32 +2024,32 @@ void _interface::min_bar::render(RenderWindow *wd) noexcept {
 //-----------------------------Мини-полоса-min_bar-Конец-----------------------------------------
 
 //-----------------------------------Разрушитель-замков-DestroerCastle-Начало-----------------------------------------
-DestroerCastle::DestroerCastle(Texture* ptr_texture, float X_POS, float Y_POS, int hp) :
-	BaseCharacter(ptr_texture, X_POS, Y_POS, hp)
+DestroerCastle::DestroerCastle(const Sprite& ptr_sprite, float X_POS, float Y_POS, int hp) :
+	BaseCharacter(ptr_sprite, X_POS, Y_POS, hp)
 	{
-	sprt->setTextureRect(IntRect(0, 0, 600, 350));
-	sprt->setPosition(pos.x, pos.y);
 	direction = 0;
 	last_direction = direction;
-
-	HP = new _interface::min_bar(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2), sprt->getGlobalBounds().top + sprt->getGlobalBounds().height, health, 0, Color::Black, Color::Red);
+	sprite_rect = IntRect(0, 0, 600, 350);
+	rect_collis = new Collision(IntRect(pos.x, pos.y, abs(sprite_rect.width), abs(sprite_rect.height)));
+	HP = new _interface::min_bar(pos.x + (abs(sprite_rect.width) / 2), pos.y + abs(sprite_rect.top), health, 0, Color::Black, Color::Red);
 }
 
 DestroerCastle::~DestroerCastle() {
 	delete HP;
+	delete rect_collis;
 }
 
 void __fastcall DestroerCastle::setPosition(float x, float y) noexcept {
 	pos.x = x;
 	pos.y = y;
-
-	sprt->setPosition(pos.x, pos.y);
+	rect_collis->setPosition(pos.x, pos.y);
+	HP->setPosition(pos.x + (abs(sprite_rect.width) / 2) - (HP->getSize().width / 2), pos.y + abs(sprite_rect.height));
 }
 
-void DestroerCastle::setPosition(const axes_f &xy) noexcept {
+void DestroerCastle::setPosition(const axes_f& xy) noexcept {
 	pos = xy;
-
-	sprt->setPosition(pos.x, pos.y);
+	rect_collis->setPosition(pos.x, pos.y);
+	HP->setPosition(pos.x + (abs(sprite_rect.width) / 2) - (HP->getSize().width / 2), pos.y + abs(sprite_rect.height));
 }
 
 void __fastcall DestroerCastle::move(float time, int direct) noexcept {
@@ -2272,7 +2066,7 @@ void __fastcall DestroerCastle::move(float time, int direct) noexcept {
 			frame = 5;
 			isDead = true;
 		}
-		sprt->setTextureRect(IntRect(600 * int(frame), 700, 600, 350));
+		sprite_rect = IntRect(600 * int(frame), 700, 600, 350);
 	} else {
 		switch (direction) { //Направление движения
 		case direcrion8::right:
@@ -2280,25 +2074,22 @@ void __fastcall DestroerCastle::move(float time, int direct) noexcept {
 			if (frame > 4) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(600 * int(frame) + 600, 0, -600, 350)); 
-			sprt->move(0.5 * time, 0); break;
+			sprite_rect = IntRect(600 * int(frame) + 600, 0, -600, 350);
+			pos.x = pos.x + (0.5 * time); break;
 		case direcrion8::left:
 			frame += 0.023 * time;
 			if (frame > 4) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(600 * int(frame), 0, 600, 350));
-			sprt->move(-0.5 * time, 0); break;
-		default:
-			break;
+			sprite_rect = IntRect(600 * int(frame), 0, 600, 350);
+			pos.x = pos.x + (-0.5 * time); break;
+		default: break;
 		}
 	}
 	last_direction = direction;
 	direction = 0;
-	HP->setPosition(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2) - (HP->getSize().width / 2), sprt->getGlobalBounds().top + sprt->getGlobalBounds().height);
-	fl_rect = sprt->getGlobalBounds();
-	pos.x = sprt->getGlobalBounds().left;
-	pos.y = sprt->getGlobalBounds().top;
+	HP->setPosition(pos.x + (abs(sprite_rect.width) / 2) - (HP->getSize().width / 2), pos.y + abs(sprite_rect.height));
+	rect_collis->setPosition(pos.x, pos.y);
 }
 
 void __fastcall DestroerCastle::attack(float time) {
@@ -2313,13 +2104,13 @@ void __fastcall DestroerCastle::attack(float time) {
 			frame = 5;
 			isDead = true;
 		}
-		sprt->setTextureRect(IntRect(600 * int(frame), 700, 600, 350));
+		sprite_rect = IntRect(600 * int(frame), 700, 600, 350);
 	} else {
 		frame += 0.023 * time;
 		if (frame > 6) {
 			frame = 0;
 		}
-		sprt->setTextureRect(IntRect(600 * int(frame), 350, 600, 350));
+		sprite_rect = IntRect(600 * int(frame), 350, 600, 350);
 	}
 }
 
@@ -2327,7 +2118,8 @@ bool DestroerCastle::isCooldown(float time) {
 	if (!cooldown) {
 		timer_cooldown = 0;
 		return false;
-	} else {
+	}
+	else {
 		timer_cooldown += time;
 		if (timer_cooldown >= 3) {
 			cooldown = false;
@@ -2339,32 +2131,36 @@ bool DestroerCastle::isCooldown(float time) {
 	}
 }
 
-void DestroerCastle::render(RenderWindow &wd) noexcept {
-	wd.draw(*sprt);
-	HP->changeBar(health);
-	HP->render(wd);
+void DestroerCastle::render(RenderWindow& wd, Sprite* ptr_sprite) noexcept {
+	if (visible) {
+		ptr_sprite->setPosition(pos.x, pos.y);
+		ptr_sprite->setTextureRect(sprite_rect);
+		wd.draw(*ptr_sprite);
+		HP->changeBar(health);
+		HP->render(wd);
+	}
 }
 
-void DestroerCastle::render(RenderWindow *wd) noexcept {
-	wd->draw(*sprt);
-	HP->changeBar(health);
-	HP->render(wd);
+void DestroerCastle::render(RenderWindow* wd, Sprite* ptr_sprite) noexcept {
+	if (visible) {
+		ptr_sprite->setPosition(pos.x, pos.y);
+		ptr_sprite->setTextureRect(sprite_rect);
+		wd->draw(*ptr_sprite);
+		HP->changeBar(health);
+		HP->render(wd);
+	}
 }
 //-----------------------------------Разрушитель-замков-DestroerCastle-Конец------------------------------------------
 
 //-----------------------------------------Копейщик-Spearman-Начало------------------------------------------
-Spearman::Spearman(Texture* ptr_texture, float X_POS, float Y_POS, int hp) :
-	BaseCharacter(ptr_texture, X_POS, Y_POS, hp)
+Spearman::Spearman(const Sprite& ptr_sprite, float X_POS, float Y_POS, int hp) :
+	BaseCharacter(ptr_sprite, X_POS, Y_POS, hp)
 	{
-	sprt->setTextureRect(IntRect(0, 0, 600, 350));
-	sprt->setPosition(pos.x, pos.y);
 	direction = 0;
 	last_direction = direction;
-
-	fl_rect = sprt->getGlobalBounds();
-	rect_collis = new Collision(IntRect(sprt->getGlobalBounds().left + 120, sprt->getGlobalBounds().top, 115, sprt->getGlobalBounds().height / 2));
-
-	HP = new _interface::min_bar(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2), sprt->getGlobalBounds().top + sprt->getGlobalBounds().height, health, 0, Color::Black, Color::Red);
+	sprite_rect = IntRect(300 * int(frame), 0, 300, 180);
+	rect_collis = new Collision(IntRect(pos.x + 15, pos.y, abs(sprite_rect.width) - 30, abs(sprite_rect.height)));
+	HP = new _interface::min_bar(pos.x + (sprite_rect.width / 2), pos.y + sprite_rect.height, health, 0, Color::Black, Color::Red);
 }
 
 Spearman::~Spearman() {
@@ -2374,18 +2170,14 @@ Spearman::~Spearman() {
 void __fastcall Spearman::setPosition(float x, float y) noexcept {
 	pos.x = x;
 	pos.y = y;
-
-	sprt->setPosition(pos.x, pos.y);
-	fl_rect = sprt->getGlobalBounds();
-	rect_collis->setPosition(pos.x + 120, pos.y);
+	rect_collis->setPosition(pos.x + 15, pos.y);
+	HP->setPosition(pos.x + (abs(sprite_rect.width) / 2) - (HP->getSize().width / 2) + 20, pos.y + abs(sprite_rect.height));
 }
 
-void Spearman::setPosition(const axes_f &xy) noexcept {
+void Spearman::setPosition(const axes_f& xy) noexcept {
 	pos = xy;
-
-	sprt->setPosition(pos.x, pos.y);
-	fl_rect = sprt->getGlobalBounds();
-	rect_collis->setPosition(pos.x + 120, pos.y);
+	rect_collis->setPosition(pos.x + 15, pos.y);
+	HP->setPosition(pos.x + (abs(sprite_rect.width) / 2) - (HP->getSize().width / 2) + 20, pos.y + abs(sprite_rect.height));
 }
 
 void __fastcall Spearman::move(float time, int direct) noexcept {
@@ -2402,7 +2194,7 @@ void __fastcall Spearman::move(float time, int direct) noexcept {
 			frame = 6;
 			isDead = true;
 		}
-		sprt->setTextureRect(IntRect(300 * int(frame) + 300, 360, -300, 180));
+		sprite_rect = IntRect(300 * int(frame) + 300, 360, -300, 180);
 	} else {
 		switch (direction) { //Направление движения
 		case direcrion8::right:
@@ -2410,26 +2202,22 @@ void __fastcall Spearman::move(float time, int direct) noexcept {
 			if (frame > 7) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(300 * int(frame), 0, 300, 180));
-			sprt->move(0.5 * time, 0); break;
+			sprite_rect = IntRect(300 * int(frame), 0, 300, 180);
+			pos.x = pos.x + (0.5 * time); break;
 		case direcrion8::left:
 			frame += 0.023 * time;
 			if (frame > 7) {
 				frame = 0;
 			}
-			sprt->setTextureRect(IntRect(300 * int(frame) + 300, 0, -300, 180));
-			sprt->move(-0.5 * time, 0); break;
-		default:
-			break;
+			sprite_rect = IntRect(300 * int(frame) + 300, 0, -300, 180);
+			pos.x = pos.x + (-0.5 * time); break;
+		default: break;
 		}
 	}
 	last_direction = direction;
 	direction = 0;
-	HP->setPosition(sprt->getGlobalBounds().left + (sprt->getGlobalBounds().width / 2) - (HP->getSize().width / 2) + 30, sprt->getGlobalBounds().top + sprt->getGlobalBounds().height);
-	fl_rect = sprt->getGlobalBounds();
-	rect_collis->setBounds(IntRect(sprt->getGlobalBounds().left + 120, sprt->getGlobalBounds().top, 115, sprt->getGlobalBounds().height / 2));
-	pos.x = sprt->getGlobalBounds().left;
-	pos.y = sprt->getGlobalBounds().top;
+	HP->setPosition(pos.x + (abs(sprite_rect.width) / 2) - (HP->getSize().width / 2) + 20, pos.y + abs(sprite_rect.height));
+	rect_collis->setPosition(pos.x + 15, pos.y);
 }
 
 void __fastcall Spearman::attack(float time) {
@@ -2444,13 +2232,13 @@ void __fastcall Spearman::attack(float time) {
 			frame = 6;
 			isDead = true;
 		}
-		sprt->setTextureRect(IntRect(300 * int(frame) + 300, 360, -300, 180));
+		sprite_rect = IntRect(300 * int(frame) + 300, 360, -300, 180);
 	} else {
 		frame += 0.023 * time;
 		if (frame > 6) {
 			frame = 0;
 		}
-		sprt->setTextureRect(IntRect(300 * int(frame) + 300, 180, -300, 180));
+		sprite_rect = IntRect(300 * int(frame) + 300, 180, -300, 180);
 	}
 }
 
@@ -2470,18 +2258,24 @@ bool Spearman::isCooldown(float time) {
 	}
 }
 
-void Spearman::render(RenderWindow &wd) noexcept {
-	rect_collis->render(wd);
-	wd.draw(*sprt);
-	HP->changeBar(health);
-	HP->render(wd);
+void Spearman::render(RenderWindow& wd, Sprite* ptr_sprite) noexcept {
+	if (visible) {
+		ptr_sprite->setPosition(pos.x, pos.y);
+		ptr_sprite->setTextureRect(sprite_rect);
+		wd.draw(*ptr_sprite);
+		HP->changeBar(health);
+		HP->render(wd);
+	}
 }
 
-void Spearman::render(RenderWindow *wd) noexcept {
-	rect_collis->render(wd);
-	wd->draw(*sprt);
-	HP->changeBar(health);
-	HP->render(wd);
+void Spearman::render(RenderWindow* wd, Sprite* ptr_sprite) noexcept {
+	if (visible) {
+		ptr_sprite->setPosition(pos.x, pos.y);
+		ptr_sprite->setTextureRect(sprite_rect);
+		wd->draw(*ptr_sprite);
+		HP->changeBar(health);
+		HP->render(wd);
+	}
 }
 //------------------------------------------Копейщик-Spearman-Конец------------------------------------------
 
@@ -2520,17 +2314,16 @@ void _interface::background_color::render(RenderWindow *wd) noexcept {
 //-------------------------------------Задний-фон-background_color-Конец------------------------------------------
 
 //---------------------------------------Ледяной-шар-IceBall-Начало------------------------------------------
-IceBall::IceBall(Texture* ptr_texture, float X_POS, float Y_POS, int hp) :
-	BaseCharacter(ptr_texture, X_POS, Y_POS, hp)
+IceBall::IceBall(const Sprite &ptr_sprite, float X_POS, float Y_POS, int hp) :
+	BaseCharacter(ptr_sprite, X_POS, Y_POS, hp)
 	{
-	visible = true;
-	sprt->setTextureRect(IntRect(0, 0, 400, 120));
-	sprt->setPosition(pos.x, pos.y);
+	//sprt->setTextureRect(IntRect(0, 0, 400, 120));
+	//sprt->setPosition(pos.x, pos.y);
 
-	fl_rect = sprt->getGlobalBounds();
-	rect_collis = new Collision(IntRect(sprt->getGlobalBounds().left, sprt->getGlobalBounds().top, 120, sprt->getGlobalBounds().height));
+	sprite_rect = IntRect(0, 0, 400, 120); //fl_rect = sprt->getGlobalBounds();
+	rect_collis = new Collision(IntRect(pos.x, pos.y, 120, abs(sprite_rect.height)));
 
-	HP = new _interface::min_bar(rect_collis->getBounds().left + (rect_collis->getBounds().width / 2) - 70, sprt->getGlobalBounds().top + sprt->getGlobalBounds().height, health, 0, Color::Black, Color::Green);
+	HP = new _interface::min_bar(pos.x + (abs(sprite_rect.width) / 2) - 200, pos.y + abs(sprite_rect.height), health, 0, Color::Black, Color::Green);
 }
 
 IceBall::~IceBall() {
@@ -2540,18 +2333,14 @@ IceBall::~IceBall() {
 void __fastcall IceBall::setPosition(float x, float y) noexcept {
 	pos.x = x;
 	pos.y = y;
-
-	sprt->setPosition(pos.x, pos.y);
-	fl_rect = sprt->getGlobalBounds();
 	rect_collis->setPosition(pos.x, pos.y);
+	HP->setPosition(pos.x + (abs(sprite_rect.width) / 2) - 200, pos.y + abs(sprite_rect.height));
 }
 
 void IceBall::setPosition(const axes_f &xy) noexcept {
 	pos = xy;
-
-	sprt->setPosition(pos.x, pos.y);
-	fl_rect = sprt->getGlobalBounds();
 	rect_collis->setPosition(pos.x, pos.y);
+	HP->setPosition(pos.x + (abs(sprite_rect.width) / 2) - 200, pos.y + abs(sprite_rect.height));
 }
 
 void __fastcall IceBall::update(float time) noexcept {
@@ -2566,13 +2355,13 @@ void __fastcall IceBall::update(float time) noexcept {
 			frame = 4;
 			isDead = true;
 		}
-		sprt->setTextureRect(IntRect(400 * int(frame), 120, 400, 120));
+		sprite_rect = IntRect(400 * int(frame), 120, 400, 120); //sprt->setTextureRect(IntRect(400 * int(frame), 120, 400, 120));
 	} else {
 		frame += 0.023 * time;
 		if (frame > 5) {
 			frame = 0;
 		}
-		sprt->setTextureRect(IntRect(400 * int(frame), 0, 400, 120));
+		sprite_rect = IntRect(400 * int(frame), 0, 400, 120); //sprt->setTextureRect(IntRect(400 * int(frame), 0, 400, 120));
 	}	
 }
 
@@ -2592,19 +2381,21 @@ bool IceBall::isCooldown(float time) {
 	}
 }
 
-void IceBall::render(RenderWindow &wd) noexcept {
+void IceBall::render(RenderWindow &wd, Sprite* ptr_sprite) noexcept {
 	if (visible) {
-		rect_collis->render(wd);
-		wd.draw(*sprt);
+		ptr_sprite->setPosition(pos.x, pos.y);
+		ptr_sprite->setTextureRect(sprite_rect);
+		wd.draw(*ptr_sprite);
 		HP->changeBar(health);
 		HP->render(wd);
 	}
 }
 
-void IceBall::render(RenderWindow *wd) noexcept {
+void IceBall::render(RenderWindow *wd, Sprite* ptr_sprite) noexcept {
 	if (visible) {
-		rect_collis->render(wd);
-		wd->draw(*sprt);
+		ptr_sprite->setPosition(pos.x, pos.y);
+		ptr_sprite->setTextureRect(sprite_rect);
+		wd->draw(*ptr_sprite);
 		HP->changeBar(health);
 		HP->render(wd);
 	}
@@ -2622,10 +2413,9 @@ BaseCharacter::BaseCharacter() :
 	timer_cooldown(0),
 	frame(0)
 	{
-	sprt = new Sprite;
 }
 
-BaseCharacter::BaseCharacter(Texture* ptr_texture, float x, float y, int _hp) :
+BaseCharacter::BaseCharacter(const Sprite& ptr_sprite, float x, float y, int _hp) :
 	pos(x, y),
 	health(_hp),
 	visible(true),
@@ -2635,11 +2425,10 @@ BaseCharacter::BaseCharacter(Texture* ptr_texture, float x, float y, int _hp) :
 	timer_cooldown(0),
 	frame(0)
 	{
-	sprt = new Sprite;
-	sprt->setTexture(*ptr_texture);
+	sprite_rect = static_cast<IntRect>(ptr_sprite.getGlobalBounds());
 }
 
-BaseCharacter::BaseCharacter(Texture* ptr_texture, const axes_f &xy, int _hp) :
+BaseCharacter::BaseCharacter(const Sprite& ptr_sprite, const axes_f& xy, int _hp) :
 	pos(xy),
 	health(_hp),
 	visible(true),
@@ -2649,20 +2438,17 @@ BaseCharacter::BaseCharacter(Texture* ptr_texture, const axes_f &xy, int _hp) :
 	timer_cooldown(0),
 	frame(0)
 	{
-	sprt = new Sprite;
-	sprt->setTexture(*ptr_texture);
+	sprite_rect = static_cast<IntRect>(ptr_sprite.getGlobalBounds());
 }
 
-BaseCharacter::~BaseCharacter() {
-	delete sprt;
-}
+BaseCharacter::~BaseCharacter() {}
 
 axes_f BaseCharacter::getPosition() {
 	return pos;
 }
 
-FloatRect BaseCharacter::getSize() {
-	return fl_rect;
+IntRect BaseCharacter::getSize() {
+	return sprite_rect;
 }
 
 void BaseCharacter::setPosition(float x, float y) {
@@ -2674,15 +2460,19 @@ void BaseCharacter::setPosition(const axes_f &xy) {
 	pos = xy;
 }
 
-void BaseCharacter::render(RenderWindow &wd) {
+void BaseCharacter::render(RenderWindow& wd, Sprite* ptr_sprite) {
 	if (visible) {
-		wd.draw(*sprt);
+		ptr_sprite->setPosition(pos.x, pos.y);
+		ptr_sprite->setTextureRect(sprite_rect);
+		wd.draw(*ptr_sprite);
 	}
 }
 
-void BaseCharacter::render(RenderWindow *wd) {
+void BaseCharacter::render(RenderWindow* wd, Sprite* ptr_sprite) {
 	if (visible) {
-		wd->draw(*sprt);
+		ptr_sprite->setPosition(pos.x, pos.y);
+		ptr_sprite->setTextureRect(sprite_rect);
+		wd->draw(*ptr_sprite);
 	}
 }
 //--------------------------------База-Характера-BaseCharacter-Конец------------------------------------------
@@ -2692,7 +2482,6 @@ _interface::BaseInerface::BaseInerface() :
 	pos(axes_i(0, 0)),
 	visible(true)
 	{
-
 }
 
 _interface::BaseInerface::BaseInerface(int x, int y, const FloatRect &rect) :
@@ -2700,7 +2489,6 @@ _interface::BaseInerface::BaseInerface(int x, int y, const FloatRect &rect) :
 	fl_rect(rect),
 	visible(true)
 	{
-
 }
 
 _interface::BaseInerface::BaseInerface(const axes_i &xy, const FloatRect &rect) :
@@ -2708,7 +2496,6 @@ _interface::BaseInerface::BaseInerface(const axes_i &xy, const FloatRect &rect) 
 	fl_rect(rect),
 	visible(true)
 	{
-
 }
 
 _interface::BaseInerface::~BaseInerface() {
@@ -2741,18 +2528,14 @@ void _interface::BaseInerface::render(RenderWindow *wd) {
 //--------------------------------База-Интерфейса-BaseInterface-Конец------------------------------------------
 
 //--------------------------------------Метеорит-Meteor-Начало------------------------------------
-Meteor::Meteor(Texture* ptr_texture, Texture* ptr_texture2, float X, float Y) :
+Meteor::Meteor(const Sprite &ptr_sprite, float X, float Y) :
 	cooldown(false),
 	reached_point(false),
 	is_sound_play(false),
 	current_len(0),
-	ObjectAnimated(ptr_texture, X, Y)
-{
-	sprt_meteor = new Sprite;
-	sprt_meteor->setTexture(*ptr_texture2);
-
-	sprt->setTextureRect(IntRect(400, 0, 400, 400));
-	sprt->setPosition(pos.x, pos.y);
+	ObjectAnimated(ptr_sprite, X, Y) {
+	sprite_rect = IntRect(400, 0, 400, 400); 
+	rect_collis->setBounds(IntRect(0, 0, 1, 1));
 
 	mouse_point.x = X + 200;
 	mouse_point.y = Y + 200;
@@ -2763,9 +2546,7 @@ Meteor::Meteor(Texture* ptr_texture, Texture* ptr_texture2, float X, float Y) :
 	full_len = sqrt(pow(mouse_point.x - start_point.x, 2) + pow(mouse_point.y - start_point.y, 2));
 }
 
-Meteor::~Meteor() {
-	delete sprt_meteor;
-}
+Meteor::~Meteor() {}
 
 void __fastcall Meteor::update(float time) {
 
@@ -2778,15 +2559,15 @@ void __fastcall Meteor::update(float time) {
 		}
 
 		if (frame >= 0 && frame <= 5) {
-			sprt->setTextureRect(IntRect(400 * int(frame), 0, 400, 400));
+			sprite_rect = IntRect(400 * int(frame), 0, 400, 400); 
 		} else if (frame >= 6 && frame <= 11) {
-			sprt->setTextureRect(IntRect(400 * (int(frame) - 6), 400, 400, 400));
+			sprite_rect = IntRect(400 * (int(frame) - 6), 400, 400, 400);
 		} else if (frame >= 12 && frame <= 17) {
-			sprt->setTextureRect(IntRect(400 * (int(frame) - 12), 800, 400, 400));
+			sprite_rect = IntRect(400 * (int(frame) - 12), 800, 400, 400);
 		} else if (frame >= 18 && frame <= 23) {
-			sprt->setTextureRect(IntRect(400 * (int(frame) - 18), 1200, 400, 400));
+			sprite_rect = IntRect(400 * (int(frame) - 18), 1200, 400, 400); 
 		}
-		rect_collis->setBounds(IntRect(pos.x, pos.y, 400, 400));
+		rect_collis->setBounds(IntRect(pos.x + 25, pos.y + 60, sprite_rect.width - 50, sprite_rect.height - 50));
 	}
 }
 
@@ -2798,26 +2579,37 @@ void Meteor::isReachedPoint(float time) {
 		C.x = C.x * (current_len / full_len);
 		C.y = C.y * (current_len / full_len);
 		C = start_point + C;
-		sprt_meteor->setPosition(C.x - (sprt_meteor->getGlobalBounds().width / 2), C.y - (sprt_meteor->getGlobalBounds().height / 2));
+		pos_meteor.x = C.x - (120.f / 2.f);
+		pos_meteor.y = C.y - (120.f / 2.f);
 		current_len += 3.6 * time;
 	} else {
 		reached_point = true;
 	}
 }
 
-void Meteor::render(RenderWindow& wd) {
-	if (reached_point) {
-		wd.draw(*sprt);
-	} else {
-		wd.draw(*sprt_meteor);
+void Meteor::render(RenderWindow& wd, Sprite* ptr_sprite, Sprite* ptr_sprite_meteor) {
+	if (visible) {
+		if (reached_point) {
+			ptr_sprite->setPosition(pos.x, pos.y);
+			ptr_sprite->setTextureRect(sprite_rect);
+			wd.draw(*ptr_sprite);
+		} else {
+			ptr_sprite_meteor->setPosition(pos_meteor.x, pos_meteor.y);
+			wd.draw(*ptr_sprite_meteor);
+		}
 	}
 }
 
-void Meteor::render(RenderWindow* wd) {
-	if (reached_point) {
-		wd->draw(*sprt);
-	} else {
-		wd->draw(*sprt_meteor);
+void Meteor::render(RenderWindow *wd, Sprite *ptr_sprite, Sprite *ptr_sprite_meteor) {
+	if (visible) {
+		if (reached_point) {
+			ptr_sprite->setPosition(pos.x, pos.y);
+			ptr_sprite->setTextureRect(sprite_rect);
+			wd->draw(*ptr_sprite);
+		} else {
+			ptr_sprite_meteor->setPosition(pos_meteor.x, pos_meteor.y);
+			wd->draw(*ptr_sprite_meteor);
+		}
 	}
 }
 //--------------------------------------Метеорит-Meteor-Конец------------------------------------

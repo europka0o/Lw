@@ -123,9 +123,8 @@ class Collision {
 	private:
 		axes_i pos;
 		IntRect rect_collis;
-		RectangleShape *main;
 	public:
-		bool active, visible_deb;
+		bool active;
 		/// <summary>
 		/// Конструктор
 		/// </summary>
@@ -159,8 +158,6 @@ class Collision {
 		/// </summary>
 		/// <param name="rect">Струткура IntRect с новыми параметрами</param>
 		void setBounds(const IntRect &rect);
-		void render(RenderWindow& wd);
-		void render(RenderWindow* wd);
 };
 
 typedef Collision Trigger;
@@ -168,31 +165,32 @@ typedef Collision Trigger;
 class BaseCharacter {
 	protected:
 		axes_f pos;
-		Sprite *sprt;
-		FloatRect fl_rect;
+		IntRect sprite_rect;
 		float frame, timer_cooldown;
 		bool zeroing;
 	public:
 		BaseCharacter();
-		BaseCharacter(Texture* ptr_texture, float x, float y, int _hp);
-		BaseCharacter(Texture* ptr_texture, const axes_f &xy, int _hp);
+		BaseCharacter(const Sprite &ptr_sprite, float x, float y, int _hp);
+		BaseCharacter(const Sprite &ptr_sprite, const axes_f& xy, int _hp);
 		~BaseCharacter();
 		bool cooldown, isDead, visible;
 		int health;
 		virtual axes_f getPosition();
 		virtual void __fastcall setPosition(float x, float y);
-		virtual void __fastcall setPosition(const axes_f &xy);
-		virtual FloatRect getSize();
-		virtual void render(RenderWindow& wd);
-		virtual void render(RenderWindow* wd);
+		virtual void __fastcall setPosition(const axes_f& xy);
+		virtual IntRect getSize();
+		virtual void render(RenderWindow& wd, Sprite *ptr_sprite);
+		virtual void render(RenderWindow* wd, Sprite *ptr_sprite);
 };
 
 class ObjectStatic {
 	protected:
 		axes_i pos;
 	public:
-		Sprite* sprt;
+		//Sprite* sprt;
 		Collision *rect_collis;
+		IntRect sprite_rect;
+		bool visible;
 		/// <summary>
 		/// Конструктор
 		/// </summary>
@@ -200,23 +198,13 @@ class ObjectStatic {
 		/// <param name="X">Координаты по оси X</param>
 		/// <param name="Y">Координаты по оси Y</param>
 		/// <returns></returns>
-		ObjectStatic(Texture* ptr_texture, float X, float Y);
+		ObjectStatic(const Sprite &ptr_sprite, float X, float Y);
 		~ObjectStatic();
 		/// <summary>
 		/// Возвращает позицию
 		/// </summary>
 		/// <returns>Структура axes_i</returns>
 		virtual axes_i getPosition();
-		/// <summary>
-		/// Возвращает данные о хитбоке: ширина, высота, функции проверки пересечения
-		/// </summary>
-		/// <returns>Структура IntRect</returns>
-		virtual FloatRect getSize();
-		/// <summary>
-		/// Устанавливает новые данные о хитбоксе
-		/// </summary>
-		/// <param name="bound">Струткура IntRect с новыми параметрами</param>
-		virtual void setRect(const IntRect &bound);
 		/// <summary>
 		/// Устанавливает позицию хитбокса по осям X и Y
 		/// </summary>
@@ -228,8 +216,8 @@ class ObjectStatic {
 		/// </summary>
 		/// <param name="xy">Структура axes_i с координатами по осям X и Y</param>
 		virtual void setPosition(const axes_i &xy);
-		virtual void render(RenderWindow &wd);
-		virtual void render(RenderWindow *wd);
+		virtual void render(RenderWindow &wd, Sprite *ptr_sprite);
+		virtual void render(RenderWindow *wd, Sprite *ptr_sprite);
 };
 
 class ObjectAnimated : public ObjectStatic {
@@ -244,7 +232,7 @@ class ObjectAnimated : public ObjectStatic {
 		/// <param name="X">Координаты по оси X</param>
 		/// <param name="Y">Координаты по оси Y</param>
 		/// <returns></returns>
-		ObjectAnimated(Texture* ptr_texture, float X, float Y);
+		ObjectAnimated(const Sprite &ptr_sprite, float X, float Y);
 		~ObjectAnimated();
 		/// <summary>
 		/// Обновление объекта
@@ -644,57 +632,55 @@ namespace _interface {
 
 }; //Конец пространства имен _interface
 
-class Character : public BaseCharacter { 
+class Character : public BaseCharacter {
 	private:
-		int direction, last_direction; 
+		int direction, last_direction;
 		_interface::min_bar* HP;
 	public:
 		Collision* rect_collis;
-		Character(Texture* ptr_texture, float X_POS, float Y_POS, int hp); 
-		~Character(); 
-		void __fastcall setPosition(float x, float y) noexcept override; 
-		void setPosition(const axes_f &xy) noexcept override; 
-		float getPositionX_forCamer() noexcept; 
-		float getPositionY_forCamer() noexcept; 
-		void __fastcall move(float time, int direct = 0) noexcept; 
-		void __fastcall move(float time) noexcept; 
+		Character(const Sprite &ptr_sprite, float X_POS, float Y_POS, int hp);
+		~Character();
+		void __fastcall setPosition(float x, float y) noexcept override;
+		void setPosition(const axes_f& xy) noexcept override;
+		void __fastcall move(float time, int direct = 0) noexcept;
 		void __fastcall attack(float time);
 		bool isCooldown(float time);
-		void render(RenderWindow& wd) noexcept override;
-		void render(RenderWindow* wd) noexcept override;
-};	
+		void render(RenderWindow& wd, Sprite *ptr_sprite) noexcept override;
+		void render(RenderWindow* wd, Sprite *ptr_sprite) noexcept override;
+};
 
 class DestroerCastle : public BaseCharacter {
 	private:
-		int direction, last_direction; 
+		int direction, last_direction;
 		_interface::min_bar* HP;
 	public:
-		DestroerCastle(Texture* ptr_texture, float X_POS, float Y_POS, int hp); 
-		~DestroerCastle(); 
-		void __fastcall setPosition(float x, float y) noexcept override; 
-		void setPosition(const axes_f &xy) noexcept override; 
-		void __fastcall move(float time, int direct) noexcept; 
+		Collision* rect_collis;
+		DestroerCastle(const Sprite &ptr_sprite, float X_POS, float Y_POS, int hp);
+		~DestroerCastle();
+		void __fastcall setPosition(float x, float y) noexcept override;
+		void setPosition(const axes_f& xy) noexcept override;
+		void __fastcall move(float time, int direct) noexcept;
 		void __fastcall attack(float time);
 		bool isCooldown(float time);
-		void render(RenderWindow& wd) noexcept override;
-		void render(RenderWindow* wd) noexcept override;
+		void render(RenderWindow& wd, Sprite *ptr_sprite) noexcept override;
+		void render(RenderWindow* wd, Sprite *ptr_sprite) noexcept override;
 };
 
 class Spearman : public BaseCharacter {
 	private:
-		int direction, last_direction; 
+		int direction, last_direction;
 		_interface::min_bar* HP;
 	public:
 		Collision* rect_collis;
-		Spearman(Texture* ptr_texture, float X_POS, float Y_POS, int hp);
-		~Spearman(); 
+		Spearman(const Sprite &ptr_sprite, float X_POS, float Y_POS, int hp);
+		~Spearman();
 		void __fastcall setPosition(float x, float y) noexcept override;
-		void setPosition(const axes_f &xy) noexcept override;
+		void setPosition(const axes_f& xy) noexcept override;
 		void __fastcall move(float time, int direct) noexcept;
 		void __fastcall attack(float time);
 		bool isCooldown(float time);
-		void render(RenderWindow& wd) noexcept override;
-		void render(RenderWindow* wd) noexcept override;
+		void render(RenderWindow& wd, Sprite *ptr_sprite) noexcept override;
+		void render(RenderWindow* wd, Sprite *ptr_sprite) noexcept override;
 };
 
 class IceBall : public BaseCharacter {
@@ -702,29 +688,29 @@ class IceBall : public BaseCharacter {
 		_interface::min_bar* HP;
 	public:
 		Collision* rect_collis;
-		IceBall(Texture* ptr_texture, float X_POS, float Y_POS, int hp);
+		IceBall(const Sprite &ptr_sprite, float X_POS, float Y_POS, int hp);
 		~IceBall();
 		void __fastcall setPosition(float x, float y) noexcept override;
 		void setPosition(const axes_f &xy) noexcept override;
 		void __fastcall update(float time) noexcept;
 		bool isCooldown(float time);
-		void render(RenderWindow& wd) noexcept override;
-		void render(RenderWindow* wd) noexcept override;
+		void render(RenderWindow& wd, Sprite* ptr_sprite) noexcept override;
+		void render(RenderWindow* wd, Sprite* ptr_sprite) noexcept override;
 };
 
 class Meteor : public ObjectAnimated {
 	private:
-		Sprite* sprt_meteor;
+		axes_f pos_meteor;
 		Vector2f start_point, mouse_point;
 		float current_len, full_len;
 		void isReachedPoint(float time);
 	public:
 		bool cooldown, reached_point, is_sound_play;
-		Meteor(Texture* ptr_texture, Texture* ptr_texture2, float X, float Y);
+		Meteor(const Sprite &ptr_sprite, float X, float Y);
 		~Meteor();
 		void __fastcall update(float time) override final;
-		void render(RenderWindow& wd) override final;
-		void render(RenderWindow* wd) override final;
+		void render(RenderWindow& wd, Sprite *ptr_sprite, Sprite *ptr_sprite_meteor);
+		void render(RenderWindow* wd, Sprite *ptr_sprite, Sprite *ptr_sprite_meteor);
 };
 
 #endif
