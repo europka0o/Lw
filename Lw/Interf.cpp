@@ -1,11 +1,12 @@
 ﻿#include "Interf.h"
 
 //----------------------------------Настройки-Settings-Начало------------------------------
-int settings::createSettings(int ScreenW, int ScreenH, bool VertS, int TxtS, bool FullS, bool Sound, int SoundV) {
+int settings::createSettings(unsigned int ScreenW, unsigned int ScreenH, int AnisF, bool VertS, int TxtS, bool FullS, bool Sound, int SoundV) {
 	fullScreen = FullS;
 	verticalSync = VertS;
 	screenHeight = ScreenH;
 	screenWidth = ScreenW;
+	anisFilt = AnisF;
 	textSize = TxtS;
 	sound = Sound;
 	soundVolume = SoundV;
@@ -14,126 +15,44 @@ int settings::createSettings(int ScreenW, int ScreenH, bool VertS, int TxtS, boo
 
 int settings::saveSettings() {
 	std::ofstream zap;
-	zap.open("settings.cfg");
-	zap << "fullScreen = " << fullScreen << ";\n";
-	zap << "verticalSync = " << verticalSync << ";\n";
-	zap << "screenHeight = " << screenHeight << ";\n";
-	zap << "screenWidth = " << screenWidth << ";\n";
-	zap << "textSize = " << textSize << ";\n";
-	zap << "sound = " << sound << ";\n";
-	zap << "soundVolume = " << soundVolume << ";\n";
+	zap.open("settings.lua");
+	zap << "fullScreen = " << (fullScreen ? "true" : "false") << "\n";
+	zap << "verticalSync = " << (verticalSync ? "true" : "false") << "\n";
+	zap << "screenHeight = " << screenHeight << "\n";
+	zap << "screenWidth = " << screenWidth << "\n";
+	zap << "anisFilt = " << anisFilt << "\n";
+	zap << "textSize = " << textSize << "\n";
+	zap << "sound = " << (sound ? "true" : "false") << "\n";
+	zap << "soundVolume = " << soundVolume << "\n";
 	zap.close();
 	return 0;
 }
 
 int settings::loadSettings() {
-	std::ifstream read;
-	read.open("settings.cfg");
-	if (read.is_open()) {
-		std::string *st = new std::string;
-		std::string *line = new std::string;
-		std::string *command = new std::string;
+	lua_State* L = luaL_newstate(); //Создаем объект lua, из которого будем получать данные
 
-		while (! read.eof()) {
-			getline(read, *line);
-			*st += *line;
-		}
-
-		delete line;
-
-		read.close();
-		int line_num = 0;
-		for (std::string::iterator it = st->begin(); it != st->end(); it++) {
-			if (line_num == 0) {
-				if (*it == '=') {
-					it++;
-					while (*it != ';') { //Получаем строку с информацией о полноэкранном режиме и записываем её в переменную fullScreen
-						*command += *it;
-						it++;
-					}
-					std::istringstream iss(*command);
-					iss >> fullScreen;
-					*command = "";
-					line_num++;
-				}
-			} else if (line_num == 1) { //Получаем строку с информацией о вертикальной синхронизации и записываем её в переменную verticalSync
-				if (*it == '=') {
-					it++;
-					while (*it != ';') {
-						*command += *it;
-						it++;
-					}
-					std::istringstream iss(*command);
-					iss >> verticalSync;
-					*command = "";
-					line_num++;
-				}
-			} else if (line_num == 2) { //Получаем строку с информацией о высоте разрешения экрана и записываем её в переменную screenHeight
-				if (*it == '=') {
-					it++;
-					while (*it != ';') {
-						*command += *it;
-						it++;
-					}
-					std::istringstream iss(*command);
-					iss >> screenHeight;
-					*command = "";
-					line_num++;
-				}
-			} else if (line_num == 3) { //Получаем строку с информацией о ширине разрешения экрана и записываем её в переменную screenWidth
-				if (*it == '=') {
-					it++;
-					while (*it != ';') {
-						*command += *it;
-						it++;
-					}
-					std::istringstream iss(*command);
-					iss >> screenWidth;
-					*command = "";
-					line_num++;
-				}
-			}  else if (line_num == 4) { //Получаем строку с информацией о размере текста и записываем её в переменную textSize
-				if (*it == '=') {
-					it++;
-					while (*it != ';') {
-						*command += *it;
-						it++;
-					}
-					std::istringstream iss(*command);
-					iss >> textSize;
-					*command = "";
-					line_num++;
-				}
-			} else if (line_num == 5) { //Получаем строку с информацией о проигрывании звуков и записываем её в переменную sound
-				if (*it == '=') { 
-					it++;
-					while (*it != ';') {
-						*command += *it;
-						it++;
-					}
-					std::istringstream iss(*command);
-					iss >> sound;
-					*command = "";
-					line_num++;
-				}
-			} else if (line_num == 6) { //Получаем строку с информацией о громкости звуков и записываем её в переменную soundVolume
-				if (*it == '=') {
-					it++;
-					while (*it != ';') {
-						*command += *it;
-						it++;
-					}
-					std::istringstream iss(*command);
-					iss >> soundVolume;
-				}
-			}
-		}
-
-		delete st, command;
-		return 1; //Возвращаем 1, если все переменные из конфига были записаны успешно
+	if (luaL_loadfile(L, "settings.lua") || lua_pcall(L, 0, 0, 0)) { //Если файл не найден
+		return 0;
 	} else {
-		return 0; //Возвращаем 0, если что-то пошло не так
+		luaL_openlibs(L); //Загружаем библиотеку для работы с lua файлами
+
+		fullScreen = luabridge::getGlobal(L, "fullScreen").cast<bool>();
+
+		verticalSync = luabridge::getGlobal(L, "verticalSync").cast<bool>();
+
+		screenHeight = luabridge::getGlobal(L, "screenHeight").cast<int>();
+
+		screenWidth = luabridge::getGlobal(L, "screenWidth").cast<int>();
+
+		anisFilt = luabridge::getGlobal(L, "anisFilt").cast<int>();
+
+		textSize = luabridge::getGlobal(L, "textSize").cast<int>();
+
+		sound = luabridge::getGlobal(L, "sound").cast<bool>();
+
+		soundVolume = luabridge::getGlobal(L, "soundVolume").cast<int>();
 	}
+	return 1;
 }
 //----------------------------------Настройки-Settings-Конец-------------------------------
 
@@ -1094,14 +1013,25 @@ _interface::settings_menu::settings_menu(configuration *cf, Camer *camera, const
 
 		txVertS = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 20, L"Вертикальная синхронизация:", Color::Yellow, Color::Black);
 		txVertS->visible_bevel = false;
-		txFullS = new text(font,(main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 100, L"На весь экран:", Color::Yellow, Color::Black);
+		txFullS = new text(font,(main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 80, L"На весь экран:", Color::Yellow, Color::Black);
 		txFullS->visible_bevel = false;
-		txScreen = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 180, L"Разрешение экрана:", Color::Yellow, Color::Black);
+
+		txAnisF = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 140, L"Анизотропная фильтрация:", Color::Yellow, Color::Black);
+		txAnisF->visible_bevel = false;
+
+		txScreen = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 200, L"Разрешение экрана:", Color::Yellow, Color::Black);
 		txScreen->visible_bevel = false;
 		txSound = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 260, L"Звук:", Color::Yellow, Color::Black);
 		txSound->visible_bevel = false;
-		txSoundV = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 340, L"Громкость звука:", Color::Yellow, Color::Black);
+		txSoundV = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 320, L"Громкость звука:", Color::Yellow, Color::Black);
 		txSoundV->visible_bevel = false;
+
+		combAnisF = new combo_box(txAnisF->getSize().left + txAnisF->getSize().width + 5, txAnisF->getSize().top, Color::Yellow, Color::Yellow);
+		combAnisF->add(L"Выкл.", 0);
+		combAnisF->add(L"2", 2);
+		combAnisF->add(L"6", 6);
+		combAnisF->add(L"8", 8);
+		combAnisF->add(L"16", 16);
 
 		combScreen = new combo_box(txScreen->getSize().left + txScreen->getSize().width + 5, txScreen->getSize().top, Color::Yellow, Color::Yellow);
 		combScreen->add(L"1280 x 720", 0);
@@ -1133,6 +1063,10 @@ _interface::settings_menu::settings_menu(configuration *cf, Camer *camera, const
 			combSoundV->back();
 		}
 
+		while (cf->anisFilt != combAnisF->getValue()) {
+			combAnisF->back();
+		}
+
 		cbVertS = new check_box((main->getGlobalBounds().width / 2) + 0 + (txVertS->getSize().width / 2) + 5, main->getGlobalBounds().top + 20, Color::Black, Color::Yellow, Color::Yellow);
 		cbVertS->isCheck = cf->verticalSync;
 		cbFullS = new check_box((main->getGlobalBounds().width / 2) + 0 + (txFullS->getSize().width / 2) + 5, main->getGlobalBounds().top + 100, Color::Black, Color::Yellow, Color::Yellow);
@@ -1156,15 +1090,11 @@ _interface::settings_menu::settings_menu(configuration *cf, const Font &font, co
 	pos.y = cf->screenHeight / 2;
 	main = new RectangleShape;
 	main->setSize(Vector2f(550, 600));
-	//main_cl = new Color;
-	//*main_cl = maincl;
 	main->setFillColor(maincl);
 	main->setPosition(pos.x - main->getGlobalBounds().width / 2, pos.y - main->getGlobalBounds().height / 2);
 
 	border = new RectangleShape;
 	border->setSize(Vector2f(main->getGlobalBounds().width + 10, main->getGlobalBounds().height + 10));
-	//border_cl = new Color;
-	//*border_cl = bordercl;
 	border->setFillColor(bordercl);
 	border->setPosition(pos.x - 5 - main->getGlobalBounds().width / 2, pos.y - 5 - main->getGlobalBounds().height / 2);
 
@@ -1185,21 +1115,34 @@ _interface::settings_menu::settings_menu(configuration *cf, const Font &font, co
 
 	txVertS = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 20, L"Вертикальная синхронизация:", Color::Yellow, Color::Black);
 	txVertS->visible_bevel = false;
-	txFullS = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 100, L"На весь экран:", Color::Yellow, Color::Black);
+	txFullS = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 80, L"На весь экран:", Color::Yellow, Color::Black);
 	txFullS->visible_bevel = false;
-	txScreen = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 180, L"Разрешение экрана:", Color::Yellow, Color::Black);
+
+	txAnisF = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 140, L"Анизотропная фильтрация:", Color::Yellow, Color::Black);
+	txAnisF->visible_bevel = false;
+
+	txScreen = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 200, L"Разрешение экрана:", Color::Yellow, Color::Black);
 	txScreen->visible_bevel = false;
 	txSound = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 260, L"Звук:", Color::Yellow, Color::Black);
 	txSound->visible_bevel = false;
-	txSoundV = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 340, L"Громкость звука:", Color::Yellow, Color::Black);
+	txSoundV = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 320, L"Громкость звука:", Color::Yellow, Color::Black);
 	txSoundV->visible_bevel = false;
 
 	txVertS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txVertS->getSize().width / 2), main->getGlobalBounds().top + 20);
-	txFullS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txFullS->getSize().width / 2), main->getGlobalBounds().top + 100);
-	txScreen->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txScreen->getSize().width / 2) - 50, main->getGlobalBounds().top + 180); 
-	txSound->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSound->getSize().width / 2), main->getGlobalBounds().top + 260);
-	txSoundV->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSoundV->getSize().width / 2) - 50, main->getGlobalBounds().top + 340);
+	txFullS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txFullS->getSize().width / 2), main->getGlobalBounds().top + 80);
 
+	txAnisF->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txAnisF->getSize().width / 2), main->getGlobalBounds().top + 140);
+
+	txScreen->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txScreen->getSize().width / 2) - 50, main->getGlobalBounds().top + 200); 
+	txSound->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSound->getSize().width / 2), main->getGlobalBounds().top + 260);
+	txSoundV->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSoundV->getSize().width / 2) - 50, main->getGlobalBounds().top + 320);
+
+	combAnisF = new combo_box(txAnisF->getSize().left + txAnisF->getSize().width + 5, txAnisF->getSize().top, Color::Yellow, Color::Yellow);
+	combAnisF->add(L"Выкл.", 0);
+	combAnisF->add(L"2", 2);
+	combAnisF->add(L"6", 6);
+	combAnisF->add(L"8", 8);
+	combAnisF->add(L"16", 16);
 
 	combScreen = new combo_box(txScreen->getSize().left + txScreen->getSize().width + 5, txScreen->getSize().top, Color::Yellow, Color::Yellow);
 	combScreen->add(L"1280 x 720", 0);
@@ -1231,15 +1174,19 @@ _interface::settings_menu::settings_menu(configuration *cf, const Font &font, co
 		combSoundV->back();
 	}
 
+	while (cf->anisFilt != combAnisF->getValue()) {
+		combAnisF->back();
+	}
+
 	cbVertS = new check_box((main->getGlobalBounds().width / 2) + 0 + (txVertS->getSize().width / 2) + 5, main->getGlobalBounds().top + 20, Color::Black, Color::Yellow, Color::Yellow);
 	cbVertS->isCheck = cf->verticalSync;
-	cbFullS = new check_box((main->getGlobalBounds().width / 2) + 0 + (txFullS->getSize().width / 2) + 5, main->getGlobalBounds().top + 100, Color::Black, Color::Yellow, Color::Yellow);
+	cbFullS = new check_box((main->getGlobalBounds().width / 2) + 0 + (txFullS->getSize().width / 2) + 5, main->getGlobalBounds().top + 80, Color::Black, Color::Yellow, Color::Yellow);
 	cbFullS->isCheck = cf->fullScreen;
 	cbSound = new check_box((main->getGlobalBounds().width / 2) + 0 + (txVertS->getSize().width / 2) + 5, main->getGlobalBounds().top + 260, Color::Black, Color::Yellow, Color::Yellow);
 	cbSound->isCheck = cf->sound;
 
 	cbVertS->setPosition(txVertS->getSize().left + txVertS->getSize().width + 5, main->getGlobalBounds().top + 20);
-	cbFullS->setPosition(txFullS->getSize().left + txFullS->getSize().width + 5, main->getGlobalBounds().top + 100);
+	cbFullS->setPosition(txFullS->getSize().left + txFullS->getSize().width + 5, main->getGlobalBounds().top + 80);
 	cbSound->setPosition(txSound->getSize().left + txSound->getSize().width + 5, main->getGlobalBounds().top + 260);
 
 	txMenuSettings = new text(font, (main->getGlobalBounds().width / 2) + 0, main->getGlobalBounds().top + 550, L"Настройки", Color::Yellow, Color::Black);
@@ -1256,11 +1203,11 @@ _interface::settings_menu::settings_menu(configuration *cf, const Font &font, co
 _interface::settings_menu::~settings_menu() {
 	delete main, border, blackout;
 	delete btBack, btSave;
-	delete txVertS, txFullS, txScreen, txSound, txSoundV;
+	delete txVertS, txFullS, txScreen, txSound, txSoundV, txAnisF;
 	delete cbFullS, cbVertS, cbSound;
 	delete txMenuSettings;
 	delete grFirst, grSecond;
-	delete combScreen, combSoundV;
+	delete combScreen, combSoundV, combAnisF;
 }
 
 void _interface::settings_menu::backSettings(configuration *cf) {
@@ -1282,6 +1229,10 @@ void _interface::settings_menu::backSettings(configuration *cf) {
 		combSoundV->back();
 	}
 
+	while (cf->anisFilt != combAnisF->getValue()) {
+		combAnisF->back();
+	}
+
 	delete t;
 }
 
@@ -1299,13 +1250,14 @@ int _interface::settings_menu::saveSettings(configuration *cf) {
 	}
 
 
-	if (cf->fullScreen != cbFullS->isCheck || (cf->screenWidth != W && cf->screenHeight != H)) {
+	if (cf->fullScreen != cbFullS->isCheck || (cf->screenWidth != W && cf->screenHeight != H) || cf->anisFilt != combAnisF->getValue()) {
 		cf->fullScreen = cbFullS->isCheck;
 		cf->verticalSync = cbVertS->isCheck;
 		cf->sound = cbSound->isCheck;
 		cf->soundVolume = combSoundV->getValue();
 		cf->screenWidth = W;
 		cf->screenHeight = H;
+		cf->anisFilt = combAnisF->getValue();
 		cf->saveSettings();
 		return static_cast<int>(settings_save_code::other);
 	} else {
@@ -1324,19 +1276,24 @@ void _interface::settings_menu::render(RenderWindow &wd, Camer *camera) noexcept
 		main->setPosition(pos.x - main->getGlobalBounds().width / 2, pos.y - main->getGlobalBounds().height / 2);
 		border->setPosition(pos.x - 5 - main->getGlobalBounds().width / 2, pos.y - 5 - main->getGlobalBounds().height / 2);
 		txVertS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txVertS->getSize().width / 2), main->getGlobalBounds().top + 20);
-		txFullS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txFullS->getSize().width / 2), main->getGlobalBounds().top + 100);
-		txScreen->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txScreen->getSize().width / 2) - 50, main->getGlobalBounds().top + 180);
+		txFullS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txFullS->getSize().width / 2), main->getGlobalBounds().top + 80);
+
+		txAnisF->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txAnisF->getSize().width / 2), main->getGlobalBounds().top + 140);
+
+		txScreen->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txScreen->getSize().width / 2) - 50, main->getGlobalBounds().top + 200);
 		
 		txSound->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSound->getSize().width / 2), main->getGlobalBounds().top + 260);
-		txSoundV->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSoundV->getSize().width / 2), main->getGlobalBounds().top + 340);
+		txSoundV->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSoundV->getSize().width / 2), main->getGlobalBounds().top + 320);
 		combSoundV->setPosition(txSoundV->getSize().left + txSoundV->getSize().width + 5, txSoundV->getSize().top);
 		cbSound->setPosition(txSound->getSize().left + txSound->getSize().width + 5, main->getGlobalBounds().top + 260);
+
+		combAnisF->setPosition(txAnisF->getSize().left + txAnisF->getSize().width + 5, txAnisF->getSize().top);
 
 		combScreen->setPosition(txScreen->getSize().left + txScreen->getSize().width + 5, txScreen->getSize().top);
 		btBack->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btBack->getSize().width / 2), main->getGlobalBounds().top + 410);
 		btSave->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btSave->getSize().width / 2), main->getGlobalBounds().top + 480);
 		cbVertS->setPosition(txVertS->getSize().left + txVertS->getSize().width + 5, main->getGlobalBounds().top + 20);
-		cbFullS->setPosition(txFullS->getSize().left + txFullS->getSize().width + 5, main->getGlobalBounds().top + 100);
+		cbFullS->setPosition(txFullS->getSize().left + txFullS->getSize().width + 5, main->getGlobalBounds().top + 80);
 		txMenuSettings->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txMenuSettings->getSize().width / 2), main->getGlobalBounds().top + 550);
 		grFirst->setPosition(txMenuSettings->getPosition().x - 5 - grFirst->getSize().width, txMenuSettings->getPosition().y + (txMenuSettings->getSize().height / 2) - (grSecond->getSize().height / 2));
 		grSecond->setPosition(txMenuSettings->getPosition().x + 5 + txMenuSettings->getSize().width, txMenuSettings->getPosition().y + (txMenuSettings->getSize().height / 2) - (grSecond->getSize().height / 2));
@@ -1350,10 +1307,12 @@ void _interface::settings_menu::render(RenderWindow &wd, Camer *camera) noexcept
 
 		txVertS->render(wd);
 		txScreen->render(wd);
+		txAnisF->render(wd);
 		txFullS->render(wd);
 		txSound->render(wd);
 		txSoundV->render(wd);
 
+		combAnisF->render(wd);
 		combScreen->render(wd);
 		combSoundV->render(wd);
 
@@ -1377,19 +1336,24 @@ void _interface::settings_menu::render(RenderWindow *wd, Camer *camera) noexcept
 		main->setPosition(pos.x - main->getGlobalBounds().width / 2, pos.y - main->getGlobalBounds().height / 2);
 		border->setPosition(pos.x - 5 - main->getGlobalBounds().width / 2, pos.y - 5 - main->getGlobalBounds().height / 2);
 		txVertS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txVertS->getSize().width / 2), main->getGlobalBounds().top + 20);
-		txFullS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txFullS->getSize().width / 2), main->getGlobalBounds().top + 100);
-		txScreen->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txScreen->getSize().width / 2) - 50, main->getGlobalBounds().top + 180);
+		txFullS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txFullS->getSize().width / 2), main->getGlobalBounds().top + 80);
+
+		txAnisF->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txAnisF->getSize().width / 2), main->getGlobalBounds().top + 140);
+
+		txScreen->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txScreen->getSize().width / 2) - 50, main->getGlobalBounds().top + 200);
 
 		txSound->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSound->getSize().width / 2), main->getGlobalBounds().top + 260);
-		txSoundV->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSoundV->getSize().width / 2), main->getGlobalBounds().top + 340);
+		txSoundV->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSoundV->getSize().width / 2), main->getGlobalBounds().top + 320);
 		combSoundV->setPosition(txSoundV->getSize().left + txSoundV->getSize().width + 5, txSoundV->getSize().top);
 		cbSound->setPosition(txSound->getSize().left + txSound->getSize().width + 5, main->getGlobalBounds().top + 260);
+
+		combAnisF->setPosition(txAnisF->getSize().left + txAnisF->getSize().width + 5, txAnisF->getSize().top);
 
 		combScreen->setPosition(txScreen->getSize().left + txScreen->getSize().width + 5, txScreen->getSize().top);
 		btBack->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btBack->getSize().width / 2), main->getGlobalBounds().top + 410);
 		btSave->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btSave->getSize().width / 2), main->getGlobalBounds().top + 480);
 		cbVertS->setPosition(txVertS->getSize().left + txVertS->getSize().width + 5, main->getGlobalBounds().top + 20);
-		cbFullS->setPosition(txFullS->getSize().left + txFullS->getSize().width + 5, main->getGlobalBounds().top + 100);
+		cbFullS->setPosition(txFullS->getSize().left + txFullS->getSize().width + 5, main->getGlobalBounds().top + 80);
 		txMenuSettings->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txMenuSettings->getSize().width / 2), main->getGlobalBounds().top + 550);
 		grFirst->setPosition(txMenuSettings->getPosition().x - 5 - grFirst->getSize().width, txMenuSettings->getPosition().y + (txMenuSettings->getSize().height / 2) - (grSecond->getSize().height / 2));
 		grSecond->setPosition(txMenuSettings->getPosition().x + 5 + txMenuSettings->getSize().width, txMenuSettings->getPosition().y + (txMenuSettings->getSize().height / 2) - (grSecond->getSize().height / 2));
@@ -1403,10 +1367,12 @@ void _interface::settings_menu::render(RenderWindow *wd, Camer *camera) noexcept
 
 		txVertS->render(wd);
 		txScreen->render(wd);
+		txAnisF->render(wd);
 		txFullS->render(wd);
 		txSound->render(wd);
 		txSoundV->render(wd);
 
+		combAnisF->render(wd);
 		combScreen->render(wd);
 		combSoundV->render(wd);
 
@@ -1433,10 +1399,12 @@ void _interface::settings_menu::render(RenderWindow &wd) noexcept {
 
 		txVertS->render(wd);
 		txScreen->render(wd);
+		txAnisF->render(wd);
 		txFullS->render(wd);
 		txSound->render(wd);
 		txSoundV->render(wd);
 		
+		combAnisF->render(wd);
 		combScreen->render(wd);
 		combSoundV->render(wd);
 
@@ -1463,10 +1431,12 @@ void _interface::settings_menu::render(RenderWindow *wd) noexcept {
 
 		txVertS->render(wd);
 		txScreen->render(wd);
+		txAnisF->render(wd);
 		txFullS->render(wd);
 		txSound->render(wd);
 		txSoundV->render(wd);
 
+		combAnisF->render(wd);
 		combScreen->render(wd);
 		combSoundV->render(wd);
 

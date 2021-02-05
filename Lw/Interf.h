@@ -5,6 +5,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <LuaBridge/LuaBridge.h>
 
 using namespace sf; 
 
@@ -22,11 +23,12 @@ typedef struct settings {
 	bool sound;
 	unsigned int screenHeight;
 	unsigned int screenWidth;
+	int anisFilt;
 	int textSize;
 	int soundVolume;
 	int saveSettings();
 	int loadSettings();
-	int createSettings(int ScreenW = 1600, int ScreenH = 900, bool VertS = false, int TxtS = 24, bool FullS = true, bool Sound = true, int SoundV = 50);
+	int createSettings(unsigned int ScreenW = 1600, unsigned int ScreenH = 900, int AnisF = 8, bool VertS = false, int TxtS = 24, bool FullS = true, bool Sound = true, int SoundV = 50);
 	//1280 x 720
 	//1600 x 900
 	//1600 x 1200
@@ -436,9 +438,9 @@ namespace _interface {
 		public:
 			bool active, blackout_visible;
 			button *btBack, *btSave;
-			text *txVertS, *txFullS, *txScreen, *txSound, *txSoundV;
+			text *txVertS, *txFullS, *txScreen, *txSound, *txSoundV, *txAnisF;
 			check_box *cbVertS, *cbFullS, *cbSound;
-			combo_box *combScreen, *combSoundV;
+			combo_box *combScreen, *combSoundV, *combAnisF;
 			settings_menu(configuration *cf, Camer *camera, const Font &font, const Color &maincl, const Color &bordercl);
 			settings_menu(configuration *cf, const Font &font, const Color &maincl, const Color &bordercl);
 			~settings_menu();

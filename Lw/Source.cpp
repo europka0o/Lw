@@ -48,7 +48,7 @@ class Game {
 		Game() {
 			config = new configuration;
 			if (!config->loadSettings()) {
-				config->createSettings(screen_width, screen_height, true, 30, true, true, 50);
+				config->createSettings(screen_width, screen_height, 8, true, 30, true, true, 50);
 			}
 
 			if (config->sound) {
@@ -57,7 +57,10 @@ class Game {
 				volume = 0;
 			}
 
-			window = new RenderWindow(VideoMode(config->screenWidth, config->screenHeight), "Little World", config->fullScreen ? 8 : 7);
+			sf::ContextSettings settings_sf;
+			settings_sf.antialiasingLevel = config->anisFilt;
+
+			window = new RenderWindow(VideoMode(config->screenWidth, config->screenHeight), "Little World", config->fullScreen ? 8 : 7, settings_sf);
 			window->setVerticalSyncEnabled(config->verticalSync);
 
 			ptr_global_memory = memory_block_allocation_void(sizeof(Image) + (sizeof(Texture) * 11) + (sizeof(Sprite) * 11) + sizeof(Font));
@@ -241,6 +244,14 @@ class Game {
 								} else {
 									volume = 0;
 								}
+							}
+						}
+
+						if (st_men->combAnisF->isAction(realPos.x, realPos.y)) {
+							if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Left) {
+								st_men->combAnisF->next();
+							} else if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Right) {
+								st_men->combAnisF->back();
 							}
 						}
 
@@ -519,6 +530,14 @@ class Game {
 										volume = 0;
 									}
 									music_main_theme->setVolume(volume);
+								}
+							}
+
+							if (st_men->combAnisF->isAction(realPos.x, realPos.y)) {
+								if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Left) {
+									st_men->combAnisF->next();
+								} else if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Right) {
+									st_men->combAnisF->back();
 								}
 							}
 
