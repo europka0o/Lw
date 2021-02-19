@@ -16,5 +16,4 @@ class World {
 		World(Image *ptr_on_img, int X_SIZE, int Y_SIZE);
 		~World() noexcept;
 		void render(RenderWindow &wd) noexcept;
-		void render(RenderWindow *wd) noexcept;
 };

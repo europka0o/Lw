@@ -183,14 +183,6 @@ void Character::render(RenderWindow& wd, Sprite* ptr_sprite) noexcept {
 		HP->render(wd);
 	}
 }
-
-void Character::render(RenderWindow* wd, Sprite* ptr_sprite) noexcept {
-	ptr_sprite->setPosition(pos.x, pos.y);
-	ptr_sprite->setTextureRect(sprite_rect);
-	wd->draw(*ptr_sprite);
-	HP->changeBar(health);
-	HP->render(wd);
-}
 //----------------------------------Персанаж-Character-Конец------------------------------
 
 //---------------------------Статический-объект-ObjectStatic-Начало------------------------------
@@ -213,7 +205,7 @@ ObjectStatic::~ObjectStatic() {
 	delete rect_collis;
 }
 
-axes_i ObjectStatic::getPosition() {
+axes_i ObjectStatic::getPosition() const noexcept {
 	return pos;
 }
 
@@ -228,20 +220,12 @@ void ObjectStatic::setPosition(const axes_i &xy) {
 	rect_collis->setPosition(xy);
 }
 
-void ObjectStatic::render(RenderWindow &wd, Sprite *ptr_sprite) {
+void ObjectStatic::render(RenderWindow &wd, Sprite *ptr_sprite) noexcept {
 	if (visible) {
 		ptr_sprite->setPosition(pos.x, pos.y);
 		ptr_sprite->setTextureRect(sprite_rect);
 		wd.draw(*ptr_sprite);
 	}	
-}
-
-void ObjectStatic::render(RenderWindow *wd, Sprite *ptr_sprite) {
-	if (visible) {
-		ptr_sprite->setPosition(pos.x, pos.y);
-		ptr_sprite->setTextureRect(sprite_rect);
-		wd->draw(*ptr_sprite);
-	}
 }
 //----------------------------------Статический-объект-ObjectStatic-Конец-------------------------------
 
@@ -294,27 +278,23 @@ void Camer::setZoom(float zoom) {
 	Vid->zoom(zoom);
 }
 
-axes_i Camer::getPosition() noexcept {
+axes_i Camer::getPosition() const noexcept {
 	return pos;
 }
 
-int Camer::getScreenWidth() noexcept {
+int Camer::getScreenWidth() const noexcept {
 	return screen_W;
 }
-int Camer::getScreenHeight() noexcept {
+int Camer::getScreenHeight() const noexcept {
 	return screen_H;
 }
 
-FloatRect Camer::getBounds() {
+FloatRect Camer::getBounds() const noexcept {
 	return Vid->getViewport();
 }
 
 void Camer::setView(RenderWindow &wd) {
 	wd.setView(*Vid);
-}
-
-void Camer::setView(RenderWindow *wd) {
-	wd->setView(*Vid);
 }
 
 //----------------------------------Камера-Camer-Конец-------------------------------
@@ -354,18 +334,6 @@ void World::render(RenderWindow& wd) noexcept {
 			}
 			worldSpr->setPosition(j * worldTexture->getSize().x, i * worldTexture->getSize().y);
 			wd.draw(*worldSpr);
-		}
-	}
-}
-
-void World::render(RenderWindow *wd) noexcept {
-	for (int i = 0; i < size_y; i++) { //Отрисовка мира
-		for (int j = 0; j < size_x; j++) {
-			if (mass_sp[i][j] == '0') {
-				worldSpr->setTextureRect(IntRect(0, 0, worldTexture->getSize().x, worldTexture->getSize().y)); //0, 0, 128, 128
-			}
-			worldSpr->setPosition(j * worldTexture->getSize().x, i * worldTexture->getSize().y);
-			wd->draw(*worldSpr);
 		}
 	}
 }
@@ -432,14 +400,6 @@ void _interface::bar::render(RenderWindow &wd) noexcept {
 	}
 }
 
-void _interface::bar::render(RenderWindow *wd) noexcept {
-	if (visible) {
-		wd->draw(*main);
-		wd->draw(*bevel);
-		wd->draw(*label);
-	}
-}
-
 void __fastcall _interface::bar::setPosition(int x, int y) noexcept {
 	pos.x = x;
 	pos.y = y;
@@ -461,11 +421,11 @@ void _interface::bar::setPosition(const axes_i &xy) noexcept {
 	fl_rect = main->getGlobalBounds();
 }
 
-void _interface::bar::freeze(Camer *camera, const axes_i &xy) {
+void _interface::bar::freeze(Camer *camera, const axes_i &xy) noexcept {
 	this->setPosition(camera->getPosition().x - (camera->getScreenWidth() / 2) + xy.x, camera->getPosition().y - (camera->getScreenHeight() / 2) + xy.y);
 }
 
-void _interface::bar::freeze(Camer* camera, int x, int y) {
+void _interface::bar::freeze(Camer* camera, int x, int y) noexcept {
 	this->setPosition(camera->getPosition().x - (camera->getScreenWidth() / 2) + x, camera->getPosition().y - (camera->getScreenHeight() / 2) + y);
 }
 
@@ -562,15 +522,6 @@ void _interface::text::render(RenderWindow &wd) noexcept {
 			wd.draw(*bevel);
 		}
 		wd.draw(*label);
-	}
-}
-
-void _interface::text::render(RenderWindow *wd) noexcept {
-	if (visible) {
-		if (visible_bevel) {
-			wd->draw(*bevel);
-		}
-		wd->draw(*label);
 	}
 }
 //-----------------------------------Текст-text-Конец-------------------------------------
@@ -674,15 +625,6 @@ void _interface::multiline_text::render(RenderWindow &wd) noexcept {
 		}
 	}
 }
-
-void _interface::multiline_text::render(RenderWindow *wd) noexcept {
-	if (visible) {
-		wd->draw(*bevel);
-		for (int i = 0; i < SIZE_MSTX; i++) {
-			wd->draw(*mass_string[i]);
-		}
-	}
-}
 //-----------------------------------Многострочный-текст-multiline_text-Конец-------------------------------------
 
 //-----------------------------------Кнопка-button-Начало-------------------------------------
@@ -698,23 +640,17 @@ _interface::button::button(int x, int y, const Font &font, const std::wstring& t
 	txt->setString(text);
 	txt->setCharacterSize(small);
 
-	//txt_cl = new Color;
-	//*txt_cl = textcl;
 	txt->setFillColor(textcl);
 	txt->setPosition(pos.x, pos.y);
 	txt->setPosition(repoz_x(int, pos.x, txt->getGlobalBounds().left, 5), repoz_y(int, pos.y, txt->getGlobalBounds().top, 5));
 
 	main = new RectangleShape;
 	main->setSize(Vector2f(txt->getGlobalBounds().width + 10, txt->getGlobalBounds().height + 10));
-	//main_cl = new Color;
-	//*main_cl = maincl;
 	main->setFillColor(maincl);
 	main->setPosition(pos.x, pos.y);
 
 	active_bvl = new RectangleShape;
 	active_bvl->setSize(Vector2f(main->getGlobalBounds().width + 10, main->getGlobalBounds().height + 10));
-	//active_cl = new Color;
-	//*active_cl = activecl;
 	active_bvl->setFillColor(activecl);
 	active_bvl->setPosition(pos.x - 5, pos.y - 5);
 
@@ -754,16 +690,6 @@ void _interface::button::render(RenderWindow &wd) noexcept {
 	}
 }
 
-void _interface::button::render(RenderWindow *wd) noexcept {
-	if (visible) {
-		if (active) {
-			wd->draw(*active_bvl);
-		}
-		wd->draw(*main);
-		wd->draw(*txt);
-	}
-}
-
 void _interface::button::resize(int size) {
 	txt->setCharacterSize(size);
 	txt->setPosition(pos.x, pos.y);
@@ -773,12 +699,12 @@ void _interface::button::resize(int size) {
 	fl_rect = main->getGlobalBounds();
 }
 
-void _interface::button::freeze(Camer *camera, const axes_i &xy) {
+void _interface::button::freeze(Camer *camera, const axes_i &xy) noexcept {
 	this->setPosition(camera->getPosition().x - (camera->getScreenHeight() / 2) + xy.x, camera->getPosition().y - (camera->getScreenWidth() / 2) + xy.y);
 
 }
 
-void _interface::button::freeze(Camer *camera, int x, int y) {
+void _interface::button::freeze(Camer *camera, int x, int y) noexcept {
 	this->setPosition(camera->getPosition().x - (camera->getScreenHeight() / 2) + x, camera->getPosition().y - (camera->getScreenWidth() / 2) + y);
 }
 
@@ -865,37 +791,6 @@ void _interface::menu::render(RenderWindow& wd, Camer *camera) noexcept {
 		grSecond->render(wd);
 	}
 }
-
-void _interface::menu::render(RenderWindow *wd, Camer *camera) noexcept {
-	
-	if (active) {
-		pos = camera->getPosition();
-
-		main->setPosition(pos.x - main->getGlobalBounds().width / 2, pos.y - main->getGlobalBounds().height / 2);
-		border->setPosition(pos.x - 5 - main->getGlobalBounds().width / 2, pos.y - 5 - main->getGlobalBounds().height / 2);
-		btContinue->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btContinue->getSize().width / 2), main->getGlobalBounds().top + 60);
-		btOptions->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btOptions->getSize().width / 2), main->getGlobalBounds().top + 160);
-		btExit->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btExit->getSize().width / 2), main->getGlobalBounds().top + 260);
-		txMenu->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txMenu->getSize().width / 2), main->getGlobalBounds().top + 450);
-		grFirst->setPosition(txMenu->getPosition().x - 5 - grFirst->getSize().width, txMenu->getPosition().y + (txMenu->getSize().height / 2) - (grSecond->getSize().height / 2));
-		grSecond->setPosition(txMenu->getPosition().x + 5 + txMenu->getSize().width, txMenu->getPosition().y + (txMenu->getSize().height / 2) - (grSecond->getSize().height / 2));
-
-		if (blackout_visible) {
-			blackout->setPosition(camera->getPosition().x - (camera->getScreenWidth() / 2), camera->getPosition().y - (camera->getScreenHeight() / 2));
-			wd->draw(*blackout);
-		}
-		wd->draw(*border);
-		wd->draw(*main);
-
-		btContinue->render(wd);
-		btOptions->render(wd);
-		btExit->render(wd);
-
-		txMenu->render(wd);
-		grFirst->render(wd);
-		grSecond->render(wd);
-	}
-}
 //-----------------------------------Меню-menu-Конец---------------------------------------
 
 //------------------------------Чекбокс-check_box-Начало--------------------------------------
@@ -966,16 +861,6 @@ void _interface::check_box::invers(bool operation) {
 
 void _interface::check_box::invers() {
 	isCheck = isCheck ? false : true;
-}
-
-void _interface::check_box::render(RenderWindow *wd) noexcept {
-	if (visible) {
-		wd->draw(*border);
-		wd->draw(*main);
-		if (isCheck) {
-			wd->draw(*check);
-		}
-	}
 }
 //------------------------------Чекбокс-check_box-Конец---------------------------------------
 
@@ -1329,66 +1214,6 @@ void _interface::settings_menu::render(RenderWindow &wd, Camer *camera) noexcept
 	}
 }
 
-void _interface::settings_menu::render(RenderWindow *wd, Camer *camera) noexcept {
-	if (active) {
-		pos = camera->getPosition();
-
-		main->setPosition(pos.x - main->getGlobalBounds().width / 2, pos.y - main->getGlobalBounds().height / 2);
-		border->setPosition(pos.x - 5 - main->getGlobalBounds().width / 2, pos.y - 5 - main->getGlobalBounds().height / 2);
-		txVertS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txVertS->getSize().width / 2), main->getGlobalBounds().top + 20);
-		txFullS->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txFullS->getSize().width / 2), main->getGlobalBounds().top + 80);
-
-		txAnisF->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txAnisF->getSize().width / 2), main->getGlobalBounds().top + 140);
-
-		txScreen->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txScreen->getSize().width / 2) - 50, main->getGlobalBounds().top + 200);
-
-		txSound->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSound->getSize().width / 2), main->getGlobalBounds().top + 260);
-		txSoundV->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txSoundV->getSize().width / 2), main->getGlobalBounds().top + 320);
-		combSoundV->setPosition(txSoundV->getSize().left + txSoundV->getSize().width + 5, txSoundV->getSize().top);
-		cbSound->setPosition(txSound->getSize().left + txSound->getSize().width + 5, main->getGlobalBounds().top + 260);
-
-		combAnisF->setPosition(txAnisF->getSize().left + txAnisF->getSize().width + 5, txAnisF->getSize().top);
-
-		combScreen->setPosition(txScreen->getSize().left + txScreen->getSize().width + 5, txScreen->getSize().top);
-		btBack->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btBack->getSize().width / 2), main->getGlobalBounds().top + 410);
-		btSave->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btSave->getSize().width / 2), main->getGlobalBounds().top + 480);
-		cbVertS->setPosition(txVertS->getSize().left + txVertS->getSize().width + 5, main->getGlobalBounds().top + 20);
-		cbFullS->setPosition(txFullS->getSize().left + txFullS->getSize().width + 5, main->getGlobalBounds().top + 80);
-		txMenuSettings->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txMenuSettings->getSize().width / 2), main->getGlobalBounds().top + 550);
-		grFirst->setPosition(txMenuSettings->getPosition().x - 5 - grFirst->getSize().width, txMenuSettings->getPosition().y + (txMenuSettings->getSize().height / 2) - (grSecond->getSize().height / 2));
-		grSecond->setPosition(txMenuSettings->getPosition().x + 5 + txMenuSettings->getSize().width, txMenuSettings->getPosition().y + (txMenuSettings->getSize().height / 2) - (grSecond->getSize().height / 2));
-
-		if (blackout_visible) {
-			blackout->setPosition(camera->getPosition().x - (camera->getScreenWidth() / 2), camera->getPosition().y - (camera->getScreenHeight() / 2));
-			wd->draw(*blackout);
-		}
-		wd->draw(*border);
-		wd->draw(*main);
-
-		txVertS->render(wd);
-		txScreen->render(wd);
-		txAnisF->render(wd);
-		txFullS->render(wd);
-		txSound->render(wd);
-		txSoundV->render(wd);
-
-		combAnisF->render(wd);
-		combScreen->render(wd);
-		combSoundV->render(wd);
-
-		cbVertS->render(wd);
-		cbFullS->render(wd);
-		cbSound->render(wd);
-
-		btBack->render(wd);
-		btSave->render(wd);
-
-		txMenuSettings->render(wd);
-		grFirst->render(wd);
-		grSecond->render(wd);
-	}
-}
-
 void _interface::settings_menu::render(RenderWindow &wd) noexcept {
 	if (active) {
 		if (blackout_visible) {
@@ -1404,38 +1229,6 @@ void _interface::settings_menu::render(RenderWindow &wd) noexcept {
 		txSound->render(wd);
 		txSoundV->render(wd);
 		
-		combAnisF->render(wd);
-		combScreen->render(wd);
-		combSoundV->render(wd);
-
-		cbVertS->render(wd);
-		cbFullS->render(wd);
-		cbSound->render(wd);
-
-		btBack->render(wd);
-		btSave->render(wd);
-
-		txMenuSettings->render(wd);
-		grFirst->render(wd);
-		grSecond->render(wd);
-	}
-}
-
-void _interface::settings_menu::render(RenderWindow *wd) noexcept {
-	if (active) {
-		if (blackout_visible) {
-			wd->draw(*blackout);
-		}
-		wd->draw(*border);
-		wd->draw(*main);
-
-		txVertS->render(wd);
-		txScreen->render(wd);
-		txAnisF->render(wd);
-		txFullS->render(wd);
-		txSound->render(wd);
-		txSoundV->render(wd);
-
 		combAnisF->render(wd);
 		combScreen->render(wd);
 		combSoundV->render(wd);
@@ -1491,18 +1284,6 @@ _interface::main_menu::~main_menu() {
 
 void _interface::main_menu::render(RenderWindow &wd) noexcept {
 	wd.draw(*main);
-	btStart->render(wd);
-	btStartTren->render(wd);
-	btOptions->render(wd);
-	btExit->render(wd);
-
-	txMainMenu->render(wd);
-	grFirst->render(wd);
-	grSecond->render(wd);
-}
-
-void _interface::main_menu::render(RenderWindow *wd) noexcept {
-	wd->draw(*main);
 	btStart->render(wd);
 	btStartTren->render(wd);
 	btOptions->render(wd);
@@ -1590,12 +1371,6 @@ void __fastcall _interface::gradient::setPosition(int x, int y) {
 void _interface::gradient::render(RenderWindow &wd) noexcept {
 	if (visible) {
 		wd.draw(*rect);
-	}
-}
-
-void _interface::gradient::render(RenderWindow *wd) noexcept {
-	if (visible) {
-		wd->draw(*rect);
 	}
 }
 //-------------------------------Градиент-gradient-Конец---------------------------------------
@@ -1708,11 +1483,11 @@ void _interface::combo_box::back() {
 	fl_rect = main->getGlobalBounds();
 }
 
-std::wstring _interface::combo_box::getText() {
+std::wstring _interface::combo_box::getText() const noexcept {
 	return std::wstring((*it)->text.getString().begin(), (*it)->text.getString().end());
 }
 
-int _interface::combo_box::getValue() {
+int _interface::combo_box::getValue() const noexcept {
 	return (*it)->value;
 }
 
@@ -1740,21 +1515,12 @@ bool _interface::combo_box::isAction(const axes_i &xy) {
 	return active;
 }
 
-void _interface::combo_box::render(RenderWindow &wd) {
+void _interface::combo_box::render(RenderWindow &wd) noexcept {
 	if (visible) {
 		if (visible_main) {
 			wd.draw(*main);
 		}
 		wd.draw((*it)->text);
-	}
-}
-
-void _interface::combo_box::render(RenderWindow *wd) {
-	if (visible) {
-		if (visible_main) {
-			wd->draw(*main);
-		}
-		wd->draw((*it)->text);
 	}
 }
 //-----------------------------Комбо-бокс-combo_box-Конец---------------------------------------
@@ -1831,52 +1597,12 @@ void _interface::message::render(RenderWindow &wd, Camer *camera) noexcept {
 	}
 }
 
-void _interface::message::render(RenderWindow *wd, Camer *camera) noexcept {
-	if (active) {
-		pos = camera->getPosition();
-
-		main->setPosition(pos.x - main->getGlobalBounds().width / 2, pos.y - main->getGlobalBounds().height / 2);
-		border->setPosition(pos.x - 5 - main->getGlobalBounds().width / 2, pos.y - 5 - main->getGlobalBounds().height / 2);
-		txInfo->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txInfo->getSize().width / 2), main->getGlobalBounds().top + 10);
-		txMess->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (txMess->getSize().width / 2), main->getGlobalBounds().top + main->getGlobalBounds().height - 50);
-		btOk->setPosition(main->getGlobalBounds().left + (main->getGlobalBounds().width / 2) - (btOk->getSize().width / 2), txInfo->getSize().top + txInfo->getSize().height + 20);
-		grFirst->setPosition(txMess->getPosition().x - 5 - grFirst->getSize().width, txMess->getPosition().y + (txMess->getSize().height / 2) - (grSecond->getSize().height / 2));
-		grSecond->setPosition(txMess->getPosition().x + 5 + txMess->getSize().width, txMess->getPosition().y + (txMess->getSize().height / 2) - (grSecond->getSize().height / 2));
-
-		wd->draw(*border);
-		wd->draw(*main);
-
-		txInfo->render(wd);
-
-		btOk->render(wd);
-
-		txMess->render(wd);
-		grFirst->render(wd);
-		grSecond->render(wd);
-	}
-}
-
 void _interface::message::render(RenderWindow &wd) noexcept {
 	if (active) {
 		wd.draw(*border);
 		wd.draw(*main);
 
 		txInfo->render(wd);
-		btOk->render(wd);
-
-		txMess->render(wd);
-		grFirst->render(wd);
-		grSecond->render(wd);
-	}
-}
-
-void _interface::message::render(RenderWindow *wd) noexcept {
-	if (active) {
-		wd->draw(*border);
-		wd->draw(*main);
-
-		txInfo->render(wd);
-
 		btOk->render(wd);
 
 		txMess->render(wd);
@@ -1912,11 +1638,11 @@ void Collision::setPosition(const axes_i &xy) {
 	rect_collis.top = pos.y;
 }
 
-axes_i Collision::getPosition() {
+axes_i Collision::getPosition() const noexcept {
 	return pos;
 }
 
-IntRect Collision::getBounds() {
+IntRect Collision::getBounds() const noexcept {
 	return rect_collis;
 }
 
@@ -1982,13 +1708,6 @@ void _interface::min_bar::render(RenderWindow &wd) noexcept {
 	if (visible) {
 		wd.draw(*main);
 		wd.draw(*bevel);
-	}
-}
-
-void _interface::min_bar::render(RenderWindow *wd) noexcept {
-	if (visible) {
-		wd->draw(*main);
-		wd->draw(*bevel);
 	}
 }
 //-----------------------------Мини-полоса-min_bar-Конец-----------------------------------------
@@ -2110,16 +1829,6 @@ void DestroerCastle::render(RenderWindow& wd, Sprite* ptr_sprite) noexcept {
 		HP->render(wd);
 	}
 }
-
-void DestroerCastle::render(RenderWindow* wd, Sprite* ptr_sprite) noexcept {
-	if (visible) {
-		ptr_sprite->setPosition(pos.x, pos.y);
-		ptr_sprite->setTextureRect(sprite_rect);
-		wd->draw(*ptr_sprite);
-		HP->changeBar(health);
-		HP->render(wd);
-	}
-}
 //-----------------------------------Разрушитель-замков-DestroerCastle-Конец------------------------------------------
 
 //-----------------------------------------Копейщик-Spearman-Начало------------------------------------------
@@ -2237,16 +1946,6 @@ void Spearman::render(RenderWindow& wd, Sprite* ptr_sprite) noexcept {
 		HP->render(wd);
 	}
 }
-
-void Spearman::render(RenderWindow* wd, Sprite* ptr_sprite) noexcept {
-	if (visible) {
-		ptr_sprite->setPosition(pos.x, pos.y);
-		ptr_sprite->setTextureRect(sprite_rect);
-		wd->draw(*ptr_sprite);
-		HP->changeBar(health);
-		HP->render(wd);
-	}
-}
 //------------------------------------------Копейщик-Spearman-Конец------------------------------------------
 
 //-------------------------------------Задний-фон-background_color-Начало------------------------------------------
@@ -2273,12 +1972,6 @@ void _interface::background_color::setColor(Color cl) {
 void _interface::background_color::render(RenderWindow &wd) noexcept {
 	if (visible) {
 		wd.draw(*background);
-	}
-}
-
-void _interface::background_color::render(RenderWindow *wd) noexcept {
-	if (visible) {
-		wd->draw(*background);
 	}
 }
 //-------------------------------------Задний-фон-background_color-Конец------------------------------------------
@@ -2341,7 +2034,7 @@ bool IceBall::isCooldown(float time) {
 		return false;
 	} else {
 		timer_cooldown += time;
-		if (timer_cooldown >= 1) {
+		if (timer_cooldown >= 1.4) {
 			cooldown = false;
 			timer_cooldown = 0;
 			return false;
@@ -2356,16 +2049,6 @@ void IceBall::render(RenderWindow &wd, Sprite* ptr_sprite) noexcept {
 		ptr_sprite->setPosition(pos.x, pos.y);
 		ptr_sprite->setTextureRect(sprite_rect);
 		wd.draw(*ptr_sprite);
-		HP->changeBar(health);
-		HP->render(wd);
-	}
-}
-
-void IceBall::render(RenderWindow *wd, Sprite* ptr_sprite) noexcept {
-	if (visible) {
-		ptr_sprite->setPosition(pos.x, pos.y);
-		ptr_sprite->setTextureRect(sprite_rect);
-		wd->draw(*ptr_sprite);
 		HP->changeBar(health);
 		HP->render(wd);
 	}
@@ -2413,11 +2096,11 @@ BaseCharacter::BaseCharacter(const Sprite& ptr_sprite, const axes_f& xy, int _hp
 
 BaseCharacter::~BaseCharacter() {}
 
-axes_f BaseCharacter::getPosition() {
+axes_f BaseCharacter::getPosition() const noexcept {
 	return pos;
 }
 
-IntRect BaseCharacter::getSize() {
+IntRect BaseCharacter::getSize() const noexcept {
 	return sprite_rect;
 }
 
@@ -2430,19 +2113,11 @@ void BaseCharacter::setPosition(const axes_f &xy) {
 	pos = xy;
 }
 
-void BaseCharacter::render(RenderWindow& wd, Sprite* ptr_sprite) {
+void BaseCharacter::render(RenderWindow& wd, Sprite* ptr_sprite) noexcept {
 	if (visible) {
 		ptr_sprite->setPosition(pos.x, pos.y);
 		ptr_sprite->setTextureRect(sprite_rect);
 		wd.draw(*ptr_sprite);
-	}
-}
-
-void BaseCharacter::render(RenderWindow* wd, Sprite* ptr_sprite) {
-	if (visible) {
-		ptr_sprite->setPosition(pos.x, pos.y);
-		ptr_sprite->setTextureRect(sprite_rect);
-		wd->draw(*ptr_sprite);
 	}
 }
 //--------------------------------База-Характера-BaseCharacter-Конец------------------------------------------
@@ -2472,7 +2147,7 @@ _interface::BaseInerface::~BaseInerface() {
 
 }
 
-axes_i _interface::BaseInerface::getPosition() {
+axes_i _interface::BaseInerface::getPosition() const noexcept {
 	return pos;
 }
 
@@ -2485,14 +2160,11 @@ void _interface::BaseInerface::setPosition(int x, int y) {
 	pos.y = y;
 }
 
-FloatRect _interface::BaseInerface::getSize() {
+FloatRect _interface::BaseInerface::getSize() const noexcept {
 	return fl_rect;
 }
 
 void _interface::BaseInerface::render(RenderWindow &wd) {
-
-}
-void _interface::BaseInerface::render(RenderWindow *wd) {
 
 }
 //--------------------------------База-Интерфейса-BaseInterface-Конец------------------------------------------
@@ -2557,7 +2229,7 @@ void Meteor::isReachedPoint(float time) {
 	}
 }
 
-void Meteor::render(RenderWindow& wd, Sprite* ptr_sprite, Sprite* ptr_sprite_meteor) {
+void Meteor::render(RenderWindow& wd, Sprite* ptr_sprite, Sprite* ptr_sprite_meteor) noexcept {
 	if (visible) {
 		if (reached_point) {
 			ptr_sprite->setPosition(pos.x, pos.y);
@@ -2566,19 +2238,6 @@ void Meteor::render(RenderWindow& wd, Sprite* ptr_sprite, Sprite* ptr_sprite_met
 		} else {
 			ptr_sprite_meteor->setPosition(pos_meteor.x, pos_meteor.y);
 			wd.draw(*ptr_sprite_meteor);
-		}
-	}
-}
-
-void Meteor::render(RenderWindow *wd, Sprite *ptr_sprite, Sprite *ptr_sprite_meteor) {
-	if (visible) {
-		if (reached_point) {
-			ptr_sprite->setPosition(pos.x, pos.y);
-			ptr_sprite->setTextureRect(sprite_rect);
-			wd->draw(*ptr_sprite);
-		} else {
-			ptr_sprite_meteor->setPosition(pos_meteor.x, pos_meteor.y);
-			wd->draw(*ptr_sprite_meteor);
 		}
 	}
 }

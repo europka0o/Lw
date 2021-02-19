@@ -289,12 +289,12 @@ class Game {
 				}
 
 				window->clear();
-				main_men->render(window);
+				main_men->render(*window);
 				window->draw(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + rand_i));
 				window->draw(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 9));
 				window->draw(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 7));
-				st_men->render(window);
-				message_settings->render(window);
+				st_men->render(*window);
+				message_settings->render(*window);
 				window->display();
 			}
 			
@@ -404,6 +404,7 @@ class Game {
 				Second = clock.getElapsedTime().asSeconds(); //Получаем время в секундах
 				clock.restart();
 				timer /= 1000;
+				//timer -= 10;
 				pos = sf::Mouse::getPosition(*window);
 				realPos = window->mapPixelToCoords(pos);
 				Event event;
@@ -423,10 +424,10 @@ class Game {
 						if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Right && !men->active) { //Если нажата правая кнопка мыши
 							if (barmp >= mp_need_cast_ice) {
 								if (Ice->empty()) {
-									Ice->push_back(new IceBall(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 6), realPos.x - 55, realPos.y - 65, 100));
+									Ice->push_back(new IceBall(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 6), realPos.x - 55, realPos.y - 65, 200));
 								} else {
 									Ice->back()->health = 0;
-									Ice->push_back(new IceBall(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 6), realPos.x - 55, realPos.y - 65, 100));
+									Ice->push_back(new IceBall(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 6), realPos.x - 55, realPos.y - 65, 200));
 								}
 								barmp -= mp_need_cast_ice;
 							}
@@ -1544,6 +1545,7 @@ class Game {
 
 						}
 
+						bool Ice_ball_is_cooldown = false;
 						for (list<IceBall*>::iterator it_ic = Ice->begin(); it_ic != Ice->end();) {
 							if ((*it_ic)->isDead) {
 								delete* it_ic;
@@ -1551,33 +1553,45 @@ class Game {
 							} else {
 
 								for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
-									if ((*it_ic)->getSize().intersects((*it_sp)->rect_collis->getBounds())) {
-										if (!(*it_ic)->isCooldown(Second)) {
+									if ((*it_ic)->rect_collis->getBounds().intersects((*it_sp)->rect_collis->getBounds())) {
+										if (!(*it_ic)->cooldown) {
 											(*it_sp)->health -= 5;
-											(*it_ic)->cooldown = true;
+											Ice_ball_is_cooldown = true;
+											//(*it_ic)->cooldown = true;
 										}
 									}
 									it_sp++;
 								}
 
 								for (list<DestroerCastle*>::iterator it_dc = DC->begin(); it_dc != DC->end();) {
-									if ((*it_ic)->getSize().intersects((*it_dc)->rect_collis->getBounds())) {
-										if (!(*it_ic)->isCooldown(Second)) {
+									if ((*it_ic)->rect_collis->getBounds().intersects((*it_dc)->rect_collis->getBounds())) {
+										if (!(*it_ic)->cooldown) {
 											(*it_dc)->health -= 5;
-											(*it_ic)->cooldown = true;
+											Ice_ball_is_cooldown = true;
+											//(*it_ic)->cooldown = true;
 										}
 									}
 									it_dc++;
 								}
 
 								for (list<Character*>::iterator it_p = Pers->begin(); it_p != Pers->end();) {
-									if ((*it_ic)->getSize().intersects((*it_p)->rect_collis->getBounds())) {
-										if (!(*it_ic)->isCooldown(Second)) {
+									if ((*it_ic)->rect_collis->getBounds().intersects((*it_p)->rect_collis->getBounds())) {
+										if (!(*it_ic)->cooldown) {
 											(*it_p)->health -= 5;
-											(*it_ic)->cooldown = true;
+											Ice_ball_is_cooldown = true;
+											//(*it_ic)->cooldown = true;
 										}
 									}
 									it_p++;
+								}
+
+								if (Ice_ball_is_cooldown) {
+									(*it_ic)->cooldown = true;
+								}
+
+								if (!(*it_ic)->isCooldown(Second)) {
+									Ice_ball_is_cooldown = false;
+									(*it_ic)->cooldown = false;
 								}
 
 								(*it_ic)->update(timer / 4.5);
@@ -1733,39 +1747,39 @@ class Game {
 				}
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------Отрисовка
 				window->clear();
-				MainWrd->render(window);
-				Camera->setView(window);
+				MainWrd->render(*window);
+				Camera->setView(*window);
 				for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
-					(*it_sp)->render(window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3));
+					(*it_sp)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3));
 					it_sp++;
 				}
 
 				for (list<DestroerCastle*>::iterator it_dc = DC->begin(); it_dc != DC->end();) {
-					(*it_dc)->render(window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4));
+					(*it_dc)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4));
 					it_dc++;
 				}
 				for (list<Character*>::iterator it_p = Pers->begin(); it_p != Pers->end();) {
-					(*it_p)->render(window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5));
+					(*it_p)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5));
 					it_p++;
 				}
 				for (list<IceBall*>::iterator it_ic = Ice->begin(); it_ic != Ice->end();) {
-					(*it_ic)->render(window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 6));
+					(*it_ic)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 6));
 					it_ic++;
 				}
 				for (list<Meteor*>::iterator it_met = Expl_list->begin(); it_met != Expl_list->end();) {
-					(*it_met)->render(window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 0), (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 1));
+					(*it_met)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 0), (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 1));
 					it_met++;
 				}
-				Castle->render(window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 2));
-				HP->render(window);
-				MP->render(window);
-				mlt->render(window);
-				lvlInfo->render(window);
-				men->render(window, Camera);
-				st_men->render(window, Camera);
-				message_settings->render(window, Camera); //Camer
-				message_end->render(window, Camera); //Camer
-				message_vic->render(window, Camera);
+				Castle->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 2));
+				HP->render(*window);
+				MP->render(*window);
+				mlt->render(*window);
+				lvlInfo->render(*window);
+				men->render(*window, Camera);
+				st_men->render(*window, Camera);
+				message_settings->render(*window, Camera); //Camer
+				message_end->render(*window, Camera); //Camer
+				message_vic->render(*window, Camera);
 				window->display();
 			}
 
@@ -2275,37 +2289,37 @@ class Game {
 				}
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------Отрисовка
 				window->clear();
-				MainWrd->render(window);
+				MainWrd->render(*window);
 				
 				for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
-					(*it_sp)->render(window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3));
+					(*it_sp)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3));
 					it_sp++;
 				}
-				Castle->render(window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 2));
+				Castle->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 2));
 				if (!mltAboutHP->visible) {
 					#undef small
 					HP->resize(_interface::text_size::small);
-					HP->render(window);
+					HP->render(*window);
 					#define small char
 				}
 				if (!mltAboutMP->visible) {
 					#undef small
 					MP->resize(_interface::text_size::small);
-					MP->render(window);
+					MP->render(*window);
 					#define small char
 				}
-				backgroundcl->render(window);
+				backgroundcl->render(*window);
 				if (mltAboutHP->visible) {
 					HP->resize(_interface::text_size::big);
-					HP->render(window);
+					HP->render(*window);
 				}
 				if (mltAboutMP->visible) {
 					MP->resize(_interface::text_size::big);
-					MP->render(window);
+					MP->render(*window);
 				}
 				if (mltAboutEnemy->visible) {
 					for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
-						(*it_sp)->render(window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3));
+						(*it_sp)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3));
 						it_sp++;
 					}
 				}
@@ -2314,7 +2328,7 @@ class Game {
 					it_ic++;
 				}
 				for (list<IceBall*>::iterator it_ic = Ice->begin(); it_ic != Ice->end();) {
-					(*it_ic)->render(window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 6));
+					(*it_ic)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 6));
 					it_ic++;
 				}
 				for (list<Meteor*>::iterator it = Expl_list->begin(); it != Expl_list->end();) {
@@ -2323,24 +2337,24 @@ class Game {
 						it = Expl_list->erase(it);
 					} else {
 						(*it)->update(timer);
-						(*it)->render(window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 0), (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 1));
+						(*it)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 0), (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 1));
 						it++;
 					}
 				}
-				mltAboutHP->render(window);
-				mltAboutMP->render(window);
-				mltAboutEnemy->render(window);
-				mltAboutIce->render(window);
-				mltAboutIce2->render(window);
-				mltAboutIce3->render(window);
-				mltEnd->render(window);
+				mltAboutHP->render(*window);
+				mltAboutMP->render(*window);
+				mltAboutEnemy->render(*window);
+				mltAboutIce->render(*window);
+				mltAboutIce2->render(*window);
+				mltAboutIce3->render(*window);
+				mltEnd->render(*window);
 
-				mlt->render(window);
-				Camera->setView(window);
-				men->render(window, Camera);
-				st_men->render(window, Camera);
-				message_settings->render(window, Camera);
-				message_end->render(window, Camera);
+				mlt->render(*window);
+				Camera->setView(*window);
+				men->render(*window, Camera);
+				st_men->render(*window, Camera);
+				message_settings->render(*window, Camera);
+				message_end->render(*window, Camera);
 				window->display();
 			}
 

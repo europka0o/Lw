@@ -101,24 +101,23 @@ public:
 	/// Возвращает позицию камеры
 	/// </summary>
 	/// <returns>Структура axes_i</returns>
-	axes_i getPosition() noexcept;
+	axes_i getPosition() const noexcept;
 	/// <summary>
 	/// Возвращает ширину вьюпорта камеры в пикселях  
 	/// </summary>
 	/// <returns>Количество пикселей в int</returns>
-	int getScreenWidth() noexcept;
+	int getScreenWidth() const noexcept;
 	/// <summary>
 	/// Возвращает высоту вьюпорта камеры в пикселях 
 	/// </summary>
 	/// <returns>Количество пикселей в int</returns>
-	int getScreenHeight() noexcept;
+	int getScreenHeight() const noexcept;
 	/// <summary>
 	/// Возвращает данные о хитбоке: ширина, высота, функции проверки пересечения
 	/// </summary>
 	/// <returns>Структура FloatRect</returns>
-	FloatRect getBounds();
+	FloatRect getBounds() const noexcept;
 	void setView(RenderWindow &wd);
-	void setView(RenderWindow *wd);
 };
 
 class Collision {
@@ -149,12 +148,12 @@ class Collision {
 		/// Возвращает позицию хитбокса по осям X и Y
 		/// </summary>
 		/// <returns>Структура axes_i</returns>
-		axes_i getPosition();
+		axes_i getPosition() const noexcept;
 		/// <summary>
 		/// Возвращает данные о хитбоке: ширина, высота, функции проверки пересечения
 		/// </summary>
 		/// <returns>Структура IntRect</returns>
-		IntRect getBounds();
+		IntRect getBounds() const noexcept;
 		/// <summary>
 		/// Устанавливает новые данные о хитбоксе
 		/// </summary>
@@ -177,12 +176,11 @@ class BaseCharacter {
 		~BaseCharacter();
 		bool cooldown, isDead, visible;
 		int health;
-		virtual axes_f getPosition();
+		virtual axes_f getPosition() const noexcept;
 		virtual void __fastcall setPosition(float x, float y);
 		virtual void __fastcall setPosition(const axes_f& xy);
-		virtual IntRect getSize();
-		virtual void render(RenderWindow& wd, Sprite *ptr_sprite);
-		virtual void render(RenderWindow* wd, Sprite *ptr_sprite);
+		virtual IntRect getSize() const noexcept;
+		virtual void render(RenderWindow& wd, Sprite *ptr_sprite) noexcept;
 };
 
 class ObjectStatic {
@@ -206,7 +204,7 @@ class ObjectStatic {
 		/// Возвращает позицию
 		/// </summary>
 		/// <returns>Структура axes_i</returns>
-		virtual axes_i getPosition();
+		virtual axes_i getPosition() const noexcept;
 		/// <summary>
 		/// Устанавливает позицию хитбокса по осям X и Y
 		/// </summary>
@@ -218,8 +216,7 @@ class ObjectStatic {
 		/// </summary>
 		/// <param name="xy">Структура axes_i с координатами по осям X и Y</param>
 		virtual void setPosition(const axes_i &xy);
-		virtual void render(RenderWindow &wd, Sprite *ptr_sprite);
-		virtual void render(RenderWindow *wd, Sprite *ptr_sprite);
+		virtual void render(RenderWindow &wd, Sprite *ptr_sprite) noexcept;
 };
 
 class ObjectAnimated : public ObjectStatic {
@@ -255,12 +252,11 @@ namespace _interface {
 			BaseInerface(const axes_i &xy, const FloatRect &rect);
 			~BaseInerface();
 			bool visible;
-			virtual axes_i getPosition();
+			virtual axes_i getPosition() const noexcept;
 			virtual void setPosition(const axes_i &xy);
 			virtual void __fastcall setPosition(int x, int y);
-			virtual FloatRect getSize();
+			virtual FloatRect getSize() const noexcept;
 			virtual void render(RenderWindow &wd);
-			virtual void render(RenderWindow *wd);
 	};
 
 	//Направление градиента
@@ -312,7 +308,6 @@ namespace _interface {
 			/// <param name="x">Координаты по оси Y</param>
 			void __fastcall setPosition(int x, int y) override;
 			void render(RenderWindow &wd) noexcept override;
-			void render(RenderWindow *wd) noexcept override;
 	};
 
 	class button : public BaseInerface {
@@ -326,10 +321,9 @@ namespace _interface {
 			void setPosition(const axes_i &xy) override;
 			void __fastcall setPosition(int x, int y) override;
 			void render(RenderWindow &wd) noexcept override;
-			void render(RenderWindow *wd) noexcept override;
 			void resize(int size);
-			void freeze(Camer *camera, const axes_i &xy); //Замораживает позицию компонента относительно камеры
-			void freeze(Camer *camera, int x, int y); //Замораживает позицию компонента относительно камеры
+			void freeze(Camer *camera, const axes_i &xy) noexcept; //Замораживает позицию компонента относительно камеры
+			void freeze(Camer *camera, int x, int y) noexcept; //Замораживает позицию компонента относительно камеры
 			bool __fastcall isAction(int x, int y);
 			bool isAction(const axes_i &xy);
 	};
@@ -357,10 +351,9 @@ namespace _interface {
 			void back();
 			bool __fastcall isAction(int x, int y);
 			bool isAction(const axes_i &xy);
-			std::wstring getText();
-			int getValue();
-			void render(RenderWindow &wd);
-			void render(RenderWindow *wd);
+			std::wstring getText() const noexcept;
+			int getValue() const noexcept;
+			void render(RenderWindow &wd) noexcept override;
 	};
 
 	class check_box : public BaseInerface {
@@ -373,7 +366,6 @@ namespace _interface {
 			void setPosition(const axes_i &xy) override;
 			void __fastcall setPosition(int x, int y) override;
 			void render(RenderWindow  &wd) noexcept override;
-			void render(RenderWindow *wd) noexcept override;
 			void invers(bool operation);
 			void invers();
 	};
@@ -394,7 +386,6 @@ namespace _interface {
 			void freeze(Camer* camera, const axes_i &xy); //Замораживает позицию компонента относительно камеры
 			void freeze(Camer* camera, int x, int y); //Замораживает позицию компонента относительно камеры
 			void render(RenderWindow& wd) noexcept override;
-			void render(RenderWindow* wd) noexcept override;
 	};
 	
 	class message {
@@ -409,9 +400,7 @@ namespace _interface {
 			message(int x, int y, const Font& font, const std::wstring& txt, const Color &maincl, const Color &bordercl, const Color &textcl);
 			~message();
 			void render(RenderWindow &wd, Camer *camera) noexcept;
-			void render(RenderWindow *wd, Camer *camera) noexcept;
 			void render(RenderWindow &wd) noexcept;
-			void render(RenderWindow *wd) noexcept;
 	};
 
 	class menu {
@@ -426,7 +415,6 @@ namespace _interface {
 			menu(Camer* camera, const Font &font, const Color &maincl, const Color &bordercl);
 			~menu();
 			void render(RenderWindow &wd, Camer *camera) noexcept;
-			void render(RenderWindow *wd, Camer *camera) noexcept;
 	};
 
 	class settings_menu {
@@ -447,9 +435,7 @@ namespace _interface {
 			void backSettings(configuration *cf);
 			int saveSettings(configuration *cf);
 			void render(RenderWindow &wd, Camer *camera) noexcept;
-			void render(RenderWindow *wd, Camer *camera) noexcept;
 			void render(RenderWindow &wd) noexcept;
-			void render(RenderWindow *wd) noexcept;
 	};
 
 	class main_menu {
@@ -462,7 +448,6 @@ namespace _interface {
 			main_menu(configuration *cf, const Font &font, const Color &maincl);
 			~main_menu();
 			void render(RenderWindow &wd) noexcept;
-			void render(RenderWindow *wd) noexcept;
 	};
 
 	class bar : public BaseInerface {
@@ -494,7 +479,6 @@ namespace _interface {
 			/// <returns></returns>
 			void __fastcall changeBar(int arg) noexcept; 
 			void render(RenderWindow &wd) noexcept override;
-			void render(RenderWindow *wd) noexcept override;
 			/// <summary>
 			/// Устанавливает новую позицию объекта 
 			/// </summary>
@@ -518,14 +502,14 @@ namespace _interface {
 			/// </summary>
 			/// <param name="camera">Указатель на камеру</param>
 			/// <param name="xy">Структура с координатами заморозки</param>
-			void freeze(Camer* camera, const axes_i &xy); 
+			void freeze(Camer* camera, const axes_i &xy) noexcept; 
 			/// <summary>
 			/// Замораживает позицию объекта относительно камеры
 			/// </summary>
 			/// <param name="camera">Указатель на камеру</param>
 			/// <param name="x">Координаты по оси X</param>
 			/// <param name="y">Координаты по оси Y</param>
-			void freeze(Camer* camera, int x, int y);
+			void freeze(Camer* camera, int x, int y) noexcept;
 	};
 
 	class min_bar : public BaseInerface {
@@ -565,8 +549,6 @@ namespace _interface {
 			/// <returns></returns>
 			void changeBar(int arg) noexcept;
 			void render(RenderWindow& wd) noexcept override;
-			void render(RenderWindow* wd) noexcept override;
-
 	};
 
 	class multiline_text {
@@ -605,7 +587,6 @@ namespace _interface {
 			/// <returns></returns>
 			void add(const std::wstring &txt) noexcept;
 			void render(RenderWindow &wd) noexcept;
-			void render(RenderWindow *wd) noexcept;
 	};
 
 	class background_color {
@@ -629,7 +610,6 @@ namespace _interface {
 			/// <param name="cl">Новый Цвет</param>
 			void setColor(Color cl);
 			void render(RenderWindow& wd) noexcept;
-			void render(RenderWindow* wd) noexcept;
 	};
 
 }; //Конец пространства имен _interface
@@ -648,7 +628,6 @@ class Character : public BaseCharacter {
 		void __fastcall attack(float time);
 		bool isCooldown(float time);
 		void render(RenderWindow& wd, Sprite *ptr_sprite) noexcept override;
-		void render(RenderWindow* wd, Sprite *ptr_sprite) noexcept override;
 };
 
 class DestroerCastle : public BaseCharacter {
@@ -665,7 +644,6 @@ class DestroerCastle : public BaseCharacter {
 		void __fastcall attack(float time);
 		bool isCooldown(float time);
 		void render(RenderWindow& wd, Sprite *ptr_sprite) noexcept override;
-		void render(RenderWindow* wd, Sprite *ptr_sprite) noexcept override;
 };
 
 class Spearman : public BaseCharacter {
@@ -682,7 +660,6 @@ class Spearman : public BaseCharacter {
 		void __fastcall attack(float time);
 		bool isCooldown(float time);
 		void render(RenderWindow& wd, Sprite *ptr_sprite) noexcept override;
-		void render(RenderWindow* wd, Sprite *ptr_sprite) noexcept override;
 };
 
 class IceBall : public BaseCharacter {
@@ -697,7 +674,6 @@ class IceBall : public BaseCharacter {
 		void __fastcall update(float time) noexcept;
 		bool isCooldown(float time);
 		void render(RenderWindow& wd, Sprite* ptr_sprite) noexcept override;
-		void render(RenderWindow* wd, Sprite* ptr_sprite) noexcept override;
 };
 
 class Meteor : public ObjectAnimated {
@@ -711,8 +687,7 @@ class Meteor : public ObjectAnimated {
 		Meteor(const Sprite &ptr_sprite, float X, float Y);
 		~Meteor();
 		void __fastcall update(float time) override final;
-		void render(RenderWindow& wd, Sprite *ptr_sprite, Sprite *ptr_sprite_meteor);
-		void render(RenderWindow* wd, Sprite *ptr_sprite, Sprite *ptr_sprite_meteor);
+		void render(RenderWindow& wd, Sprite *ptr_sprite, Sprite *ptr_sprite_meteor) noexcept;
 };
 
 #endif
