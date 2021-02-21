@@ -101,7 +101,7 @@ public:
 	/// Возвращает позицию камеры
 	/// </summary>
 	/// <returns>Структура axes_i</returns>
-	axes_i getPosition() const noexcept;
+	const axes_i& getPosition() const noexcept;
 	/// <summary>
 	/// Возвращает ширину вьюпорта камеры в пикселях  
 	/// </summary>
@@ -116,7 +116,7 @@ public:
 	/// Возвращает данные о хитбоке: ширина, высота, функции проверки пересечения
 	/// </summary>
 	/// <returns>Структура FloatRect</returns>
-	FloatRect getBounds() const noexcept;
+	const FloatRect& getBounds() const noexcept;
 	void setView(RenderWindow &wd);
 };
 
@@ -148,12 +148,12 @@ class Collision {
 		/// Возвращает позицию хитбокса по осям X и Y
 		/// </summary>
 		/// <returns>Структура axes_i</returns>
-		axes_i getPosition() const noexcept;
+		const axes_i& getPosition() const noexcept;
 		/// <summary>
 		/// Возвращает данные о хитбоке: ширина, высота, функции проверки пересечения
 		/// </summary>
 		/// <returns>Структура IntRect</returns>
-		IntRect getBounds() const noexcept;
+		const IntRect& getBounds() const noexcept;
 		/// <summary>
 		/// Устанавливает новые данные о хитбоксе
 		/// </summary>
@@ -176,10 +176,10 @@ class BaseCharacter {
 		~BaseCharacter();
 		bool cooldown, isDead, visible;
 		int health;
-		virtual axes_f getPosition() const noexcept;
+		virtual const axes_f& getPosition() const noexcept;
 		virtual void __fastcall setPosition(float x, float y);
 		virtual void __fastcall setPosition(const axes_f& xy);
-		virtual IntRect getSize() const noexcept;
+		virtual const IntRect& getSize() const noexcept;
 		virtual void render(RenderWindow& wd, Sprite *ptr_sprite) noexcept;
 };
 
@@ -204,7 +204,7 @@ class ObjectStatic {
 		/// Возвращает позицию
 		/// </summary>
 		/// <returns>Структура axes_i</returns>
-		virtual axes_i getPosition() const noexcept;
+		virtual const axes_i& getPosition() const noexcept;
 		/// <summary>
 		/// Устанавливает позицию хитбокса по осям X и Y
 		/// </summary>
@@ -252,10 +252,10 @@ namespace _interface {
 			BaseInerface(const axes_i &xy, const FloatRect &rect);
 			~BaseInerface();
 			bool visible;
-			virtual axes_i getPosition() const noexcept;
+			virtual const axes_i& getPosition() const noexcept;
 			virtual void setPosition(const axes_i &xy);
 			virtual void __fastcall setPosition(int x, int y);
-			virtual FloatRect getSize() const noexcept;
+			virtual const FloatRect& getSize() const noexcept;
 			virtual void render(RenderWindow &wd);
 	};
 
@@ -554,7 +554,7 @@ namespace _interface {
 	class multiline_text {
 		private:
 			int SIZE_MSTX, max_length; //Размерность массива(кол-во строк в нем), максимальная длина текста в пикселях
-			axes_f pos; //Структура axes_i с координатами по осям X и Y
+			axes_f pos; //Структура axes_f с координатами по осям X и Y
 			RectangleShape *bevel; //Прямоугольник под текстом  
 			Font *font_main;
 		public:

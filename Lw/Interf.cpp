@@ -118,14 +118,14 @@ void __fastcall Character::move(float time, int direct) noexcept {
 				frame = 0;
 			}
 			sprite_rect = IntRect(400 * int(frame), 250, 400, 250);
-			pos.x = pos.x + (0.5 * time);
+			pos.x = pos.x + (0.5 * time); break;
 		case direcrion8::left:
 			frame += 0.023 * time;
 			if (frame > 7) {
 				frame = 0;
 			}
 			sprite_rect = IntRect(400 * int(frame) + 400, 250, -400, 250);
-			pos.x = pos.x + (-0.5 * time);
+			pos.x = pos.x + (-0.5 * time); break;
 		default: break;
 		}
 	}
@@ -205,7 +205,7 @@ ObjectStatic::~ObjectStatic() {
 	delete rect_collis;
 }
 
-axes_i ObjectStatic::getPosition() const noexcept {
+const axes_i& ObjectStatic::getPosition() const noexcept {
 	return pos;
 }
 
@@ -278,7 +278,7 @@ void Camer::setZoom(float zoom) {
 	Vid->zoom(zoom);
 }
 
-axes_i Camer::getPosition() const noexcept {
+const axes_i& Camer::getPosition() const noexcept {
 	return pos;
 }
 
@@ -289,7 +289,7 @@ int Camer::getScreenHeight() const noexcept {
 	return screen_H;
 }
 
-FloatRect Camer::getBounds() const noexcept {
+const FloatRect& Camer::getBounds() const noexcept {
 	return Vid->getViewport();
 }
 
@@ -1638,11 +1638,11 @@ void Collision::setPosition(const axes_i &xy) {
 	rect_collis.top = pos.y;
 }
 
-axes_i Collision::getPosition() const noexcept {
+const axes_i& Collision::getPosition() const noexcept {
 	return pos;
 }
 
-IntRect Collision::getBounds() const noexcept {
+const IntRect& Collision::getBounds() const noexcept {
 	return rect_collis;
 }
 
@@ -2096,11 +2096,11 @@ BaseCharacter::BaseCharacter(const Sprite& ptr_sprite, const axes_f& xy, int _hp
 
 BaseCharacter::~BaseCharacter() {}
 
-axes_f BaseCharacter::getPosition() const noexcept {
+const axes_f& BaseCharacter::getPosition() const noexcept {
 	return pos;
 }
 
-IntRect BaseCharacter::getSize() const noexcept {
+const IntRect& BaseCharacter::getSize() const noexcept {
 	return sprite_rect;
 }
 
@@ -2147,7 +2147,7 @@ _interface::BaseInerface::~BaseInerface() {
 
 }
 
-axes_i _interface::BaseInerface::getPosition() const noexcept {
+const axes_i& _interface::BaseInerface::getPosition() const noexcept {
 	return pos;
 }
 
@@ -2160,7 +2160,7 @@ void _interface::BaseInerface::setPosition(int x, int y) {
 	pos.y = y;
 }
 
-FloatRect _interface::BaseInerface::getSize() const noexcept {
+const FloatRect& _interface::BaseInerface::getSize() const noexcept {
 	return fl_rect;
 }
 
