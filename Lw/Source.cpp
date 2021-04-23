@@ -2395,7 +2395,7 @@ class Game {
 		void ExecuteCommand(const char* command) {
 			std::string find_str(command);
 
-			if (find_str.find("-moremane") != std::string::npos) {
+			if (find_str.find("-moremana") != std::string::npos) {
 				barmp_max = 99999;
 				barmp = 99999;
 			}
