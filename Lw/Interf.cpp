@@ -387,7 +387,7 @@ void __fastcall _interface::bar::changeBar(int arg) noexcept {
 		if (arg < 0) {
 			arg = 0;
 		}
-	bevel->setSize(Vector2f((400 * arg) / max_bar, label->getGlobalBounds().height));
+	bevel->setSize(Vector2f(static_cast<unsigned long long>(400 * arg) / max_bar, label->getGlobalBounds().height));
 	curr_bar = arg;
 	}
 }

@@ -66,8 +66,8 @@ struct axes {
 	axes(type _x, type _y);
 };
 
-typedef axes<int> axes_i;
-typedef axes<float> axes_f;
+using axes_i = axes<int>;
+using axes_f = axes<float>;
 
 class Camer {
 private:

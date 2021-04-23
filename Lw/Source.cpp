@@ -42,10 +42,16 @@ class Game {
 		uint32_t CENTER_SCREEN_X;
 		uint32_t CENTER_SCREEN_Y;
 		int volume; //Громкость звука
+		float barhp; //Здоровье
+		float barmp; //Текущее значение маны
+		float barmp_max; //Максимальное значение маны, нужно для восстановления маны
+		int mp_need_cast_expl; //Нужное кол-во маны для взрыва
+		int mp_need_cast_ice; //Нужное кол-во маны для призыва кристалла
 		
 	public:
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		Game() {
+
 			config = new configuration;
 			if (!config->loadSettings()) {
 				config->createSettings(screen_width, screen_height, 8, true, 30, true, true, 50);
@@ -116,6 +122,12 @@ class Game {
 
 			CENTER_SCREEN_X = config->screenWidth / 2;
 			CENTER_SCREEN_Y = config->screenHeight / 2;
+
+			barhp = 200; 
+			barmp_max = 150;
+			barmp = barmp_max;
+			mp_need_cast_expl = 20;
+			mp_need_cast_ice = 100; 
 
 		}
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -333,14 +345,9 @@ class Game {
 			bool cooldown_expl = false; //Кулдаун для метеорита
 
 			float timer; //Глобальное время
-			float barhp = 200; //Здоровье
-			float barmp = 150; //Мана
-			float barmp_max = 150;
-			int mp_need_cast_expl = 20; //Нужное кол-во маны для взрыва
-			int mp_need_cast_ice = 100; //Нужное кол-во маны для призыва кристалла
 
 			HP = new _interface::bar(r_pointer_cast(((char*)(ptr_global_memory) + block_memory_font), Font), 5, 5, barhp, 0, L"HP:", Color::White, Color::Red, Color::Black); //Полоса здоровья
-			MP = new _interface::bar(r_pointer_cast(((char*)(ptr_global_memory) + block_memory_font), Font), 5, HP->getSize().left + HP->getSize().width + 5, barmp, 0, L"MP:", Color::White, Color::Blue, Color::Black); //Полоса маны
+			MP = new _interface::bar(r_pointer_cast(((char*)(ptr_global_memory) + block_memory_font), Font), 5, HP->getSize().left + HP->getSize().width + 5, barmp_max, 0, L"MP:", Color::White, Color::Blue, Color::Black); //Полоса маны
 
 			_interface::message *message_end = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, r_pointer_cast(((char*)(ptr_global_memory) + block_memory_font), Font), L"Захватчики разрушили ваш замок, вы проиграли", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
 			_interface::message *message_vic = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, r_pointer_cast(((char*)(ptr_global_memory) + block_memory_font), Font), L"Вы победили всех нападающих противников! Поздравляем!", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
@@ -1928,8 +1935,8 @@ class Game {
 			Castle->rect_collis->setBounds(IntRect(0, 0, 400, 1500));
 			//int sd = 0;
 			float timer;
-			float barhp = 100;
-			float barmp = 100;
+			//float barhp = 100;
+			//flbarmp = 100;
 
 			_interface::message *message_end = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, r_pointer_cast(((char*)(ptr_global_memory) + block_memory_font), Font), L"Замок разрушен, вы проиграли", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
 			_interface::message *message_settings = new _interface::message(config->screenWidth / 2, config->screenHeight / 2, r_pointer_cast(((char*)(ptr_global_memory) + block_memory_font), Font), L"Изменения вступят в силу после перезапуска игры", Color(38, 38, 38, 255), Color::Yellow, Color::Yellow);
@@ -2317,7 +2324,8 @@ class Game {
 					MP->resize(_interface::text_size::big);
 					MP->render(*window);
 				}
-				if (mltAboutEnemy->visible) {
+				if (mltAboutEnemy->visible) {					
+
 					for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
 						(*it_sp)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3));
 						it_sp++;
@@ -2384,6 +2392,20 @@ class Game {
 		}
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		
+		void ExecuteCommand(const char* command) {
+			std::string find_str(command);
+
+			if (find_str.find("-moremane") != std::string::npos) {
+				barmp_max = 99999;
+				barmp = 99999;
+			}
+
+			if (find_str.find("-morehealth") != std::string::npos) {
+				barhp = 99999;
+			}
+		}
+
+		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		void StartApp() {
 			int out;
 			out = this->Run();
@@ -2398,13 +2420,19 @@ class Game {
 		}
 };
 
-int main(){
+int main(int argc, char* argv[]){
 	#pragma comment(linker, "/SUBSYSTEM:windows /ENTRY:mainCRTStartup")
 
 	Game *gamez = new Game();
 
+	if (argc >= 2) { //Проверяем наличие ключей запуска
+		for (int i = 1; argc > i; i++) {
+			gamez->ExecuteCommand(argv[i]);
+		}
+	}
+
 	try {
-		gamez->StartApp();
+		gamez->StartApp(); //Запускаем приложение
 	} catch(...) {
 		
 	}
