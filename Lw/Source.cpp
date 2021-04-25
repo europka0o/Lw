@@ -16,8 +16,12 @@ unsigned int screen_height = GetSystemMetrics(SM_CYSCREEN);
 
 #endif
 #pragma hdrstop
-using namespace sf;
-using namespace std;
+
+using sf::Clock;
+using sf::Event;
+using sf::VideoMode;
+using sf::Mouse, sf::Keyboard;
+using sf::SoundBuffer, sf::Sound, sf::Music;
 
 enum lvlnum {
 	lvlRun = 1,
@@ -147,6 +151,9 @@ class Game {
 		}
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		int Run() {
+
+
+
 			Clock clock;
 			float timer = 0;
 
@@ -315,6 +322,9 @@ class Game {
 		}
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 		int LvlRun() {
+
+			using std::list;
+
 			Clock clock;
 			World *MainWrd;
 			_interface::bar *HP;
@@ -1834,6 +1844,9 @@ class Game {
 		//--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 		int lvlTraining() {
+
+			using std::list;
+
 			Clock clock;
 			World *MainWrd;
 			_interface::bar *HP;

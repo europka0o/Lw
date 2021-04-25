@@ -7,10 +7,19 @@
 #include <sstream>
 #include <LuaBridge/LuaBridge.h>
 
-using namespace sf; 
+//using namespace sf; 
 
 #ifndef _INTERFACE_G
 #define _INTERFACE_G
+
+using sf::View;
+using sf::FloatRect;
+using sf::RectangleShape;
+using sf::Text;
+using sf::Color;
+using sf::Font;
+using sf::IntRect;
+using sf::Vector2f;
 
 enum class settings_save_code {
 	sound_or_sound_volume_or_verticalS = 1,

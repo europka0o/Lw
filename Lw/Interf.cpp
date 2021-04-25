@@ -316,7 +316,7 @@ World::World(Image *ptr_on_img, int X_SIZE, int Y_SIZE) :
 	}
 
 	for (int i = 0; i < size_y; i++) {
-		mass_sp[i] = String(mass_ch);
+		mass_sp[i] = sf::String(mass_ch);
 	}
 	delete[] mass_ch;
 }
