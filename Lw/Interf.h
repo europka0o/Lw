@@ -172,6 +172,12 @@ class Collision {
 
 typedef Collision Trigger;
 
+#define DEFULT_CLASS 0
+#define SPEARMAN_CLASS 1
+#define DESTROERCASTLE_CLASS 2
+#define KNIGHT_CLASS 3
+#define ICEBALL_CLASS 4
+
 class BaseCharacter {
 	protected:
 		axes_f pos;
@@ -180,14 +186,19 @@ class BaseCharacter {
 		bool zeroing;
 	public:
 		BaseCharacter();
-		BaseCharacter(const Sprite &ptr_sprite, float x, float y, int _hp);
-		BaseCharacter(const Sprite &ptr_sprite, const axes_f& xy, int _hp);
-		~BaseCharacter();
-		bool cooldown, isDead, visible;
+		BaseCharacter(const Sprite &ptr_sprite, float x, float y, int _hp, unsigned int descendant = DEFULT_CLASS);
+		BaseCharacter(const Sprite &ptr_sprite, const axes_f& xy, int _hp, unsigned int descendant = DEFULT_CLASS);
+		virtual ~BaseCharacter();
+		Collision* rect_collis;
+		unsigned int descendant_class;
+		bool cooldown, is_dead, visible;
 		int health;
 		virtual const axes_f& getPosition() const noexcept;
 		virtual void __fastcall setPosition(float x, float y);
 		virtual void __fastcall setPosition(const axes_f& xy);
+		virtual void __fastcall move(float time, int direct = 0) noexcept;
+		virtual void __fastcall attack(float time);
+		virtual bool isCooldown(float time);
 		virtual const IntRect& getSize() const noexcept;
 		virtual void render(RenderWindow& wd, Sprite *ptr_sprite) noexcept;
 };
@@ -325,7 +336,7 @@ namespace _interface {
 			RectangleShape *main, *active_bvl;
 		public:
 			bool active;
-			button(int x, int y, const Font &font, const std::wstring &text, const Color &maincl, const Color &textcl, const Color &activecl);
+			button(int x, int y, const Font &font, const wchar_t *text, const Color &maincl, const Color &textcl, const Color &activecl);
 			~button();
 			void setPosition(const axes_i &xy) override;
 			void __fastcall setPosition(int x, int y) override;
@@ -355,7 +366,7 @@ namespace _interface {
 			~combo_box();
 			void setPosition(const axes_i &xy) override;
 			void __fastcall setPosition(int x, int y) override;
-			void add(const std::wstring &st, int val);
+			void add(const wchar_t *st, int val);
 			void next();
 			void back();
 			bool __fastcall isAction(int x, int y);
@@ -385,9 +396,9 @@ namespace _interface {
 		public:
 			bool visible_bevel; //Видимость прямоугольника под текстом 
 			Text* label;
-			text(const Font& font, int x = 0, int y = 0, const std::wstring& txt = L"NON:", const Color &lbcol = Color::White, const Color &bvcol = Color::Black);
+			text(const Font& font, int x = 0, int y = 0, const wchar_t *txt = L"NON:", const Color &lbcol = Color::White, const Color &bvcol = Color::Black);
 			~text();
-			void setString(const std::wstring &txt) noexcept; //Задает текст 
+			void setString(const wchar_t *txt) noexcept; //Задает текст 
 			void setFont(const Font &font) noexcept; //Путь к фону для текста
 			void __fastcall setPosition(int x, int y) noexcept override; //Устанавливает позицию объекта по осям X, Y
 			void setPosition(const axes_i &xy) noexcept override; //Устанавливает позицию объекта по осям X, Y 
@@ -406,7 +417,7 @@ namespace _interface {
 		public:
 			bool active;
 			button *btOk;
-			message(int x, int y, const Font& font, const std::wstring& txt, const Color &maincl, const Color &bordercl, const Color &textcl);
+			message(int x, int y, const Font& font, const wchar_t *txt, const Color &maincl, const Color &bordercl, const Color &textcl);
 			~message();
 			void render(RenderWindow &wd, Camer *camera) noexcept;
 			void render(RenderWindow &wd) noexcept;
@@ -478,7 +489,7 @@ namespace _interface {
 			/// <param name="bcol">Цвет прямоугольника под полосой</param>
 			/// <param name="tcol">Цвет текста</param>
 			/// <returns></returns>
-			bar(const Font &font, int x = 0, int y = 0, int br_ma = 100, int br_mi = 0, const std::wstring& name = L"NON:", const Color &mcol = Color::White, const Color &bcol = Color::Red, const Color &tcol = Color::Black);
+			bar(const Font &font, int x = 0, int y = 0, int br_ma = 100, int br_mi = 0, const wchar_t *name = L"NON:", const Color &mcol = Color::White, const Color &bcol = Color::Red, const Color &tcol = Color::Black);
 			bar(); //Конструктор по умолчанию
 			~bar(); //Деструктор
 			/// <summary>
@@ -623,19 +634,18 @@ namespace _interface {
 
 }; //Конец пространства имен _interface
 
-class Character : public BaseCharacter {
+class Knight : public BaseCharacter {
 	private:
 		int direction, last_direction;
 		_interface::min_bar* HP;
 	public:
-		Collision* rect_collis;
-		Character(const Sprite &ptr_sprite, float X_POS, float Y_POS, int hp);
-		~Character();
+		Knight(const Sprite &ptr_sprite, float X_POS, float Y_POS, int hp, unsigned int descendant = KNIGHT_CLASS);
+		virtual ~Knight();
 		void __fastcall setPosition(float x, float y) noexcept override;
 		void setPosition(const axes_f& xy) noexcept override;
-		void __fastcall move(float time, int direct = 0) noexcept;
-		void __fastcall attack(float time);
-		bool isCooldown(float time);
+		void __fastcall move(float time, int direct = 0) noexcept override;
+		void __fastcall attack(float time) override;
+		bool isCooldown(float time) override;
 		void render(RenderWindow& wd, Sprite *ptr_sprite) noexcept override;
 };
 
@@ -644,14 +654,13 @@ class DestroerCastle : public BaseCharacter {
 		int direction, last_direction;
 		_interface::min_bar* HP;
 	public:
-		Collision* rect_collis;
-		DestroerCastle(const Sprite &ptr_sprite, float X_POS, float Y_POS, int hp);
-		~DestroerCastle();
+		DestroerCastle(const Sprite &ptr_sprite, float X_POS, float Y_POS, int hp, unsigned int descendant = DESTROERCASTLE_CLASS);
+		virtual ~DestroerCastle();
 		void __fastcall setPosition(float x, float y) noexcept override;
 		void setPosition(const axes_f& xy) noexcept override;
-		void __fastcall move(float time, int direct) noexcept;
-		void __fastcall attack(float time);
-		bool isCooldown(float time);
+		void __fastcall move(float time, int direct = 0) noexcept override;
+		void __fastcall attack(float time) override;
+		bool isCooldown(float time) override;
 		void render(RenderWindow& wd, Sprite *ptr_sprite) noexcept override;
 };
 
@@ -660,14 +669,13 @@ class Spearman : public BaseCharacter {
 		int direction, last_direction;
 		_interface::min_bar* HP;
 	public:
-		Collision* rect_collis;
-		Spearman(const Sprite &ptr_sprite, float X_POS, float Y_POS, int hp);
-		~Spearman();
+		Spearman(const Sprite &ptr_sprite, float X_POS, float Y_POS, int hp, unsigned int descendant = SPEARMAN_CLASS);
+		virtual ~Spearman();
 		void __fastcall setPosition(float x, float y) noexcept override;
 		void setPosition(const axes_f& xy) noexcept override;
-		void __fastcall move(float time, int direct) noexcept;
-		void __fastcall attack(float time);
-		bool isCooldown(float time);
+		void __fastcall move(float time, int direct = 0) noexcept override;
+		void __fastcall attack(float time) override;
+		bool isCooldown(float time) override;
 		void render(RenderWindow& wd, Sprite *ptr_sprite) noexcept override;
 };
 
@@ -675,13 +683,12 @@ class IceBall : public BaseCharacter {
 	private:
 		_interface::min_bar* HP;
 	public:
-		Collision* rect_collis;
-		IceBall(const Sprite &ptr_sprite, float X_POS, float Y_POS, int hp);
-		~IceBall();
+		IceBall(const Sprite &ptr_sprite, float X_POS, float Y_POS, int hp, unsigned int descendant = ICEBALL_CLASS);
+		virtual ~IceBall();
 		void __fastcall setPosition(float x, float y) noexcept override;
 		void setPosition(const axes_f &xy) noexcept override;
 		void __fastcall update(float time) noexcept;
-		bool isCooldown(float time);
+		bool isCooldown(float time) override;
 		void render(RenderWindow& wd, Sprite* ptr_sprite) noexcept override;
 };
 

@@ -67,35 +67,35 @@ template<typename type>
 axes<type>::axes(type _x, type _y) : x(_x), y(_y) {}
 //----------------------------------Структура-оси-axes-Конец-------------------------------
 
-// ----------------------------------Персанаж-Character-Начало------------------------------
-Character::Character(const Sprite& ptr_sprite, float X_POS, float Y_POS, int hp) :
-	BaseCharacter(ptr_sprite, X_POS, Y_POS, hp)
+// ----------------------------------Персанаж-Knight-Начало------------------------------
+Knight::Knight(const Sprite& ptr_sprite, float X_POS, float Y_POS, int hp, unsigned int descendant) :
+	BaseCharacter(ptr_sprite, X_POS, Y_POS, hp, descendant)
 	{
 	direction = 0;
 	last_direction = direction;
 	sprite_rect = IntRect(400 * int(frame), 250, 300, 250);
-	rect_collis = new Collision(IntRect(pos.x, pos.y, abs(sprite_rect.width) - 20, abs(sprite_rect.height) - 20));
+	*rect_collis = Collision{ IntRect(pos.x, pos.y, abs(sprite_rect.width) - 20, abs(sprite_rect.height) - 20) };
 	HP = new _interface::min_bar(pos.x + (abs(sprite_rect.width) / 2), pos.y + abs(sprite_rect.height), health, 0, Color::Black, Color::Red);
 }
 
-Character::~Character() {
+Knight::~Knight() {
 	delete HP;
 }
 
-void __fastcall Character::setPosition(float x, float y) noexcept {
+void __fastcall Knight::setPosition(float x, float y) noexcept {
 	pos.x = x;
 	pos.y = y;
 	rect_collis->setPosition(pos.x, pos.y);
 	HP->setPosition(pos.x + (abs(sprite_rect.width) / 2) - (HP->getSize().width / 2) + 25, pos.y + abs(sprite_rect.height));
 }
 
-void Character::setPosition(const axes_f& xy) noexcept {
+void Knight::setPosition(const axes_f& xy) noexcept {
 	pos = xy;
 	rect_collis->setPosition(pos.x, pos.y);
 	HP->setPosition(pos.x + (abs(sprite_rect.width) / 2) - (HP->getSize().width / 2) + 25, pos.y + abs(sprite_rect.height));
 }
 
-void __fastcall Character::move(float time, int direct) noexcept {
+void __fastcall Knight::move(float time, int direct) noexcept {
 	direction = direct;
 
 	if (health <= 0 && !zeroing) {
@@ -107,7 +107,7 @@ void __fastcall Character::move(float time, int direct) noexcept {
 		frame += 0.04 * time;
 		if (frame > 7) {
 			frame = 6;
-			isDead = true;
+			is_dead = true;
 		}
 		sprite_rect = IntRect(400 * int(frame) + 400, 0, -400, 250);
 	} else {
@@ -136,7 +136,7 @@ void __fastcall Character::move(float time, int direct) noexcept {
 	rect_collis->setPosition(pos.x + 100, pos.y + 20);
 }
 
-void __fastcall Character::attack(float time) {
+void __fastcall Knight::attack(float time) {
 	if (health <= 0 && !zeroing) {
 		zeroing = true;
 		frame = 0;
@@ -146,7 +146,7 @@ void __fastcall Character::attack(float time) {
 		frame += 0.023 * time;
 		if (frame > 7) {
 			frame = 6;
-			isDead = true;
+			is_dead = true;
 		}
 		sprite_rect = IntRect(400 * int(frame) + 400, 0, -400, 250);
 	} else {
@@ -158,7 +158,7 @@ void __fastcall Character::attack(float time) {
 	}
 }
 
-bool Character::isCooldown(float time) {
+bool Knight::isCooldown(float time) {
 	if (!cooldown) {
 		timer_cooldown = 0;
 		return false;
@@ -174,7 +174,7 @@ bool Character::isCooldown(float time) {
 	}
 }
 
-void Character::render(RenderWindow& wd, Sprite* ptr_sprite) noexcept {
+void Knight::render(RenderWindow& wd, Sprite* ptr_sprite) noexcept {
 	if (visible) {
 		ptr_sprite->setPosition(pos.x, pos.y);
 		ptr_sprite->setTextureRect(sprite_rect);
@@ -183,7 +183,7 @@ void Character::render(RenderWindow& wd, Sprite* ptr_sprite) noexcept {
 		HP->render(wd);
 	}
 }
-//----------------------------------Персанаж-Character-Конец------------------------------
+//----------------------------------Персанаж-Knight-Конец------------------------------
 
 //---------------------------Статический-объект-ObjectStatic-Начало------------------------------
 ObjectStatic::ObjectStatic(const Sprite &ptr_sprite, float X, float Y) : 
@@ -340,7 +340,7 @@ void World::render(RenderWindow& wd) noexcept {
 //-----------------------------------Мир-World-Конец-------------------------------------
 
 //-----------------------------------Полоса-bar-Начало-------------------------------------
-_interface::bar::bar(const Font &font, int x, int y, int br_ma, int br_mi, const std::wstring &name, const Color &mcol, const Color &bcol, const Color &tcol) :
+_interface::bar::bar(const Font &font, int x, int y, int br_ma, int br_mi, const wchar_t *name, const Color &mcol, const Color &bcol, const Color &tcol) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	max_bar(br_ma),
 	min_bar(br_mi),
@@ -442,7 +442,7 @@ void _interface::bar::resize(int size) noexcept {
 //-----------------------------------Полоса-bar-Конец--------------------------------------
 
 //-----------------------------------Текст-text-Начало-------------------------------------
-_interface::text::text(const Font& font, int x, int y, const std::wstring& txt, const Color &lbcol, const Color &bvcol) :
+_interface::text::text(const Font& font, int x, int y, const wchar_t *txt, const Color &lbcol, const Color &bvcol) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	visible_bevel(true)
 	{
@@ -471,7 +471,7 @@ _interface::text::~text() {
 	delete label, bevel;
 }
 
-void _interface::text::setString(const std::wstring& txt) noexcept {
+void _interface::text::setString(const wchar_t *txt) noexcept {
 	label->setString(txt);
 	_interface::text::resize(label->getCharacterSize());
 }
@@ -628,7 +628,7 @@ void _interface::multiline_text::render(RenderWindow &wd) noexcept {
 //-----------------------------------Многострочный-текст-multiline_text-Конец-------------------------------------
 
 //-----------------------------------Кнопка-button-Начало-------------------------------------
-_interface::button::button(int x, int y, const Font &font, const std::wstring& text, const Color &maincl, const Color &textcl, const Color &activecl) :
+_interface::button::button(int x, int y, const Font &font, const wchar_t *text, const Color &maincl, const Color &textcl, const Color &activecl) :
 	BaseInerface(x, y, FloatRect(Vector2f(0, 0), Vector2f(0, 0))),
 	active(false)
 	{
@@ -1438,7 +1438,7 @@ void __fastcall _interface::combo_box::setPosition(int x, int y) {
 	fl_rect = main->getGlobalBounds();
 }
 
-void _interface::combo_box::add(const std::wstring& st, int val) {
+void _interface::combo_box::add(const wchar_t *st, int val) {
 	mass_text.push_back(new cell(Text(st, *font, _interface::text_size::small), val));
 	it = mass_text.end();
 	it--;
@@ -1526,7 +1526,7 @@ void _interface::combo_box::render(RenderWindow &wd) noexcept {
 //-----------------------------Комбо-бокс-combo_box-Конец---------------------------------------
 
 //-----------------------------Сообщение-message-Начало---------------------------------------
-_interface::message::message(int x, int y, const Font& font, const std::wstring &txt, const Color& maincl, const Color& bordercl, const Color& textcl) :
+_interface::message::message(int x, int y, const Font& font, const wchar_t *txt, const Color& maincl, const Color& bordercl, const Color& textcl) :
 	active(false)
 	{
 	pos.x = x;
@@ -1713,19 +1713,18 @@ void _interface::min_bar::render(RenderWindow &wd) noexcept {
 //-----------------------------Мини-полоса-min_bar-Конец-----------------------------------------
 
 //-----------------------------------Разрушитель-замков-DestroerCastle-Начало-----------------------------------------
-DestroerCastle::DestroerCastle(const Sprite& ptr_sprite, float X_POS, float Y_POS, int hp) :
-	BaseCharacter(ptr_sprite, X_POS, Y_POS, hp)
+DestroerCastle::DestroerCastle(const Sprite& ptr_sprite, float X_POS, float Y_POS, int hp, unsigned int descendant) :
+	BaseCharacter(ptr_sprite, X_POS, Y_POS, hp, descendant)
 	{
 	direction = 0;
 	last_direction = direction;
 	sprite_rect = IntRect(0, 0, 600, 350);
-	rect_collis = new Collision(IntRect(pos.x, pos.y, abs(sprite_rect.width), abs(sprite_rect.height)));
+	*rect_collis = Collision{ IntRect(pos.x, pos.y, abs(sprite_rect.width), abs(sprite_rect.height)) };
 	HP = new _interface::min_bar(pos.x + (abs(sprite_rect.width) / 2), pos.y + abs(sprite_rect.top), health, 0, Color::Black, Color::Red);
 }
 
 DestroerCastle::~DestroerCastle() {
 	delete HP;
-	delete rect_collis;
 }
 
 void __fastcall DestroerCastle::setPosition(float x, float y) noexcept {
@@ -1753,7 +1752,7 @@ void __fastcall DestroerCastle::move(float time, int direct) noexcept {
 		frame += 0.023 * time;
 		if (frame > 6) {
 			frame = 5;
-			isDead = true;
+			is_dead = true;
 		}
 		sprite_rect = IntRect(600 * int(frame), 700, 600, 350);
 	} else {
@@ -1791,7 +1790,7 @@ void __fastcall DestroerCastle::attack(float time) {
 		frame += 0.023 * time;
 		if (frame > 6) {
 			frame = 5;
-			isDead = true;
+			is_dead = true;
 		}
 		sprite_rect = IntRect(600 * int(frame), 700, 600, 350);
 	} else {
@@ -1832,13 +1831,13 @@ void DestroerCastle::render(RenderWindow& wd, Sprite* ptr_sprite) noexcept {
 //-----------------------------------Разрушитель-замков-DestroerCastle-Конец------------------------------------------
 
 //-----------------------------------------Копейщик-Spearman-Начало------------------------------------------
-Spearman::Spearman(const Sprite& ptr_sprite, float X_POS, float Y_POS, int hp) :
-	BaseCharacter(ptr_sprite, X_POS, Y_POS, hp)
+Spearman::Spearman(const Sprite& ptr_sprite, float X_POS, float Y_POS, int hp, unsigned int descendant) :
+	BaseCharacter(ptr_sprite, X_POS, Y_POS, hp, descendant)
 	{
 	direction = 0;
 	last_direction = direction;
 	sprite_rect = IntRect(300 * int(frame), 0, 300, 180);
-	rect_collis = new Collision(IntRect(pos.x + 15, pos.y, abs(sprite_rect.width) - 30, abs(sprite_rect.height)));
+	*rect_collis = Collision{ IntRect(pos.x + 15, pos.y, abs(sprite_rect.width) - 30, abs(sprite_rect.height)) };
 	HP = new _interface::min_bar(pos.x + (sprite_rect.width / 2), pos.y + sprite_rect.height, health, 0, Color::Black, Color::Red);
 }
 
@@ -1871,7 +1870,7 @@ void __fastcall Spearman::move(float time, int direct) noexcept {
 		frame += 0.023 * time;
 		if (frame > 7) {
 			frame = 6;
-			isDead = true;
+			is_dead = true;
 		}
 		sprite_rect = IntRect(300 * int(frame) + 300, 360, -300, 180);
 	} else {
@@ -1909,7 +1908,7 @@ void __fastcall Spearman::attack(float time) {
 		frame += 0.023 * time;
 		if (frame > 7) {
 			frame = 6;
-			isDead = true;
+			is_dead = true;
 		}
 		sprite_rect = IntRect(300 * int(frame) + 300, 360, -300, 180);
 	} else {
@@ -1977,20 +1976,17 @@ void _interface::background_color::render(RenderWindow &wd) noexcept {
 //-------------------------------------Задний-фон-background_color-Конец------------------------------------------
 
 //---------------------------------------Ледяной-шар-IceBall-Начало------------------------------------------
-IceBall::IceBall(const Sprite &ptr_sprite, float X_POS, float Y_POS, int hp) :
-	BaseCharacter(ptr_sprite, X_POS, Y_POS, hp)
+IceBall::IceBall(const Sprite &ptr_sprite, float X_POS, float Y_POS, int hp, unsigned int descendant) :
+	BaseCharacter(ptr_sprite, X_POS, Y_POS, hp, descendant)
 	{
-	//sprt->setTextureRect(IntRect(0, 0, 400, 120));
-	//sprt->setPosition(pos.x, pos.y);
-
 	sprite_rect = IntRect(0, 0, 400, 120); //fl_rect = sprt->getGlobalBounds();
-	rect_collis = new Collision(IntRect(pos.x, pos.y, 120, abs(sprite_rect.height)));
+	*rect_collis = Collision{ IntRect(pos.x, pos.y, 120, abs(sprite_rect.height)) };
 
 	HP = new _interface::min_bar(pos.x + (abs(sprite_rect.width) / 2) - 200, pos.y + abs(sprite_rect.height), health, 0, Color::Black, Color::Green);
 }
 
 IceBall::~IceBall() {
-	delete rect_collis, HP;
+	delete HP;
 }
 
 void __fastcall IceBall::setPosition(float x, float y) noexcept {
@@ -2016,7 +2012,7 @@ void __fastcall IceBall::update(float time) noexcept {
 		frame += 0.023 * time;
 		if (frame > 5) {
 			frame = 4;
-			isDead = true;
+			is_dead = true;
 		}
 		sprite_rect = IntRect(400 * int(frame), 120, 400, 120); //sprt->setTextureRect(IntRect(400 * int(frame), 120, 400, 120));
 	} else {
@@ -2061,40 +2057,48 @@ BaseCharacter::BaseCharacter() :
 	health(0),
 	visible(true),
 	cooldown(false),
-	isDead(false),
+	is_dead(false),
 	zeroing(false),
 	timer_cooldown(0),
-	frame(0)
+	frame(0),
+	descendant_class(DEFULT_CLASS)
 	{
+	rect_collis = new Collision(IntRect(pos.x, pos.y, 0, 0));
 }
 
-BaseCharacter::BaseCharacter(const Sprite& ptr_sprite, float x, float y, int _hp) :
+BaseCharacter::BaseCharacter(const Sprite& ptr_sprite, float x, float y, int _hp, unsigned int descendant) :
 	pos(x, y),
 	health(_hp),
 	visible(true),
 	cooldown(false),
-	isDead(false),
+	is_dead(false),
 	zeroing(false),
 	timer_cooldown(0),
-	frame(0)
+	frame(0),
+	descendant_class(descendant)
 	{
 	sprite_rect = static_cast<IntRect>(ptr_sprite.getGlobalBounds());
+	rect_collis = new Collision(IntRect(pos.x, pos.y, abs(sprite_rect.width), abs(sprite_rect.height)));
 }
 
-BaseCharacter::BaseCharacter(const Sprite& ptr_sprite, const axes_f& xy, int _hp) :
+BaseCharacter::BaseCharacter(const Sprite& ptr_sprite, const axes_f& xy, int _hp, unsigned int descendant) :
 	pos(xy),
 	health(_hp),
 	visible(true),
 	cooldown(false),
-	isDead(false),
+	is_dead(false),
 	zeroing(false),
 	timer_cooldown(0),
-	frame(0)
+	frame(0),
+	descendant_class(descendant)
 	{
 	sprite_rect = static_cast<IntRect>(ptr_sprite.getGlobalBounds());
+	rect_collis = new Collision(IntRect(pos.x, pos.y, abs(sprite_rect.width), abs(sprite_rect.height)));
 }
 
-BaseCharacter::~BaseCharacter() {}
+BaseCharacter::~BaseCharacter() {
+	delete rect_collis;
+}
 
 const axes_f& BaseCharacter::getPosition() const noexcept {
 	return pos;
@@ -2111,6 +2115,18 @@ void BaseCharacter::setPosition(float x, float y) {
 
 void BaseCharacter::setPosition(const axes_f &xy) {
 	pos = xy;
+}
+
+void __fastcall BaseCharacter::move(float time, int direct) noexcept {
+
+}
+
+void __fastcall BaseCharacter::attack(float time) {
+
+}
+
+bool BaseCharacter::isCooldown(float time) {
+	return false;
 }
 
 void BaseCharacter::render(RenderWindow& wd, Sprite* ptr_sprite) noexcept {

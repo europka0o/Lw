@@ -17,11 +17,7 @@ unsigned int screen_height = GetSystemMetrics(SM_CYSCREEN);
 #endif
 #pragma hdrstop
 
-using sf::Clock;
-using sf::Event;
-using sf::VideoMode;
-using sf::Mouse, sf::Keyboard;
-using sf::SoundBuffer, sf::Sound, sf::Music;
+using namespace sf;
 
 enum lvlnum {
 	lvlRun = 1,
@@ -300,12 +296,12 @@ class Game {
 					}
 				}
 
-				if (timer >= 1.f) {
-					(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 7)->rotate(0.01); //Planet->sprt->rotate(0.01);
-					(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + rand_i)->rotate(0.17); //D1->sprt->rotate(0.17);
-					(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 9)->rotate(0.17); //Castd->sprt->rotate(0.17);
+				//if (timer >= 1.f) {
+					(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 7)->rotate(0.01 * timer / 16); //Planet->sprt->rotate(0.01);
+					(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + rand_i)->rotate(0.17 * timer / 16); //D1->sprt->rotate(0.17);
+					(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 9)->rotate(0.17 * timer / 16); //Castd->sprt->rotate(0.17);
 					clock.restart();
-				}
+				//}
 
 				window->clear();
 				main_men->render(*window);
@@ -337,10 +333,14 @@ class Game {
 			_interface::menu *men;
 			list<Meteor*> *Expl_list = new list<Meteor*>;
 
-			list<Character*> *Pers = new list<Character*>;
-			list<DestroerCastle*> *DC = new list<DestroerCastle*>;
-			list<Spearman*> *Spman = new list<Spearman*>;
-			list<IceBall*> *Ice = new list<IceBall*>;
+			Sprite* pointer_sprt = nullptr;
+
+			//list<Knight*> *Pers = new list<Knight*>;
+			//list<DestroerCastle*> *DC = new list<DestroerCastle*>;
+			//list<Spearman*> *Spman = new list<Spearman*>;
+
+			list<BaseCharacter*> *EnemyList = new list<BaseCharacter*>;
+			list<IceBall*> *IceList = new list<IceBall*>;
 
 			MainWrd = new World((pointer_cast(ptr_global_memory, Image)), 40, 60);
 			mlt = new _interface::multiline_text(100, 200, Color::Black, Color::Yellow);
@@ -410,7 +410,49 @@ class Game {
 			Music *music_main_theme = new Music; //Создаем объект музыки																
 			music_main_theme->openFromFile("Sounds/main_theme.ogg"); //Загружаем файл		
 			music_main_theme->setVolume(volume);
-			music_main_theme->play();																								
+			music_main_theme->play();
+
+			auto free_memory_list {
+				[Expl_list, EnemyList, IceList,
+				 men, st_men,
+				 HP, MP, 
+				 mlt, lvlInfo, 
+				 attack_ice_sound, attack_sound, music_main_theme,
+				 MainWrd, Camera,
+				 message_settings, message_end, message_vic]()->void {
+					for (list<Meteor*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) {
+						delete* it_expl;
+						it_expl = Expl_list->erase(it_expl);
+					}
+					delete Expl_list;
+					delete men, st_men;
+					delete HP, MP;
+					delete mlt;
+					delete lvlInfo;
+					for (list<Sound*>::iterator it_sd_ice = attack_ice_sound->begin(); it_sd_ice != attack_ice_sound->end();) {
+						delete* it_sd_ice;
+						it_sd_ice = attack_ice_sound->erase(it_sd_ice);
+					}
+					for (list<Sound*>::iterator it_sd = attack_sound->begin(); it_sd != attack_sound->end();) {
+						delete* it_sd;
+						it_sd = attack_sound->erase(it_sd);
+					}
+					for (list<BaseCharacter*>::iterator it_en = EnemyList->begin(); it_en != EnemyList->end();) {
+						delete* it_en;
+						it_en = EnemyList->erase(it_en);
+					}
+					for (list<IceBall*>::iterator it_ic = IceList->begin(); it_ic != IceList->end();) {
+						delete* it_ic;
+						it_ic = IceList->erase(it_ic);
+					}
+					delete EnemyList, IceList;
+					delete MainWrd;
+					delete message_settings, message_end, message_vic;
+					delete Camera;
+					delete music_main_theme, attack_sound, attack_ice_sound;
+				}
+			};
+
 //------------------------------------------------------------------------------------------------------------------------------------
 			
 			while (window->isOpen()) {
@@ -440,11 +482,11 @@ class Game {
 
 						if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Right && !men->active) { //Если нажата правая кнопка мыши
 							if (barmp >= mp_need_cast_ice) {
-								if (Ice->empty()) {
-									Ice->push_back(new IceBall(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 6), realPos.x - 55, realPos.y - 65, 200));
+								if (IceList->empty()) {
+									IceList->push_back(new IceBall(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 6), realPos.x - 55, realPos.y - 65, 200));
 								} else {
-									Ice->back()->health = 0;
-									Ice->push_back(new IceBall(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 6), realPos.x - 55, realPos.y - 65, 200));
+									IceList->back()->health = 0;
+									IceList->push_back(new IceBall(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 6), realPos.x - 55, realPos.y - 65, 200));
 								}
 								barmp -= mp_need_cast_ice;
 							}
@@ -465,44 +507,7 @@ class Game {
 
 							if (men->btExit->isAction(realPos.x, realPos.y)) { //Если нажата кнопка выйти
 								if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Left) {
-									for (list<Meteor*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) {
-										delete* it_expl;
-										it_expl = Expl_list->erase(it_expl);
-									}
-									delete Expl_list;
-									delete men, st_men;
-									delete HP, MP;
-									delete mlt;
-									delete lvlInfo;
-									for (list<Sound*>::iterator it_sd_ice = attack_ice_sound->begin(); it_sd_ice != attack_ice_sound->end();) {
-										delete* it_sd_ice;
-										it_sd_ice = attack_ice_sound->erase(it_sd_ice);
-									}
-									for (list<Sound*>::iterator it_sd = attack_sound->begin(); it_sd != attack_sound->end();) {
-										delete* it_sd;
-										it_sd = attack_sound->erase(it_sd);
-									}
-									for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
-										delete* it_sp;
-										it_sp = Spman->erase(it_sp);
-									}
-									for (list<Character*>::iterator it_p = Pers->begin(); it_p != Pers->end();) {
-										delete* it_p;
-										it_p = Pers->erase(it_p);
-									}
-									for (list<DestroerCastle*>::iterator it_dc = DC->begin(); it_dc != DC->end();) {
-										delete* it_dc;
-										it_dc = DC->erase(it_dc);
-									}
-									for (list<IceBall*>::iterator it_ic = Ice->begin(); it_ic != Ice->end();) {
-										delete* it_ic;
-										it_ic = Ice->erase(it_ic);
-									}
-									delete Pers, DC, Spman, Ice;
-									delete MainWrd;
-									delete message_settings, message_end, message_vic;
-									delete Camera;
-									delete music_main_theme, attack_sound, attack_ice_sound;
+									free_memory_list();
 									return lvlnum::menuGame;
 								}
 							}
@@ -586,88 +591,14 @@ class Game {
 					} else {
 						if (message_end->btOk->isAction(realPos.x, realPos.y) && message_end->active) { //Если нажата кнопка ок в сообщении о проигрыше
 							if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Left) {
-								for (list<Meteor*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) {
-									delete* it_expl;
-									it_expl = Expl_list->erase(it_expl);
-								}
-								delete Expl_list;
-								delete men, st_men;
-								delete HP, MP;
-								delete mlt;
-								delete lvlInfo;
-								for (list<Sound*>::iterator it_sd_ice = attack_ice_sound->begin(); it_sd_ice != attack_ice_sound->end();) {
-									delete* it_sd_ice;
-									it_sd_ice = attack_ice_sound->erase(it_sd_ice);
-								}
-								for (list<Sound*>::iterator it_sd = attack_sound->begin(); it_sd != attack_sound->end();) {
-									delete* it_sd;
-									it_sd = attack_sound->erase(it_sd);
-								}
-								for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
-									delete* it_sp;
-									it_sp = Spman->erase(it_sp);
-								}
-								for (list<Character*>::iterator it_p = Pers->begin(); it_p != Pers->end();) {
-									delete* it_p;
-									it_p = Pers->erase(it_p);
-								}
-								for (list<DestroerCastle*>::iterator it_dc = DC->begin(); it_dc != DC->end();) {
-									delete* it_dc;
-									it_dc = DC->erase(it_dc);
-								}
-								for (list<IceBall*>::iterator it_ic = Ice->begin(); it_ic != Ice->end();) {
-									delete* it_ic;
-									it_ic = Ice->erase(it_ic);
-								}
-								delete Pers, DC, Spman, Ice;
-								delete MainWrd;
-								delete message_settings, message_end, message_vic;
-								delete Camera;
-								delete music_main_theme, attack_sound, attack_ice_sound;
+								free_memory_list();
 								return lvlnum::menuGame;
 							}
 						}
 
 						if (message_vic->btOk->isAction(realPos.x, realPos.y) && message_vic->active) {
 							if (event.type == event.MouseButtonReleased && event.mouseButton.button == Mouse::Left) {
-								for (list<Meteor*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) {
-									delete* it_expl;
-									it_expl = Expl_list->erase(it_expl);
-								}
-								delete Expl_list;
-								delete men, st_men;
-								delete HP, MP;
-								delete mlt;
-								delete lvlInfo;
-								for (list<Sound*>::iterator it_sd_ice = attack_ice_sound->begin(); it_sd_ice != attack_ice_sound->end();) {
-									delete* it_sd_ice;
-									it_sd_ice = attack_ice_sound->erase(it_sd_ice);
-								}
-								for (list<Sound*>::iterator it_sd = attack_sound->begin(); it_sd != attack_sound->end();) {
-									delete* it_sd;
-									it_sd = attack_sound->erase(it_sd);
-								}
-								for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
-									delete* it_sp;
-									it_sp = Spman->erase(it_sp);
-								}
-								for (list<Character*>::iterator it_p = Pers->begin(); it_p != Pers->end();) {
-									delete* it_p;
-									it_p = Pers->erase(it_p);
-								}
-								for (list<DestroerCastle*>::iterator it_dc = DC->begin(); it_dc != DC->end();) {
-									delete* it_dc;
-									it_dc = DC->erase(it_dc);
-								}
-								for (list<IceBall*>::iterator it_ic = Ice->begin(); it_ic != Ice->end();) {
-									delete* it_ic;
-									it_ic = Ice->erase(it_ic);
-								}
-								delete Pers, DC, Spman, Ice;
-								delete MainWrd;
-								delete message_settings, message_end, message_vic;
-								delete Camera;
-								delete music_main_theme, attack_sound, attack_ice_sound;
+								free_memory_list();
 								return lvlnum::menuGame;
 							}
 						}
@@ -691,59 +622,59 @@ class Game {
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //Если разрешение экрана 2560 х 1440
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 500, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 600, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 700, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 900, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 1000, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 1100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 600, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 700, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 900, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 1000, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 1100, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 900, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 920, 230, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 905, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 900, 560, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 950, 920, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 740, 990, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 900, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 920, 230, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 905, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 900, 560, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 950, 920, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 740, 990, 45));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //Если разрешение 1280 х 720
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 450, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 900, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 920, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 905, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 900, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 950, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 740, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 900, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 920, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 905, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 900, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 950, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 740, 400, 45));
 							} else { //Если любое другое
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 180, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 260, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 340, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 420, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 500, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 580, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 660, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 740, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 180, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 260, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 340, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 420, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 580, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 660, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 740, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 900, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 920, 190, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 905, 280, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 900, 370, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 460, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 950, 550, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 740, 640, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 900, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 920, 190, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 905, 280, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 900, 370, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 460, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 950, 550, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 740, 640, 45));
 							}
 
 							change_numlvl = false;
@@ -758,92 +689,92 @@ class Game {
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //Если разрешение экрана 2560 х 1440
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 200, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 230, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 27, 560, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 55, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 240, 920, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 990, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 300, 1200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 200, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 230, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 27, 560, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 55, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 240, 920, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 990, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 300, 1200, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 230, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 560, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 920, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 990, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 230, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 560, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 920, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 990, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 100, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 230, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 560, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 920, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 560, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1910, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 920, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 230, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 560, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 920, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 560, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1910, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 920, 45));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //Если разрешение 1280 х 720
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 200, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 27, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 55, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 240, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 300, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 200, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 27, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 55, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 240, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 300, 450, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 450, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 20, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 70, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 120, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 170, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 220, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 270, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 320, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 370, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1910, 420, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 470, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 20, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 70, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 120, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 170, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 220, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 270, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 320, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 370, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1910, 420, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 470, 45));
 							} else { //Если любое другое
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 200, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 180, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 260, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 27, 340, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 55, 420, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 240, 500, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 580, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 300, 660, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 200, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 180, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 260, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 27, 340, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 55, 420, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 240, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 580, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 300, 660, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 180, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 260, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 340, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 420, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 500, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 580, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 660, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 180, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 260, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 340, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 420, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 580, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 660, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 170, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 240, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 310, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 380, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 520, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 590, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1910, 660, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 730, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 170, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 240, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 310, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 380, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 520, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 590, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1910, 660, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 730, 45));
 							}
 
 							change_numlvl = false;
@@ -858,95 +789,95 @@ class Game {
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //Если разрешение экрана 2560 х 1440
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 500, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 600, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 700, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 900, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 1000, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 1100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 600, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 700, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 900, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 1000, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 1100, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 230, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 560, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 920, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 990, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 1000, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 230, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 560, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 920, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 990, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 1000, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 230, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 560, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 920, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 560, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1910, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 920, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 230, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 560, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 920, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 560, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1910, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 920, 45));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //Если разрешение 1280 х 720
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 450, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 450, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 90, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 130, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 170, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 210, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 290, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 330, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1910, 370, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 410, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 90, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 130, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 170, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 210, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 290, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 330, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1910, 370, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 410, 45));
 							} else { //Если любое другое
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 500, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 500, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 550, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 550, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1910, 550, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 600, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1910, 550, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 600, 45));
 							}
 
 							change_numlvl = false;
@@ -961,95 +892,95 @@ class Game {
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //Если разрешение экрана 2560 х 1440
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 200, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 230, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 27, 560, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 55, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 240, 920, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 990, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 300, 1200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 200, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 230, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 27, 560, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 55, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 240, 920, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 990, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 300, 1200, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 120, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 240, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 410, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 550, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 810, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 930, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 970, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 1100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 120, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 240, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 410, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 550, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 810, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 930, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 970, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 1100, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 110, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 220, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 405, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 575, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 809, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 915, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1890, 970, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 2000, 1005, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1950, 1130, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 110, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 220, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 405, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 575, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 809, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 915, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1890, 970, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 2000, 1005, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1950, 1130, 45));
 
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 2100, 600, 650));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 2100, 600, 650));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //Если разрешение 1280 х 720
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 200, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 27, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 55, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 240, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 300, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 200, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 27, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 55, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 240, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 300, 450, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 400, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 90, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 130, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 170, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 210, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1890, 390, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 2000, 430, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1950, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 90, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 130, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 170, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 210, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1890, 390, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 2000, 430, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1950, 450, 45));
 
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 2100, 400, 650));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 2100, 400, 650));
 							} else { //Если любое другое
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 200, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 27, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 55, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 240, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 300, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 200, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 27, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 55, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 240, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 300, 450, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 980, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 995, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 990, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 970, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1040, 450, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1890, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 2000, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1950, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1905, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1900, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1908, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1920, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1890, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 2000, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1950, 500, 45));
 
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 2100, 450, 650));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 2100, 450, 650));
 							}
 		
 							change_numlvl = false;
@@ -1063,97 +994,97 @@ class Game {
 							mp_need_cast_ice -= 15; //mp_need_cast_ice = 85
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //Если разрешение экрана 2560 х 1440
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 230, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 57, 560, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 95, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 920, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 230, 990, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 1200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 230, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 57, 560, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 95, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 920, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 230, 990, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 1200, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 230, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 560, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 920, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 990, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 1000, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 230, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 560, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 920, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 990, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 1000, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 600, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 750, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 900, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 1050, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 1200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 600, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 750, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 900, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 1050, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 1200, 45));
 
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1900, 200, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1870, 700, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1900, 200, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1870, 700, 500));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //Если разрешение 1280 х 720
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 57, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 95, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 230, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 57, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 95, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 230, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 400, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 400, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 450, 45));
 
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1900, 200, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1870, 450, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1900, 200, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1870, 450, 500));
 							} else { //Если любое другое
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 57, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 95, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 230, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 29, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 114, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 57, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 95, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 230, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 450, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 600, 450, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1300, 500, 45));
 
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1900, 200, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1870, 500, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1900, 200, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1870, 500, 500));
 							}
 
 							change_numlvl = false;
@@ -1167,77 +1098,77 @@ class Game {
 							mp_need_cast_expl -= 1; //mp_need_cast_expl = 9
 							
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //Если разрешение экрана 2560 х 1440
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 20, 200, 400));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 20, 200, 400));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1200, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1150, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1100, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 600, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 750, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1100, 900, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1150, 1050, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1200, 1200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1200, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1150, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1100, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 600, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 750, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1100, 900, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1150, 1050, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1200, 1200, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1500, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1550, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1650, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1700, 600, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1650, 750, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 900, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1550, 1050, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1500, 1200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1500, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1550, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1650, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1700, 600, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1650, 750, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 900, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1550, 1050, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1500, 1200, 45));
 
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1900, 600, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1900, 600, 500));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //Если разрешение 1280 х 720
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 20, 200, 400));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 20, 200, 400));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1200, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1150, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1100, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1100, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1150, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1200, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1200, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1150, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1100, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1100, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1150, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1200, 450, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1500, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1550, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1650, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1700, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1650, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1550, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1200, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1500, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1550, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1650, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1700, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1650, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1550, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1200, 450, 45));
 
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1900, 300, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1900, 300, 500));
 							} else { //Если любое другое
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 20, 200, 400));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 20, 200, 400));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1200, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1150, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1100, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1100, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1150, 500, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1200, 550, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1200, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1150, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1100, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1000, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1050, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1100, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1150, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1200, 550, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1500, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1550, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1650, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1700, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1650, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1550, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1500, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1500, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1550, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1650, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1700, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1650, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1600, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1550, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 1500, 500, 45));
 
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1900, 400, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1900, 400, 500));
 							}
 
 							change_numlvl = false;
@@ -1251,41 +1182,41 @@ class Game {
 							mp_need_cast_ice -= 15; //mp_need_cast_ice = 70
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //Если разрешение экрана 2560 х 1440
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 120, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 115, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 110, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 600, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 750, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 110, 900, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 115, 1050, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 120, 1200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 120, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 115, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 110, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 600, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 750, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 110, 900, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 115, 1050, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 120, 1200, 45));
 
-								DC->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 1000, 700, 1000));
+								EnemyList->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 1000, 700, 1000));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //Если разрешение 1280 х 720
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 120, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 115, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 110, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 110, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 115, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 120, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 120, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 115, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 110, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 110, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 115, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 120, 450, 45));
 
-								DC->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 1000, 250, 1000));
+								EnemyList->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 1000, 250, 1000));
 							} else { //Если любое другое
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 120, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 115, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 110, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 110, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 115, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 120, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 120, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 115, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 110, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 110, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 115, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 120, 500, 45));
 
-								DC->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 1000, 400, 1000));
+								EnemyList->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 1000, 400, 1000));
 							}
 
 							change_numlvl = false;
@@ -1297,41 +1228,41 @@ class Game {
 							lvlInfo->setPosition((config->screenWidth / 2) - lvlInfo->getSize().width / 2, (config->screenHeight / 2) - lvlInfo->getSize().height / 2);
 							
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //Если разрешение экрана 2560 х 1440
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 650, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 850, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 650, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 850, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 650, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 850, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 1050, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 650, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 850, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 1050, 45));
 
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 300, 300, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 350, 600, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 700, 800, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 300, 300, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 350, 600, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 700, 800, 500));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //Если разрешение 1280 х 720
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 300, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 350, 45));
 
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 300, 200, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 350, 300, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 700, 400, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 300, 200, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 350, 300, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 700, 400, 500));
 							} else { //Если любое другое
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 550, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 105, 550, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 550, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 305, 550, 45));
 
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 300, 100, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 350, 300, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 700, 500, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 300, 100, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 350, 300, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 700, 500, 500));
 							}
 
 							change_numlvl = false;
@@ -1343,20 +1274,20 @@ class Game {
 							lvlInfo->setPosition((config->screenWidth / 2) - lvlInfo->getSize().width / 2, (config->screenHeight / 2) - lvlInfo->getSize().height / 2);
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //Если разрешение экрана 2560 х 1440
-								DC->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 100, 700, 1000));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 500, 300, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 700, 500, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 570, 900, 500));
+								EnemyList->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 100, 700, 1000));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 500, 300, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 700, 500, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 570, 900, 500));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //Если разрешение 1280 х 720
-								DC->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 100, 200, 1000));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 500, 150, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 700, 200, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 570, 250, 500));
+								EnemyList->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 100, 200, 1000));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 500, 150, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 700, 200, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 570, 250, 500));
 							} else { //Если любое другое
-								DC->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 100, 300, 1000));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 500, 300, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 700, 400, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 570, 600, 500));
+								EnemyList->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 100, 300, 1000));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 500, 300, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 700, 400, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 570, 600, 500));
 							}
 
 							change_numlvl = false;
@@ -1371,113 +1302,113 @@ class Game {
 							mp_need_cast_expl -= 1; //mp_need_cast_expl = 8
 
 							if (config->screenWidth == 2560 && config->screenHeight == 1440) { //Если разрешение экрана 2560 х 1440
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 500, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 600, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 700, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 900, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 1000, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 1100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 600, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 700, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 900, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 1000, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 1100, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130 + 400, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 400, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 400, 500, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 400, 600, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10 + 400, 700, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 400, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 400, 900, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 400, 1000, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140 + 400, 1100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130 + 400, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 400, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 400, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 400, 600, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10 + 400, 700, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 400, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 400, 900, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 400, 1000, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140 + 400, 1100, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130 + 800, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 800, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 800, 500, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 800, 600, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10 + 800, 700, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 800, 800, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 800, 900, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 800, 1000, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140 + 800, 1100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130 + 800, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 800, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 800, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 800, 600, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10 + 800, 700, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 800, 800, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 800, 900, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 800, 1000, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140 + 800, 1100, 45));
 
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1300, 300, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1400, 800, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1300, 300, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1400, 800, 500));
 
-								DC->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 2000, 100, 1000));
-								DC->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 2700, 700, 1000));
+								EnemyList->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 2000, 100, 1000));
+								EnemyList->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 2700, 700, 1000));
 							} else if (config->screenWidth == 1280 && config->screenHeight == 720) { //Если разрешение 1280 х 720
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 450, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130 + 400, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 400, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 400, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 400, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10 + 400, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 400, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 400, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 400, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140 + 400, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130 + 400, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 400, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 400, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 400, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10 + 400, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 400, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 400, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 400, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140 + 400, 450, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130 + 800, 50, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 800, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 800, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 800, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10 + 800, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 800, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 800, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 800, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140 + 800, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130 + 800, 50, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 800, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 800, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 800, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10 + 800, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 800, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 800, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 800, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140 + 800, 450, 45));
 
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1300, 100, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1400, 400, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1300, 100, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1400, 400, 500));
 
-								DC->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 2000, 50, 1000));
-								DC->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 2700, 300, 1000));
+								EnemyList->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 2000, 50, 1000));
+								EnemyList->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 2700, 300, 1000));
 							} else { //Если любое другое
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140, 500, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130 + 400, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 400, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 400, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 400, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10 + 400, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 400, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 400, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 400, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140 + 400, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130 + 400, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 400, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 400, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 400, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10 + 400, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 400, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 400, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 400, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140 + 400, 500, 45));
 
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130 + 800, 100, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 800, 150, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 800, 200, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 800, 250, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10 + 800, 300, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 800, 350, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 800, 400, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 800, 450, 45));
-								Spman->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140 + 800, 500, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 130 + 800, 100, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 800, 150, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 800, 200, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 800, 250, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 10 + 800, 300, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 40 + 800, 350, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 70 + 800, 400, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 100 + 800, 450, 45));
+								EnemyList->push_back(new Spearman(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3), config->screenWidth + 140 + 800, 500, 45));
 
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1300, 300, 500));
-								Pers->push_back(new Character(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1400, 500, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1300, 300, 500));
+								EnemyList->push_back(new Knight(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5), config->screenWidth + 1400, 500, 500));
 
-								DC->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 2000, 100, 1000));
-								DC->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 2700, 560, 1000));
+								EnemyList->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 2000, 100, 1000));
+								EnemyList->push_back(new DestroerCastle(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4), config->screenWidth + 2700, 560, 1000));
 							}
 
 							change_numlvl = false;
@@ -1490,16 +1421,16 @@ class Game {
 						}
 					}
 
-					if (Spman->empty() && Pers->empty() && DC->empty()) {
+					if (EnemyList->empty()) { //Если врагов нет
 						NacopSec2 += Second;
 						lvlInfo->visible = true;
-						if (NacopSec2 >= 3) {
+						if (NacopSec2 >= 3) { //Через 3 секунды перехом на следующую волну
 							numlvl++;
 							change_numlvl = true;
 							barmp = barmp_max;
 						}
 
-						if (numlvl == 11) {
+						if (numlvl == 11) { //Если все волны пройдены, то победа
 							music_main_theme->stop();
 							victory_sound.setVolume(volume);
 							victory_sound.play();
@@ -1512,7 +1443,8 @@ class Game {
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------Регистрация попаданий
 					if (!men->active) {
 
-						for (list<Meteor*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) {
+						for (list<Meteor*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) { 
+
 							cooldown_expl = false;
 							if ((*it_expl)->end) {
 								delete* it_expl;
@@ -1525,31 +1457,15 @@ class Game {
 									(*it_expl)->is_sound_play = true;
 								}
 
-								for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
-									if ((*it_expl)->rect_collis->getBounds().intersects((*it_sp)->rect_collis->getBounds()) && !(*it_expl)->cooldown) {
+								for (list<BaseCharacter*>::iterator it_en = EnemyList->begin(); it_en != EnemyList->end();) {
+									if ((*it_expl)->rect_collis->getBounds().intersects((*it_en)->rect_collis->getBounds()) && !(*it_expl)->cooldown) {
 										cooldown_expl = true;
-										(*it_sp)->health -= 30;
-										if ((*it_sp)->health <= 0) { (*it_sp)->health = 0; }
+										(*it_en)->health -= 25;
+										if ((*it_en)->health <= 0) {
+											(*it_en)->health = 0; 
+										}
 									}
-									it_sp++;
-								}
-
-								for (list<DestroerCastle*>::iterator it_dc = DC->begin(); it_dc != DC->end();) {
-									if ((*it_expl)->rect_collis->getBounds().intersects((*it_dc)->rect_collis->getBounds()) && !(*it_expl)->cooldown) {
-										cooldown_expl = true;
-										(*it_dc)->health -= 25;
-										if ((*it_dc)->health <= 0) { (*it_dc)->health = 0; }
-									}
-									it_dc++;
-								}
-
-								for (list<Character*>::iterator it_p = Pers->begin(); it_p != Pers->end();) {
-									if ((*it_expl)->rect_collis->getBounds().intersects((*it_p)->rect_collis->getBounds()) && !(*it_expl)->cooldown) {
-										cooldown_expl = true;
-										(*it_p)->health -= 25;
-										if ((*it_p)->health <= 0) { (*it_p)->health = 0; }
-									}
-									it_p++;
+									it_en++;
 								}
 
 								(*it_expl)->update(timer);
@@ -1559,47 +1475,82 @@ class Game {
 								}
 								it_expl++;
 							}
-
 						}
+						//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+						for (list<BaseCharacter*>::iterator it_en = EnemyList->begin(); it_en != EnemyList->end();) {
+						
+							bool is_attack = false;
+							int factor_demage = 1;
+							float factor_speed = 1;
+							
+							switch ((*it_en)->descendant_class) {
+								case SPEARMAN_CLASS: factor_demage = 1; 
+													 factor_speed = 2; break;
+								case KNIGHT_CLASS: factor_demage = 3;
+												   factor_speed = 3.5; break;
+								case DESTROERCASTLE_CLASS: factor_demage = 7;
+														   factor_speed = 3.5; break;
+								default: break;
+							}
 
-						bool Ice_ball_is_cooldown = false;
-						for (list<IceBall*>::iterator it_ic = Ice->begin(); it_ic != Ice->end();) {
-							if ((*it_ic)->isDead) {
-								delete* it_ic;
-								it_ic = Ice->erase(it_ic);
+							if ((*it_en)->is_dead) {
+								delete* it_en;
+								it_en = EnemyList->erase(it_en);
 							} else {
 
-								for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
-									if ((*it_ic)->rect_collis->getBounds().intersects((*it_sp)->rect_collis->getBounds())) {
-										if (!(*it_ic)->cooldown) {
-											(*it_sp)->health -= 5;
-											Ice_ball_is_cooldown = true;
-											//(*it_ic)->cooldown = true;
-										}
+								if ((*it_en)->rect_collis->getBounds().intersects(Castle->rect_collis->getBounds()) && (*it_en)->health != 0) {
+									(*it_en)->attack(timer / 2);
+									if (!(*it_en)->isCooldown(Second)) {							
+										barhp -= (3 * factor_demage);
+										(*it_en)->cooldown = true;
+										attack_sound->push_back(new Sound(attackBuffer));
+										attack_sound->back()->setVolume(volume);
+										attack_sound->back()->play();
 									}
-									it_sp++;
+									is_attack = true;
+								}
+			
+								for (list<IceBall*>::iterator it_ic = IceList->begin(); it_ic != IceList->end();) {
+									if ((*it_ic)->rect_collis->getBounds().intersects((*it_en)->rect_collis->getBounds())) {
+
+										(*it_en)->attack(timer / 2);
+										if (!(*it_en)->isCooldown(Second)) {
+
+											(*it_ic)->health -= (3 * factor_demage);
+											(*it_en)->cooldown = true;
+											attack_ice_sound->push_back(new Sound(attackIceBuffer));
+											attack_ice_sound->back()->setVolume(volume);
+											attack_ice_sound->back()->play();
+										}
+										is_attack = true;
+									}	
+									it_ic++;
 								}
 
-								for (list<DestroerCastle*>::iterator it_dc = DC->begin(); it_dc != DC->end();) {
-									if ((*it_ic)->rect_collis->getBounds().intersects((*it_dc)->rect_collis->getBounds())) {
-										if (!(*it_ic)->cooldown) {
-											(*it_dc)->health -= 5;
-											Ice_ball_is_cooldown = true;
-											//(*it_ic)->cooldown = true;
-										}
-									}
-									it_dc++;
-								}
+								if (!is_attack) {
+									(*it_en)->move(timer / factor_speed, direcrion8::left);
+								}			
+								it_en++;
+							}
+						}
+						//-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
-								for (list<Character*>::iterator it_p = Pers->begin(); it_p != Pers->end();) {
-									if ((*it_ic)->rect_collis->getBounds().intersects((*it_p)->rect_collis->getBounds())) {
+						bool Ice_ball_is_cooldown = false;
+						for (list<IceBall*>::iterator it_ic = IceList->begin(); it_ic != IceList->end();) {
+							if ((*it_ic)->is_dead) {
+								delete* it_ic;
+								it_ic = IceList->erase(it_ic);
+							} else {
+
+								for (list<BaseCharacter*>::iterator it_en = EnemyList->begin(); it_en != EnemyList->end();) {
+									if ((*it_ic)->rect_collis->getBounds().intersects((*it_en)->rect_collis->getBounds())) {
 										if (!(*it_ic)->cooldown) {
-											(*it_p)->health -= 5;
+											(*it_en)->health -= 5;
 											Ice_ball_is_cooldown = true;
 											//(*it_ic)->cooldown = true;
 										}
 									}
-									it_p++;
+									it_en++;
 								}
 
 								if (Ice_ball_is_cooldown) {
@@ -1616,120 +1567,6 @@ class Game {
 							}
 						}
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------Логика поведения врагов
-
-						for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
-							if ((*it_sp)->isDead) {
-								delete* it_sp;
-								it_sp = Spman->erase(it_sp);
-							} else {
-
-								if ((*it_sp)->rect_collis->getBounds().intersects(Castle->rect_collis->getBounds()) && (*it_sp)->health != 0) {
-									(*it_sp)->attack(timer / 2);
-									if (!(*it_sp)->isCooldown(Second)) {
-										barhp -= 3;
-										(*it_sp)->cooldown = true;
-										attack_sound->push_back(new Sound(attackBuffer));
-										attack_sound->back()->setVolume(volume);
-										attack_sound->back()->play();
-									}
-								} else {
-
-									if (Ice->empty()) {
-										(*it_sp)->move(timer / 2, direcrion8::left);
-									} else {
-										if ((*it_sp)->rect_collis->getBounds().intersects(Ice->back()->rect_collis->getBounds()) && Ice->back()->health != 0) {
-											(*it_sp)->attack(timer / 2);
-											if (!(*it_sp)->isCooldown(Second)) {
-												Ice->back()->health -= 3;
-												(*it_sp)->cooldown = true;
-												attack_ice_sound->push_back(new Sound(attackIceBuffer));
-												attack_ice_sound->back()->setVolume(volume);
-												attack_ice_sound->back()->play();
-											}
-										} else {
-											(*it_sp)->move(timer / 2, direcrion8::left);
-										}
-									}	
-								}
-								it_sp++;
-							}
-						}
-
-						for (list<Character*>::iterator it_p = Pers->begin(); it_p != Pers->end();) {
-							if ((*it_p)->isDead) {
-								delete* it_p;
-								it_p = Pers->erase(it_p);
-							} else {
-
-								if ((*it_p)->rect_collis->getBounds().intersects(Castle->rect_collis->getBounds()) && (*it_p)->health != 0) {
-									(*it_p)->attack(timer / 1.5);
-									if (!(*it_p)->isCooldown(Second)) {
-										barhp -= 10;
-										(*it_p)->cooldown = true;
-										attack_sound->push_back(new Sound(attackBuffer));
-										attack_sound->back()->setVolume(volume);
-										attack_sound->back()->play();
-									}
-								} else {
-									if (Ice->empty()) {
-										(*it_p)->move(timer / 3.5, direcrion8::left);
-									} else {
-										if ((*it_p)->rect_collis->getBounds().intersects(Ice->back()->rect_collis->getBounds()) && Ice->back()->health != 0) {
-											(*it_p)->attack(timer / 2);
-											if (!(*it_p)->isCooldown(Second)) {
-												Ice->back()->health -= 10;
-												(*it_p)->cooldown = true;
-												attack_ice_sound->push_back(new Sound(attackIceBuffer));
-												attack_ice_sound->back()->setVolume(volume);
-												attack_ice_sound->back()->play();
-											}
-										} else {
-											(*it_p)->move(timer / 3.5, direcrion8::left);
-										}
-									}
-									
-								}
-
-								it_p++;
-							}
-						}
-
-						for (list<DestroerCastle*>::iterator it_dc = DC->begin(); it_dc != DC->end();) {
-							if ((*it_dc)->isDead) {
-								delete* it_dc;
-								it_dc = DC->erase(it_dc);
-							} else {
-								if ((*it_dc)->rect_collis->getBounds().intersects(Castle->rect_collis->getBounds()) && (*it_dc)->health != 0) {
-									(*it_dc)->attack(timer / 4.2);
-									if (!(*it_dc)->isCooldown(Second)) {
-										barhp -= 20;
-										(*it_dc)->cooldown = true;
-										attack_sound->push_back(new Sound(attackBuffer));
-										attack_sound->back()->setVolume(volume);
-										attack_sound->back()->play();
-									}
-								} else {
-									if (Ice->empty()) {
-										(*it_dc)->move(timer / 3.5, direcrion8::left);
-									} else {
-										if ((*it_dc)->rect_collis->getBounds().intersects(Ice->back()->rect_collis->getBounds()) && Ice->back()->health != 0) {
-											(*it_dc)->attack(timer / 2);
-											if (!(*it_dc)->isCooldown(Second)) {
-												Ice->back()->health -= 20;
-												(*it_dc)->cooldown = true;
-												attack_ice_sound->push_back(new Sound(attackIceBuffer));
-												attack_ice_sound->back()->setVolume(volume);
-												attack_ice_sound->back()->play();
-											}
-										} else {
-											(*it_dc)->move(timer / 3.5, direcrion8::left);
-										}
-									}
-								}
-								it_dc++;
-							}
-						}
-
 						for (list<Sound*>::iterator it_sd = attack_sound->begin(); it_sd != attack_sound->end();) {
 							if (!(*it_sd)->getStatus()) {
 								delete* it_sd;
@@ -1763,23 +1600,26 @@ class Game {
 					}
 				}
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------Отрисовка
+				
 				window->clear();
 				MainWrd->render(*window);
 				Camera->setView(*window);
-				for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
-					(*it_sp)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 3));
-					it_sp++;
-				}
+				for (list<BaseCharacter*>::iterator it_en = EnemyList->begin(); it_en != EnemyList->end();) {
 
-				for (list<DestroerCastle*>::iterator it_dc = DC->begin(); it_dc != DC->end();) {
-					(*it_dc)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 4));
-					it_dc++;
+					switch ((*it_en)->descendant_class) {
+						case SPEARMAN_CLASS: 
+							pointer_sprt = (pointer_cast(((char*)(ptr_global_memory)+block_memory_sprite), Sprite) + 3); break;
+						case KNIGHT_CLASS:
+							pointer_sprt = (pointer_cast(((char*)(ptr_global_memory)+block_memory_sprite), Sprite) + 5); break;
+						case DESTROERCASTLE_CLASS:
+							pointer_sprt = (pointer_cast(((char*)(ptr_global_memory)+block_memory_sprite), Sprite) + 4); break;
+						default: pointer_sprt = nullptr; break;
+					}
+					(*it_en)->render(*window, pointer_sprt);
+					it_en++;
 				}
-				for (list<Character*>::iterator it_p = Pers->begin(); it_p != Pers->end();) {
-					(*it_p)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 5));
-					it_p++;
-				}
-				for (list<IceBall*>::iterator it_ic = Ice->begin(); it_ic != Ice->end();) {
+				
+				for (list<IceBall*>::iterator it_ic = IceList->begin(); it_ic != IceList->end();) {
 					(*it_ic)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 6));
 					it_ic++;
 				}
@@ -1787,6 +1627,7 @@ class Game {
 					(*it_met)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 0), (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 1));
 					it_met++;
 				}
+
 				Castle->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 2));
 				HP->render(*window);
 				MP->render(*window);
@@ -1799,45 +1640,8 @@ class Game {
 				message_vic->render(*window, Camera);
 				window->display();
 			}
-
-			for (list<Meteor*>::iterator it_expl = Expl_list->begin(); it_expl != Expl_list->end();) {
-				delete* it_expl;
-				it_expl = Expl_list->erase(it_expl);
-			}
-			delete Expl_list;
-			delete men, st_men;
-			delete HP, MP;
-			delete mlt;
-			delete lvlInfo;
-			for (list<Sound*>::iterator it_sd_ice = attack_ice_sound->begin(); it_sd_ice != attack_ice_sound->end();) {
-				delete* it_sd_ice;
-				it_sd_ice = attack_ice_sound->erase(it_sd_ice);
-			}
-			for (list<Sound*>::iterator it_sd = attack_sound->begin(); it_sd != attack_sound->end();) {
-				delete* it_sd;
-				it_sd = attack_sound->erase(it_sd);
-			}
-			for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
-				delete *it_sp;
-				it_sp = Spman->erase(it_sp);
-			}
-			for (list<Character*>::iterator it_p = Pers->begin(); it_p != Pers->end();) {
-				delete *it_p;
-				it_p = Pers->erase(it_p);
-			}
-			for (list<DestroerCastle*>::iterator it_dc = DC->begin(); it_dc != DC->end();) {
-				delete *it_dc;
-				it_dc = DC->erase(it_dc);
-			}
-			for (list<IceBall*>::iterator it_ic = Ice->begin(); it_ic != Ice->end();) {
-				delete* it_ic;
-				it_ic = Ice->erase(it_ic);
-			}
-			delete Pers, Castle, DC, Spman, Ice;
-			delete MainWrd;
-			delete message_settings, message_end, message_vic;
-			delete Camera;
-			delete music_main_theme, attack_sound;
+			
+			free_memory_list();
 
 			return lvlnum::exitGame;
 		}
@@ -2244,7 +2048,7 @@ class Game {
 
 					for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
 						(*it_sp)->move(timer / 2, direcrion8::non);
-						if ((*it_sp)->isDead) {
+						if ((*it_sp)->is_dead) {
 							delete* it_sp;
 							it_sp = Spman->erase(it_sp);
 							mltAboutEnemy->visible = false;
@@ -2264,7 +2068,7 @@ class Game {
 						
 //---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------Логика поведения врагов
 						for (list<Spearman*>::iterator it_sp = Spman->begin(); it_sp != Spman->end();) {
-							if ((*it_sp)->isDead) {
+							if ((*it_sp)->is_dead) {
 								delete* it_sp;
 								it_sp = Spman->erase(it_sp);
 							} else {
@@ -2346,10 +2150,7 @@ class Game {
 				}
 				for (list<IceBall*>::iterator it_ic = Ice->begin(); it_ic != Ice->end();) {
 					(*it_ic)->update(timer / 4.5);
-					it_ic++;
-				}
-				for (list<IceBall*>::iterator it_ic = Ice->begin(); it_ic != Ice->end();) {
-					(*it_ic)->render(*window, (pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 6));
+					(*it_ic)->render(*window, (pointer_cast(((char*)(ptr_global_memory)+block_memory_sprite), Sprite) + 6));
 					it_ic++;
 				}
 				for (list<Meteor*>::iterator it = Expl_list->begin(); it != Expl_list->end();) {
