@@ -1743,8 +1743,11 @@ class Game {
 			Trigger *triggerForEnemy = new Trigger(IntRect(config->screenWidth - 500, 0, 20, config->screenHeight));
 
 			MainWrd = new World(pointer_cast(ptr_global_memory, Image), 60, 60);
-			HP = new _interface::bar(r_pointer_cast(((char*)(ptr_global_memory) + block_memory_font), Font), 5, 5, 100, 0, L"HP:", Color::White, Color::Red, Color::Black);
-			MP = new _interface::bar(r_pointer_cast(((char*)(ptr_global_memory) + block_memory_font), Font), 5, HP->getSize().left + HP->getSize().width + 5, 100, 0, L"MP:", Color::White, Color::Blue, Color::Black);
+
+			barhp = 100;
+			barmp = 100;
+			HP = new _interface::bar(r_pointer_cast(((char*)(ptr_global_memory) + block_memory_font), Font), 5, 5, barhp, 0, L"HP:", Color::White, Color::Red, Color::Black); //Полоса здоровья
+			MP = new _interface::bar(r_pointer_cast(((char*)(ptr_global_memory) + block_memory_font), Font), 5, HP->getSize().left + HP->getSize().width + 5, barmp, 0, L"MP:", Color::White, Color::Blue, Color::Black);
 			Camera = new Camer(CENTER_SCREEN_X, CENTER_SCREEN_Y, config->screenWidth, config->screenHeight);
 
 			Castle = new ObjectStatic(*(pointer_cast(((char*)(ptr_global_memory) + block_memory_sprite), Sprite) + 2), 0, 0);
